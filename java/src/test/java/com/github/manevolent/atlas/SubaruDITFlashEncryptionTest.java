@@ -69,6 +69,7 @@ public class SubaruDITFlashEncryptionTest {
         expecteds.put(0x393D667E, 0xEEEEEEEE);
         expecteds.put(0x941478D7, 0xFFFFFFFF);
         expecteds.put(0xF135FA11, 0x5555FFFF);
+        expecteds.put(0x96554F6E, 0x12345123);
 
         for (Integer cleartext_symbol : expecteds.keySet()) {
             byte[] encrypted_data_out = new byte[4];

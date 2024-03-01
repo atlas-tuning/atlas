@@ -11,6 +11,7 @@ public enum Unit {
     NM(() -> UnitClass.TORQUE),
     PERCENT(() -> UnitClass.NONE),
     PSI(() -> UnitClass.PRESSURE),
+    KPA(() -> UnitClass.PRESSURE),
     IN_HG(() -> UnitClass.PRESSURE),
     VOLTS(() -> UnitClass.NONE),
     HZ(() -> UnitClass.NONE),

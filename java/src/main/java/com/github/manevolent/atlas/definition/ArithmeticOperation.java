@@ -32,7 +32,19 @@ public enum ArithmeticOperation {
         return a - x;
     }, (a, x) -> {
         return a + x;
-    });
+    }),
+
+    RSHIFT((a, x) -> {
+        return a / (float)Math.pow(2, x.intValue());
+    }, (a, x) -> {
+        return a * (float)Math.pow(2, x.intValue());
+    }),
+
+    LSHIFT((a, x) -> {
+        return a * (float)Math.pow(2, x.intValue());
+    }, (a, x) -> {
+        return a / (float)Math.pow(2, x.intValue());
+    }),;
 
     private final BiFunction<Float, Float, Float> forwardOperation;
     private final BiFunction<Float, Float, Float> reverseOperation;
