@@ -32,6 +32,11 @@ public class TestJ2534Device implements J2534Device {
     }
 
     @Override
+    public CANDevice openCAN() throws IOException {
+        return openCAN(new CANFilter[0]);
+    }
+
+    @Override
     public CANDevice openCAN(CANFilter... filters) throws IOException {
         return new CANDevice() {
             @Override

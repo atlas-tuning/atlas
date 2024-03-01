@@ -41,7 +41,7 @@ import java.nio.ByteBuffer;
  */
 public class SubaruDITFlashEncryption {
 
-    private static byte[] feistel_lookup_table = new byte[] {
+    public static byte[] feistel_lookup_table = new byte[] {
             (byte) 0x05, (byte) 0x06, (byte) 0x07, (byte) 0x01, (byte) 0x09,
             (byte) 0x0c, (byte) 0x0d, (byte) 0x08, (byte) 0x0a, (byte) 0x0d,
             (byte) 0x02, (byte) 0x0b, (byte) 0x0f, (byte) 0x04, (byte) 0x00,

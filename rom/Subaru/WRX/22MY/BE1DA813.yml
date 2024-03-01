@@ -1,0 +1,118 @@
+ROM:
+  Type: 'SubaruDIT'
+  Vehicle:
+    Market: 'USDM'
+    Make: 'Subaru'
+    Model: 'WRX'
+    Year: '2022'
+    Trim: 'Premium'
+    Transmission: '6MT'
+  Regions:
+    - Name: 'Bootloader'
+      Address: 0x00000000
+      Length: 0x0000FFFF
+      Type: 'File'
+      File:
+        Name: 'bootloader.bin'
+        Format: 'Binary'
+        Offset: 0x00000000
+    - Name: 'Code flash'
+      Address: 0x00010000
+      Length: 0x003F0000
+      Type: 'File'
+      File:
+        Name: 'BE1DA813.bin'
+        Format: 'Binary'
+        Offset: 0x00010000
+        Encryption:
+          Type: 'SubaruDIT'
+          LookupTable: 0x05060701090C0D080A0D020B0F0400030B0406000F020D09050C010A030D0E08
+          Key:
+            - 0x5fb1
+            - 0xa7ca
+            - 0x42da
+            - 0xb740
+  SubaruDIT:
+    CalibrationID: 0xBE1DA813
+    Tables:
+      - Name: 'Ignition Timing'
+        Address: 0x00000000
+        Format: float
+        X:
+          Address: 0x00000000
+          Length: 12
+          Format: float
+        Y:
+          DataAddress: 0x00000000
+          Length: 12
+          Format: float
+    Symbols:
+      Tables:
+        - RangeStart: 0x0013c468
+          RangeEnd: 0x00146f7c
+      DIDs:
+        - RangeStart: 0x0100
+          RangeEnd: 0x01FF
+          Address: 0x0014c5c8
+          Length: 0x41
+        - RangeStart: 0x0200
+          RangeEnd: 0x02FF
+          Address: 0x0014c8d4
+          Length: 0x1F
+        - RangeStart: 0x1000
+          RangeEnd: 0x10FF
+          Address: 0x0014ca48
+          Length: 0x59
+        - RangeStart: 0x1100
+          RangeEnd: 0x11FF
+          Address: 0x0014ce74
+          Length: 0x44
+        - RangeStart: 0x1200
+          RangeEnd: 0x12FF
+          Address: 0x0014d1a4
+          Length: 0x5c
+        - RangeStart: 0x1300
+          RangeEnd: 0x13FF
+          Address: 0x0014d5f4
+          Length: 0x74
+        - RangeStart: 0x1400
+          RangeEnd: 0x14FF
+          Address: 0x0014db64
+          Length: 0x0c
+        - RangeStart: 0x2000
+          RangeEnd: 0x20FF
+          Address: 0x0014dbf4
+          Length: 0x0d
+        - RangeStart: 0x3000
+          RangeEnd: 0x30FF
+          Address: 0x0014dc90
+          Length: 0x0c
+        - RangeStart: 0x7000
+          RangeEnd: 0x70FF
+          Address: 0x0014e014
+          Length: 0x36
+        - RangeStart: 0x7400
+          RangeEnd: 0x74FF
+          Address: 0x0014c46c
+          Length: 0x02
+        - RangeStart: 0x7500
+          RangeEnd: 0x75FF
+          Address: 0x0014e29c
+          Length: 0xC8
+        - RangeStart: 0x7600
+          RangeEnd: 0x76FF
+          Address: 0x0014ebfc
+          Length: 0x9e
+        - RangeStart: 0x7700
+          RangeEnd: 0x77FF
+          Address: 0x0014f364
+          Length: 0x76
+        - RangeStart: 0xF100
+          RangeEnd: 0xF1FF
+          Address: 0x0014dd20
+          Length: 0x06
+        - RangeStart: 0xf400
+          RangeEnd: 0xf4FF
+          Address: 0x0014dd68
+          Length: 0x39
+

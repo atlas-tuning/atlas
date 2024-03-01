@@ -8,6 +8,8 @@ import java.util.Arrays;
 
 public interface J2534Device {
 
+    CANDevice openCAN() throws IOException;
+
     CANDevice openCAN(CANFilter... filters) throws IOException;
 
     default ISOTPDevice openISOTOP() throws IOException {

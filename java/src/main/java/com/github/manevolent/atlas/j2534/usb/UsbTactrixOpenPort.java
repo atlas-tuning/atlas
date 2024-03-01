@@ -22,6 +22,11 @@ public class UsbTactrixOpenPort implements J2534Device {
     }
 
     @Override
+    public CANDevice openCAN() throws IOException {
+        throw new UnsupportedOperationException();
+    }
+
+    @Override
     public CANDevice openCAN(CANFilter... filters) throws IOException {
         throw new UnsupportedOperationException();
     }

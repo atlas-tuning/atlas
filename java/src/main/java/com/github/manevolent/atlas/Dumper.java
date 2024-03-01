@@ -24,13 +24,17 @@ import java.util.Collection;
 public class Dumper {
 
     public static void main(String[] args) throws Exception {
-        String path = args[0];
-        File file = new File(path);
+        RandomAccessFile raf = new RandomAccessFile(args[0], "rw");
 
-        RandomAccessFile raf = new RandomAccessFile(args[1], "rw");
+        SerialTatrixOpenPortFactory canDeviceFactory =
+                new SerialTatrixOpenPortFactory(SerialTactrixOpenPort.CommunicationMode.DIRECT_SOCKET);
 
-        CANFrameReader canReader = new OpenPort2CANFrameReader(new FileInputStream(file));
-        ISOTPFrameReader isotpReader = new ISOTPFrameReader(canReader);
+        Collection<J2534DeviceDescriptor> devices = canDeviceFactory.findDevices();
+        J2534DeviceDescriptor deviceDescriptor = devices.stream().findFirst().orElseThrow(() ->
+                new IllegalArgumentException("No can devices found"));
+        J2534Device device = deviceDescriptor.createDevice();
+
+        ISOTPFrameReader isotpReader = new ISOTPFrameReader(device.openCAN().reader());
         UDSFrameReader udsReader = new UDSFrameReader(isotpReader, SubaruProtocols.DIT);
         UDSFrame frame;
 
@@ -45,6 +49,8 @@ public class Dumper {
             if (frame == null) {
                 break;
             }
+
+            System.out.println(frame.toString());
 
             if (frame.getBody() instanceof UDSTransferRequest) {
                 UDSTransferRequest transferRequest = (UDSTransferRequest) frame.getBody();

@@ -146,6 +146,11 @@ public class SerialTactrixOpenPort implements J2534Device {
 
 
     @Override
+    public CANDevice openCAN() throws IOException {
+        return openCAN(CAN_ALL);
+    }
+
+    @Override
     public CANDevice openCAN(CANFilter... filters) throws IOException {
         preconnect();
         connect(5);
