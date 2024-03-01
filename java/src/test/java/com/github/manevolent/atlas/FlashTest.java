@@ -83,6 +83,33 @@ public class FlashTest {
                         .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
     }
 
+    private static Table.Builder dynamicAdvanceIgnitionTimingTable(FlashRegion code, String name, int timingDataAddress,
+                                                         int rpmAddress, int rpmLength, int loadAddress, int loadLength) {
+        return Table.builder()
+                .withName("Dynamic Advance Timing - " + name)
+                .withData(Series.builder()
+                        .withName("Timing")
+                        .withAddress(code, timingDataAddress)
+                        .withFormat(DataFormat.UBYTE)
+                        .withUnit(Unit.DEGREES)
+                        .withScale(Scale.builder().withOperations(
+                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
+                        )))
+                .withAxis(Y, Series.builder()
+                        .withName("RPM")
+                        .withAddress(code, rpmAddress)
+                        .withLength(rpmLength)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)))
+                .withAxis(X, Series.builder()
+                        .withName("Load")
+                        .withAddress(code, loadAddress)
+                        .withLength(loadLength)
+                        .withUnit(Unit.G_PER_REV)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
+    }
+
     private static Table.Builder fuelPressureTargetWarmupTable_1D(FlashRegion code,
                                                                   String name,
                                                                   int dataAddress,
@@ -185,6 +212,9 @@ public class FlashTest {
                         .withAddress(code, dataAddress)
                         .withFormat(DataFormat.UBYTE)
                         .withUnit(Unit.DEGREES)
+                        .withScale(Scale.builder().withOperations(
+                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
+                        ))
                 )
                 .withAxis(Y, Series.builder()
                         .withName("RPM")
@@ -216,6 +246,9 @@ public class FlashTest {
                         .withAddress(code, dataAddress)
                         .withFormat(DataFormat.UBYTE)
                         .withUnit(Unit.DEGREES)
+                        .withScale(Scale.builder().withOperations(
+                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
+                        ))
                     )
                     .withAxis(X, Series.builder()
                         .withName("Air Temperature")
@@ -299,6 +332,7 @@ public class FlashTest {
                 .withTable(ignitionTimingBaseTable(code, "TGVs Closed - AVCS Enabled", 0x000ad7a8, 0x000a88b4, 0x000a89bc))
                 .withTable(ignitionTimingBaseTable(code, "TGVs Open - AVCS Disabled", 0x000ada3c, 0x000a88b4, 0x000a89bc))
                 .withTable(ignitionTimingBaseTable(code, "TGVs Open - AVCS Enabled", 0x000adcd0, 0x000a88b4, 0x000a89bc))
+
                 // Ignition timing compensation by gear
                 .withTable(ignitionTimingGearCompTable(code, "1st", 0x000a8bf0, 0x000a7478, 0x000a7470))
                 .withTable(ignitionTimingGearCompTable(code, "2nd", 0x000a8bfc, 0x000a7478, 0x000a7470))
@@ -309,6 +343,13 @@ public class FlashTest {
                         0x000ac830, 0x000a8914, 0x000a8980))
                 .withTables(ignitionTimingIatCompTables(code, "B", 0x000a7b5c, 0x000a80cc,
                         0x000acac4, 0x000a8914, 0x000a8980))
+
+                // Dynamic advance timing
+                .withTable(dynamicAdvanceIgnitionTimingTable(code, "Base - TGVs Closed", 0x000b5fc0, 0x000b54e4, 0x16, 0x000b5510, 0x1E))
+                .withTable(dynamicAdvanceIgnitionTimingTable(code, "Base - TGVs Open", 0x000b6254, 0x000b54e4, 0x16, 0x000b5510, 0x1E))
+                .withTable(dynamicAdvanceIgnitionTimingTable(code, "Adder - TGVs Closed", 0x000b64e8, 0x000b5624, 0x15, 0x000b5578, 0x1E))
+                .withTable(dynamicAdvanceIgnitionTimingTable(code, "Adder - TGVs Open", 0x000b6760, 0x000b5650, 0x15, 0x000b55b4, 0x1E))
+
                 // Fuel pressure
                 .withTable(Table.builder()
                         .withName("Fuel Pressure Target - Main - Adder Activation")
