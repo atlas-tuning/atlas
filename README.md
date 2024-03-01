@@ -7,3 +7,5 @@ This project is a few different things in one place/monolith:
 3. Code to interact with the modern Subaru "DIT" ECU used in the 2015+ VA and VB WRX models, including absolutely anything I find interesting but mostly centered around true flashing capability.
 
 This is mostly a personal repository for personal goals, and at the moment is not intended for consumption but you may well find use from it -- it is written in a way that you might be able to leverage it as an API in your own project(s).  Ultimately my hope is others reverse engineering the VA/VB WRX platform can find some use out of this effort.
+
+If you want to adapt the logic in here to your own vehicle(s) or ECU(s), be mindful that I am being somewhat careless in my efforts to not brick any of my ECUs.  Therefore, you should take caution as there are keys in this repository that can and will allow you to perform operations that damage your ECU. Be careful!
