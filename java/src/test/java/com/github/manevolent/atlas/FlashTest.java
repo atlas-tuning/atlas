@@ -6,8 +6,11 @@ import com.github.manevolent.atlas.definition.zip.StreamedFlashSource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.lang.reflect.AccessFlag;
 
 import static com.github.manevolent.atlas.definition.Axis.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -16,6 +19,35 @@ public class FlashTest {
     private static final String testRomName = "BE1DA813";
     private static final String fileFormat = "%s.bin";
     private static final String testRomResource = "/" + String.format(fileFormat, testRomName);
+
+    private static Table.Builder ignitionTimingCompTable(FlashRegion code,
+                                                         String gear,
+                                                         int dataAddress,
+                                                         int rpmAddress,
+                                                         int loadAddress) {
+
+        return Table.builder()
+                .withName("Ignition Timing Compensation - " + gear + " Gear")
+                .withData(Series.builder()
+                        .withName("Timing")
+                        .withAddress(code, dataAddress)
+                        .withFormat(DataFormat.UBYTE)
+                        .withUnit(Unit.DEGREES)
+                )
+                .withAxis(Y, Series.builder()
+                        .withName("RPM")
+                        .withAddress(code, rpmAddress)
+                        .withLength(0x03)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)))
+                .withAxis(X, Series.builder()
+                        .withName("Load")
+                        .withAddress(code, loadAddress)
+                        .withLength(0x03)
+                        .withUnit(Unit.G_PER_REV)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
+    }
 
     private static Rom newRom() {
         FlashRegion code = new FlashRegion();
@@ -129,32 +161,12 @@ public class FlashTest {
                                         .withUnit(Unit.G_PER_REV)
                                         .withFormat(DataFormat.USHORT)
                                         .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)))
-                ).withTable(
-                        Table.builder()
-                                .withName("Base Ignition Timing - TGVs Open - AVCS Enabled")
-                                .withData(Series.builder()
-                                        .withName("Timing")
-                                        .withAddress(code, 0x000adcd0)
-                                        .withFormat(DataFormat.UBYTE)
-                                        .withUnit(Unit.DEGREES)
-                                        .withScale(Scale.builder().withOperations(
-                                                ScalingOperation.from(ArithmeticOperation.SUBTRACT, 0x20),
-                                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
-                                        )))
-                                .withAxis(Y, Series.builder()
-                                        .withName("RPM")
-                                        .withAddress(code, 0x000a88b4)
-                                        .withLength(0x16)
-                                        .withFormat(DataFormat.USHORT)
-                                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)))
-                                .withAxis(X, Series.builder()
-                                        .withName("Load")
-                                        .withAddress(code, 0x000a89bc)
-                                        .withLength(0x1E)
-                                        .withUnit(Unit.G_PER_REV)
-                                        .withFormat(DataFormat.USHORT)
-                                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)))
-                ).build();
+                )
+                .withTable(ignitionTimingCompTable(code, "1st", 0x000a8bf0, 0x000a7478, 0x000a7470))
+                .withTable(ignitionTimingCompTable(code, "2nd", 0x000a8bfc, 0x000a7478, 0x000a7470))
+                .withTable(ignitionTimingCompTable(code, "3rd", 0x000a8c08, 0x000a7478, 0x000a7470))
+                .withTable(ignitionTimingCompTable(code, "4th", 0x000a8c14, 0x000a7478, 0x000a7470))
+                .withTable(ignitionTimingCompTable(code, "5th", 0x000a8c20, 0x000a7478, 0x000a7470)).build();
     }
 
     @Test
