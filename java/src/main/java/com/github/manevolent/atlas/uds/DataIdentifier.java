@@ -98,4 +98,11 @@ public enum DataIdentifier {
     public String text() {
         return text;
     }
+
+    public int collapse() {
+        if (begin != end) {
+            throw new IllegalArgumentException("Cannot collapse this DID: " + name());
+        }
+        return begin;
+    }
 }

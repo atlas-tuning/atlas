@@ -20,6 +20,11 @@ public class UDSWriteDataByIDRequest extends UDSRequest<UDSWriteDataByIDResponse
         this.data = data;
     }
 
+    public UDSWriteDataByIDRequest(DataIdentifier id, byte[] data) {
+        this.did = id.collapse();
+        this.data = data;
+    }
+
     public UDSWriteDataByIDRequest() {
 
     }

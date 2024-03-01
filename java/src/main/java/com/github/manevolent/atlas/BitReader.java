@@ -174,6 +174,12 @@ public class BitReader {
         return remaining;
     }
 
+    public byte[] readBytes(int number) throws IOException {
+        byte[] data = new byte[number];
+        read(data);
+        return data;
+    }
+
     public int available() throws IOException {
         return is.available();
     }
