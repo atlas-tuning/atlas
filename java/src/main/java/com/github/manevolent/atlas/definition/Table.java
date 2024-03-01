@@ -86,7 +86,7 @@ public class Table {
             writeCell.accept("");
 
             for (int x_index = 0; x_index < x.getLength(); x_index ++) {
-                writeCell.accept(Float.toString(x.get(x_index)));
+                writeCell.accept(String.format("%." + rounding_precision + "f", x.get(x_index)));
             }
 
             writer.write("\r\n");
@@ -94,7 +94,7 @@ public class Table {
             if (axes.size() == 2) {
                 for (int y_index = 0; y_index < y.getLength(); y_index ++) {
                     // Write the row header
-                    writeCell.accept(Float.toString(y.get(y_index)));
+                    writeCell.accept(String.format("%." + rounding_precision + "f", y.get(y_index)));
                     for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                         // Write the cell data
                         writeCell.accept(String.format("%." + rounding_precision + "f", getCell(x_index, y_index)));
