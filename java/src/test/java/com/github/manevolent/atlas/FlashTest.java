@@ -63,7 +63,7 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.MULTIPLY, 10.0f);
 
     /**
-     * Unit is kPa
+     * Unit is PSI
      */
     private static final Scale.Builder boostTargetPressureScale_RelSL_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.ADD, 0x6A6)
@@ -71,6 +71,18 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.RSHIFT, 8)
             .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
             .withOperation(ArithmeticOperation.SUBTRACT, (float) 14.70);
+
+    private static final Scale.Builder absolutePressure_16bit = Scale.builder()
+            .withOperation(ArithmeticOperation.RSHIFT, 8)
+            .withOperation(ArithmeticOperation.DIVIDE, 6.895f);
+
+    /**
+     * Unit is percent
+     */
+    private static final Scale.Builder boostTargetCompensation_8bit = Scale.builder()
+            .withOperation(ArithmeticOperation.SUBTRACT, 0x55)
+            .withOperation(ArithmeticOperation.DIVIDE, 0x50)
+            .withOperation(ArithmeticOperation.MULTIPLY, 100);
 
     /**
      * Unit is degrees celsius
@@ -534,7 +546,7 @@ public class FlashTest {
                 .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup Mode 4", 0x000c8654, true, 0x000c83e4, 0x000c82f8))
                 .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup Default", 0x000c83c4, false, 0x000c83b4, 0x000c82f8))
                 .withTable(Table.builder()
-                        .withName("Boost Target - Relative Sea Level")
+                        .withName("Boost Target - Main")
                         .withData(Series.builder()
                                 .withName("Boost (rel. sea level)")
                                 .withAddress(code, 0x0002cda8)
@@ -556,6 +568,48 @@ public class FlashTest {
                                 .withUnit(Unit.NM)
                                 .withFormat(DataFormat.USHORT)
                                 .withScale(req_torque_16bit)))
+                .withTable(Table.builder()
+                        .withName("Boost Target - IAT Compensation")
+                        .withData(Series.builder()
+                                .withName("Percent")
+                                .withAddress(code, 0x0002a318)
+                                .withScale(boostTargetCompensation_8bit)
+                                .withFormat(DataFormat.UBYTE)
+                                .withUnit(Unit.PERCENT)
+                        )
+                        .withAxis(X, Series.builder()
+                                .withName("Intake Air Temperature")
+                                .withAddress(code, 0x00036e6c)
+                                .withLength(0x10)
+                                .withFormat(DataFormat.UBYTE)
+                                .withScale(Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 50))
+                                .withUnit(Unit.CELSIUS))
+                )
+                .withTable(Table.builder()
+                        .withName("Boost Target - Barometric Compensation")
+                        .withData(Series.builder()
+                                .withName("Percent")
+                                .withAddress(code, 0x0002c594)
+                                .withScale(boostTargetCompensation_8bit)
+                                .withFormat(DataFormat.UBYTE)
+                                .withUnit(Unit.PERCENT)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002afa8)
+                                .withLength(0xB)
+                                .withFormat(DataFormat.USHORT)
+                                .withUnit(Unit.RPM)
+                                .withScale(rpm_16bit))
+                        .withAxis(X, Series.builder()
+                                .withName("Barometric Pressure")
+                                .withAddress(code, 0x0002afc0)
+                                .withLength(0xB)
+                                .withScale(absolutePressure_16bit)
+                                .withFormat(DataFormat.USHORT)
+                                .withUnit(Unit.PSI)
+                        )
+                )
                 .build();
     }
 
