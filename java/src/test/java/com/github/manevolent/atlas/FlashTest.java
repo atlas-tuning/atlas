@@ -116,7 +116,7 @@ public class FlashTest {
                                             directInjectionFuelPressureScale_8bit)
                         .withUnit(Unit.KPA)
                 )
-                .withAxis(X, Series.builder()
+                .withAxis(Y, Series.builder()
                         .withName("Coolant Temperature")
                         .withAddress(code, coolantTempAddress)
                         .withLength(0x8)
@@ -124,7 +124,7 @@ public class FlashTest {
                         .withFormat(DataFormat.USHORT)
                         .withScale(coolantTemp16BitScale)
                 )
-                .withAxis(Y, Series.builder()
+                .withAxis(X, Series.builder()
                     .withName("RPM")
                     .withAddress(code, rpmAddress)
                     .withLength(0x4)
@@ -325,7 +325,7 @@ public class FlashTest {
     public void test_WriteCsvs() throws IOException {
         Rom rom = newRom();
         for (Table table : rom.getTables()) {
-            table.writeCsv(new FileOutputStream(table.getName() + ".csv"));
+            table.writeCsv(new FileOutputStream("tables/" + testRomName + "/" + table.getName() + ".csv"));
         }
     }
 
