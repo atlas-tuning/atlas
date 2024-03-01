@@ -34,6 +34,32 @@ ROM:
             - 0xb740
   SubaruDIT:
     CalibrationID: 0xBE1DA813
+    Arbitration:
+      - Name: 'Broadcast'
+        SendID: 0x7DF
+      - Name: 'CGW'
+        SendID: 0x763
+        ReplyID: 0x76B
+      - Name: 'ECU'
+        SendID: 0x7A2
+        ReplyID: 0x7AA
+    SecurityAccess:
+      - Name: 'Flash'
+        Level: 1
+        Type: 'AES'
+        Key: 0x667E3078219976B4EDF3D43BD1D8FFC9
+      - Name: 'Memory'
+        Level: 3
+        Type: 'AES'
+        Key: 0x469A20AB308D5CA64BCD5BBE535BD85F
+      - Name: 'Unknown'
+        Level: 5
+        Type: 'AES'
+        Key: 0xE8CC52D5D8F20706424813126FA7ABDD
+      - Name: 'CGW'
+        Level: 7
+        Type: 'AES'
+        Key: 0x7692E7932F23A901568DDFA5FF580625
     Tables:
       - Name: 'Ignition Timing'
         Address: 0x00000000
