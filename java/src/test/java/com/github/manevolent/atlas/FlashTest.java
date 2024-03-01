@@ -302,6 +302,69 @@ public class FlashTest {
         };
     }
 
+    private static Table.Builder ignitionTimingCoolantCompTable(FlashRegion code,
+                                                                   String name,
+                                                                   int dataAddress,
+                                                                   DataFormat dataFormat,
+                                                                   Scale.Builder dataScale,
+                                                                   int coolantAddress) {
+        return Table.builder()
+                .withName("Ignition Timing Compensation Coolant - " + name)
+                .withData(Series.builder()
+                        .withName("Timing")
+                        .withAddress(code, dataAddress)
+                        .withFormat(dataFormat)
+                        .withUnit(Unit.DEGREES)
+                        .withScale(dataScale)
+                )
+                .withAxis(X, Series.builder()
+                        .withName("Coolant Temperature")
+                        .withUnit(Unit.CELSIUS)
+                        .withAddress(code, coolantAddress)
+                        .withLength(0x10)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(coolantTemp16BitScale)
+                );
+    }
+
+    private static Table.Builder ignitionTimingCoolantActivationTable(FlashRegion code,
+                                                                      String name,
+                                                                      int activationDataAddress,
+                                                                      DataFormat activationFormat,
+                                                                      Scale.Builder activationScale,
+                                                                      int activationRpmAddress,
+                                                                      int rpmLength,
+                                                                      DataFormat rpmFormat,
+                                                                      Scale.Builder rpmScale,
+                                                                      int activationCalcLoadAddress,
+                                                                      int calcLoadLength,
+                                                                      DataFormat calcLoadFormat,
+                                                                      Scale.Builder calcLoadScale) {
+        return Table.builder()
+                .withName("Ignition Timing Compensation Coolant Activation - " + name)
+                .withData(Series.builder()
+                        .withName("Activation")
+                        .withAddress(code, activationDataAddress)
+                        .withFormat(activationFormat)
+                        .withUnit(Unit.PERCENT)
+                        .withScale(activationScale)
+                )
+                .withAxis(Y, Series.builder()
+                        .withName("RPM")
+                        .withAddress(code, activationRpmAddress)
+                        .withLength(rpmLength)
+                        .withFormat(rpmFormat)
+                        .withScale(rpmScale))
+                .withAxis(X, Series.builder()
+                        .withName("Load")
+                        .withAddress(code, activationCalcLoadAddress)
+                        .withLength(calcLoadLength)
+                        .withUnit(Unit.G_PER_REV)
+                        .withFormat(calcLoadFormat)
+                        .withScale(calcLoadScale)
+                );
+    }
+
     private static Table.Builder[] ignitionTimingCoolantCompTables(FlashRegion code,
                                                                String name,
                                                                int dataAddress,
@@ -310,48 +373,18 @@ public class FlashTest {
                                                                int activationRpmAddress,
                                                                int activationCalcLoadAddress) {
         return new Table.Builder[] {
-                Table.builder()
-                        .withName("Ignition Timing Compensation Coolant - " + name)
-                        .withData(Series.builder()
-                                .withName("Timing")
-                                .withAddress(code, dataAddress)
-                                .withFormat(DataFormat.USHORT)
-                                .withUnit(Unit.DEGREES)
-                                .withScale(Scale.builder().withOperations(
-                                        ScalingOperation.from(ArithmeticOperation.DIVIDE, 10)
-                                ))
-                        )
-                        .withAxis(X, Series.builder()
-                        .withName("Coolant Temperature")
-                        .withUnit(Unit.CELSIUS)
-                        .withAddress(code, coolantAddress)
-                        .withLength(0x10)
-                        .withFormat(DataFormat.USHORT)
-                        .withScale(coolantTemp16BitScale)
-                ),
-                Table.builder()
-                        .withName("Ignition Timing Compensation Coolant Activation - " + name)
-                        .withData(Series.builder()
-                                .withName("Activation")
-                                .withAddress(code, activationDataAddress)
-                                .withFormat(DataFormat.USHORT)
-                                .withUnit(Unit.PERCENT)
-                                .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 100f))
-                        )
-                        .withAxis(Y, Series.builder()
-                                .withName("RPM")
-                                .withAddress(code, activationRpmAddress)
-                                .withLength(0x16)
-                                .withFormat(DataFormat.UBYTE)
-                                .withScale(rpm_8bit_2))
-                        .withAxis(X, Series.builder()
-                            .withName("Load")
-                            .withAddress(code, activationCalcLoadAddress)
-                            .withLength(0x1E)
-                            .withUnit(Unit.G_PER_REV)
-                            .withFormat(DataFormat.UBYTE)
-                            .withScale(calculated_load_8bit)
-                        )
+                ignitionTimingCoolantCompTable(code, name,
+                        dataAddress, DataFormat.USHORT, Scale.builder().withOperations(
+                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 10)
+                        ),
+                        coolantAddress),
+                ignitionTimingCoolantActivationTable(code, name,
+                        activationDataAddress,
+                        DataFormat.USHORT,
+                        Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 100f),
+                        activationRpmAddress, 0x16, DataFormat.UBYTE, rpm_8bit_2,
+                        activationCalcLoadAddress, 0x1E, DataFormat.UBYTE, calculated_load_8bit
+                )
         };
     }
 
@@ -422,6 +455,23 @@ public class FlashTest {
                 //Ignition timing compensation by coolant temperature
                 .withTables(ignitionTimingCoolantCompTables(code, "TGVs Closed", 0x000a7e9c, 0x00030a68, 0x000abde0, 0x000a8b34, 0x000a8b6c))
                 .withTables(ignitionTimingCoolantCompTables(code, "TGVs Open", 0x000a7ebc, 0x00030a68, 0x000ac308, 0x000a8b34, 0x000a8b6c))
+                .withTable(ignitionTimingCoolantActivationTable(code, "Cold Start - TGVs Closed",
+                        0x000a9490,
+                        DataFormat.UBYTE,
+                        Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x80).withOperation(ArithmeticOperation.DIVIDE, 0xFF).withOperation(ArithmeticOperation.MULTIPLY, 100),
+                        0x000a8888, 0x16, DataFormat.USHORT, rpm_16bit,
+                        0x000a797c, 0x10, DataFormat.USHORT, calculated_load_16bit))
+                .withTable(ignitionTimingCoolantActivationTable(code, "Cold Start - TGVs Open",
+                        0x000a95f0,
+                        DataFormat.UBYTE,
+                        Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x80).withOperation(ArithmeticOperation.DIVIDE, 0xFF).withOperation(ArithmeticOperation.MULTIPLY, 100),
+                        0x000a8888, 0x16, DataFormat.USHORT, rpm_16bit,
+                        0x000a95f0, 0x10, DataFormat.USHORT, calculated_load_16bit))
+                .withTable(ignitionTimingCoolantCompTable(code, "Cold Start",
+                        0x000a7b2c,
+                        DataFormat.UBYTE,
+                        Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x80).withOperation(ArithmeticOperation.DIVIDE, 2),
+                        0x000a7b0c))
 
                 // Fuel pressure
                 .withTable(Table.builder()
