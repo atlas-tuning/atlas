@@ -21,6 +21,14 @@ public class UDSReadDataByIDRequest extends UDSRequest {
 
     }
 
+    public int[] getDids() {
+        return dids;
+    }
+
+    public void setDids(int[] dids) {
+        this.dids = dids;
+    }
+
     @Override
     public UDSFrameType getType() {
         return UDSFrameType.READ_DATA_BY_ID;

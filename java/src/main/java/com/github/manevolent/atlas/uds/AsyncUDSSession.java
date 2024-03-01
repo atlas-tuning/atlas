@@ -30,11 +30,13 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         }
     }
 
-    protected UDSFrameReader reader() throws IOException {
+    public UDSFrameReader reader() throws IOException {
+        ensureInitialized();
         return reader;
     }
 
-    protected UDSFrameWriter writer() throws IOException {
+    public UDSFrameWriter writer() throws IOException {
+        ensureInitialized();
         return new UDSFrameWriter(new ISOTPFrameWriter(device.writer()));
     }
 
@@ -60,6 +62,10 @@ public class AsyncUDSSession extends Thread implements UDSSession {
 
     public UDSResponse handleNext() throws IOException {
         UDSFrame frame = reader().read();
+        if (frame == null) {
+            return null;
+        }
+
         if (frame.getBody() instanceof UDSResponse) {
             if (frame.getBody() instanceof UDSNegativeResponse) {
                 UDSNegativeResponse negativeResponse = (UDSNegativeResponse) frame.getBody();
@@ -94,8 +100,7 @@ public class AsyncUDSSession extends Thread implements UDSSession {
             throw new IllegalStateException("There is an outstanding transaction for SID " + (serviceId & 0xFF));
         }
 
-        ensureInitialized();
-        writer.write(new UDSFrame(request));
+        writer().write(new UDSFrame(request));
         return transaction;
     }
 }

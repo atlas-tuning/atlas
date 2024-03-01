@@ -24,7 +24,7 @@ public class ISOTPSingleFrame extends ISOTPDataSubFrame implements Frame {
     @Override
     public void read(BitReader reader) throws IOException {
         byte sz = (byte) reader.read(4);
-        byte[] data = new byte[sz];
+        this.data = new byte[sz];
         reader.read(data);
     }
 

@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.can;
 
 import com.github.manevolent.atlas.BitReader;
+import com.github.manevolent.atlas.Frame;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -12,12 +13,17 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
     /**
      * "ar5" in ASCII
      */
-    private static final byte[] HEADER = new byte[] {
+    private static final byte[] READ_DATA_HEADER = new byte[] {
             0x61,
             0x72,
             0x35
     };
 
+    private static final byte[] OK_HEADER = new byte[] {
+            0x61,
+            0x72,
+            0x6F
+    };
     private final InputStream inputStream;
 
     public OpenPort2FrameReader(InputStream inputStream) {
@@ -32,7 +38,7 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
     @Override
     public CanFrame read() throws IOException {
         // Expect header
-        byte[] tactrixHeader = new byte[HEADER.length];
+        byte[] tactrixHeader = new byte[READ_DATA_HEADER.length];
         try {
             int read = inputStream.read(tactrixHeader);
             if (read < 0) {
@@ -44,21 +50,24 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
             return null;
         }
 
-        if (!Arrays.equals(tactrixHeader, HEADER)) {
-            throw new IllegalArgumentException("Unexpected header: " + Arrays.toString(tactrixHeader));
+        if (Arrays.equals(tactrixHeader, READ_DATA_HEADER)) {
+            int size = inputStream.read();
+
+            byte[] header = new byte[5];
+            inputStream.read(header);
+
+            int arbitrationId = (int) new BitReader(inputStream.readNBytes(4)).read(32);
+
+            byte[] body = new byte[size - header.length - 4];
+            inputStream.read(body);
+
+            return new OpenPort2Frame(header, arbitrationId, body);
+        } else if (Arrays.equals(tactrixHeader, OK_HEADER)) {
+            while ((char) inputStream.read() != '\n');
+            return null;
+        } else {
+            throw new IllegalArgumentException("Unexpected header: " + Frame.toHexString(tactrixHeader));
         }
-
-        int size = inputStream.read();
-
-        byte[] header = new byte[5];
-        inputStream.read(header);
-
-        int arbitrationId = (int) new BitReader(inputStream.readNBytes(4)).read(32);
-
-        byte[] body = new byte[size - header.length - 4];
-        inputStream.read(body);
-
-        return new OpenPort2Frame(header, arbitrationId, body);
     }
 
     private static class OpenPort2Frame extends CanFrame {

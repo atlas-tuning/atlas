@@ -19,9 +19,14 @@ public class ISOTPFrameReader implements FrameReader<ISOTPFrame> {
     public ISOTPFrame read() throws IOException {
         CanFrame canFrame;
         while ((canFrame = canReader.read()) != null) {
+            if (canFrame.getLength() <= 0) {
+                continue;
+            }
+
             int id = canFrame.getArbitrationId();
             ISOTPPeer peer = peers.computeIfAbsent(id, ISOTPPeer::new);
             ISOTPWireFrame wireFrame = new ISOTPWireFrame();
+            wireFrame.read(canFrame.bitReader());
             ISOTPFrame fullFrame = peer.handleFrame(wireFrame.getSubFrame());
             if (fullFrame != null) {
                 return fullFrame;

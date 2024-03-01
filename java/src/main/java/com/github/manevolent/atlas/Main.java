@@ -21,8 +21,9 @@ public class Main {
                 new IllegalArgumentException("No can devices found"));
         CanDevice device = deviceDescriptor.createDevice();
         AsyncUDSSession session = new AsyncUDSSession(device);
+        session.start();
 
-        try (var transaction = session.request(new UDSReadDataByIDRequest(new int[] { 0x00 }))) {
+        try (var transaction = session.request(new UDSReadDataByIDRequest(new int[] { 0x1010 }))) {
             System.out.println(transaction.get().toHexString());
         }
     }

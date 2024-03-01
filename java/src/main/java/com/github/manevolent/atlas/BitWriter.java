@@ -15,7 +15,7 @@ public class BitWriter extends OutputStream implements AutoCloseable {
 
     public void write(boolean bit) throws IOException {
         if (bit) {
-            buffer = (byte) (buffer | (0x1<<offs));
+            buffer = (byte) (buffer | (0x1<<(7 - offs)));
         }
 
         offs ++;
@@ -36,7 +36,7 @@ public class BitWriter extends OutputStream implements AutoCloseable {
     public void writeNibble(byte nibble) throws IOException {
         boolean[] bits = new boolean[4];
         for (int n = 0; n < bits.length; n ++) {
-            bits[n] = (nibble>>n & 0x1) == 0x1;
+            bits[bits.length - n - 1] = (nibble>>n & 0x1) == 0x1;
         }
         write(bits);
     }
@@ -46,37 +46,36 @@ public class BitWriter extends OutputStream implements AutoCloseable {
         byte b = (byte) (0xFF & i);
         boolean[] bits = new boolean[8];
         for (int n = 0; n < bits.length; n ++) {
-            bits[n] = (b>>n & 0x1) == 0x1;
+            bits[bits.length - n - 1] = (b>>n & 0x1) == 0x1;
         }
         write(bits);
     }
 
     public void writeShort(short s) throws IOException {
-        write((byte) (s & 0xFF));
         write((byte) (s>>8 & 0xFF));
+        write((byte) (s & 0xFF));
     }
 
     public void writeInt(int i) throws IOException {
-        write((byte) (i & 0xFF));
-        write((byte) (i>>8 & 0xFF));
-        write((byte) (i>>16 & 0xFF));
         write((byte) (i>>24 & 0xFF));
+        write((byte) (i>>16 & 0xFF));
+        write((byte) (i>>8 & 0xFF));
+        write((byte) (i & 0xFF));
     }
 
     public void writeLong(long l) throws IOException {
-        write((byte) (l & 0xFF));
-        write((byte) (l>>8 & 0xFF));
-        write((byte) (l>>16 & 0xFF));
-        write((byte) (l>>24 & 0xFF));
-        write((byte) (l>>32 & 0xFF));
-        write((byte) (l>>48 & 0xFF));
         write((byte) (l>>56 & 0xFF));
+        write((byte) (l>>48 & 0xFF));
+        write((byte) (l>>32 & 0xFF));
+        write((byte) (l>>16 & 0xFF));
+        write((byte) (l>>8 & 0xFF));
+        write((byte) (l & 0xFF));
     }
 
     public void writeLSB(int data, int nbits) throws IOException {
         boolean[] bits = new boolean[nbits];
         for (int n = 0; n < bits.length; n ++) {
-            bits[n] = (data>>n & 0x1) == 0x1;
+            bits[bits.length - n - 1] = (data>>n & 0x1) == 0x1;
         }
         write(bits);
     }
