@@ -33,7 +33,7 @@ public class SubaruClearFlashCommand extends UDSRoutineCommand {
                     response.getRoutineId());
         }
 
-        if (!Arrays.equals(response.getData(), new byte[0])) {
+        if (!Arrays.equals(response.getData(), new byte[1])) {
             throw new IllegalStateException("Unexpected clear flash response: " +
                     Frame.toHexString(response.getData()));
         }
