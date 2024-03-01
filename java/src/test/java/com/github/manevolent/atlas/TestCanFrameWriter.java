@@ -9,12 +9,12 @@ import java.io.IOException;
 public class TestCanFrameWriter implements CanFrameWriter {
     private ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
-    @Override
-    public void write(CanFrame frame) throws IOException {
-        baos.write(frame.getData());
-    }
-
     public byte[] getWritten() {
         return baos.toByteArray();
+    }
+
+    @Override
+    public void write(Address address, CanFrame frame) throws IOException {
+        baos.write(frame.getData());
     }
 }

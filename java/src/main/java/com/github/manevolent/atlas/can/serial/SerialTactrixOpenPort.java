@@ -55,7 +55,7 @@ public class SerialTactrixOpenPort implements CanDevice {
                 }
 
                 int channelId = 5;
-                int flags = 0x00000800;
+                int flags = 0x00000800; // CAN_ID_BOTH
                 int baud = 500_000;
                 os.write(String.format("ato%d %d %d 0\r\n",
                                 channelId,
@@ -68,11 +68,25 @@ public class SerialTactrixOpenPort implements CanDevice {
                     throw new IllegalStateException("Unexpected response: " + answer);
                 }
 
-                os.write(String.format("atf%d 1 64 4\r\n", channelId)
-                        .getBytes(StandardCharsets.US_ASCII));
+                // PASS_FILTER
+                // Allows matching messages into the receive queue. This filter type is only valid on non-ISO 15765 channels
+                int filterType = 0x01;
+
+                // ISO15765_FRAME_PAD
+                // pad all flow controlled messages to a full CAN frame using zeroes
+                int txFlags = 0x00000040;
+
+                int maskSize = 4;
+                os.write(String.format("atf%d %d %d %d\r\n",
+                                channelId,
+                                filterType,
+                                txFlags,
+                                maskSize
+                        ).getBytes(StandardCharsets.US_ASCII));
 
                 byte[] mask = new byte[] { 0x00, 0x00, 0x00, 0x00 };
                 byte[] pattern = new byte[] { 0x00, 0x00, 0x00, 0x00 };
+
                 os.write(mask);
                 os.write(pattern);
                 os.flush();

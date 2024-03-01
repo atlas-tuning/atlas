@@ -4,10 +4,11 @@ import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
+import com.github.manevolent.atlas.uds.response.UDSTransferResponse;
 
 import java.io.IOException;
 
-public class UDSTransferRequest extends UDSRequest implements Frame {
+public class UDSTransferRequest extends UDSRequest<UDSTransferResponse> implements Frame {
     private int index;
     private int address;
     private byte[] data;

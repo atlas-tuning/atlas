@@ -1,33 +1,29 @@
 package com.github.manevolent.atlas.uds.request;
 
 import com.github.manevolent.atlas.BitReader;
+import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
-import com.github.manevolent.atlas.uds.response.UDSTesterPresentResponse;
+import com.github.manevolent.atlas.uds.response.UDSReadDTCInformationResponse;
 
 import java.io.IOException;
 
-public class UDSTesterPresentRequest extends UDSRequest<UDSTesterPresentResponse> implements Frame {
-    private byte[] data;
+public class UDSReadDTCInformationRequest
+        extends UDSRequest<UDSReadDTCInformationResponse> implements Frame  {
 
     @Override
     public UDSFrameType getType() {
-        return UDSFrameType.TESTER_PRESENT;
-    }
-
-    @Override
-    public byte[] getData() {
-        return data;
+        return UDSFrameType.READ_DTC_INFORMATION;
     }
 
     @Override
     public void read(BitReader reader) throws IOException {
-        this.data = reader.readRemaining();
+
     }
 
     @Override
-    public String toString() {
-        return toHexString();
+    public void write(BitWriter writer) throws IOException {
+
     }
 }

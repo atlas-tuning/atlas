@@ -35,6 +35,12 @@ public enum UDSFrameType {
     CONTROL_DTC_SETTINGS(0x85, UDSControlDTCRequest.class,
             0xC5, UDSControlDTCResponse.class),
 
+    RESET_DTC_INFORMATION(0x14, UDSClearDTCInformationRequest.class,
+            0x54, UDSClearDTCInformationResponse.class),
+
+    READ_DTC_INFORMATION(0x19, UDSReadDTCInformationRequest.class,
+            0x59, UDSReadDTCInformationResponse.class),
+
     DOWNLOAD(0x34, UDSDownloadRequest.class,
             0x74, UDSDownloadResponse.class),
 

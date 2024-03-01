@@ -4,11 +4,12 @@ import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
+import com.github.manevolent.atlas.uds.response.UDSCommunicationControlResponse;
 
 import java.io.IOException;
 
 // See: https://embetronicx.com/tutorials/automotive/uds-protocol/diagnostics-and-communication-management/#Communication_Control
-public class UDSCommunicationControlRequest extends UDSRequest implements Frame {
+public class UDSCommunicationControlRequest extends UDSRequest<UDSCommunicationControlResponse> implements Frame {
     private int communicationType;
     private byte[] data;
 

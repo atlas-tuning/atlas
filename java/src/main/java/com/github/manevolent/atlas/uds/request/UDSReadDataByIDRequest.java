@@ -5,12 +5,13 @@ import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.uds.DataIdentifier;
 import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
+import com.github.manevolent.atlas.uds.response.UDSReadDataByIDResponse;
 
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
-public class UDSReadDataByIDRequest extends UDSRequest {
+public class UDSReadDataByIDRequest extends UDSRequest<UDSReadDataByIDResponse> {
     private int[] dids;
 
     public UDSReadDataByIDRequest(int[] dids) {

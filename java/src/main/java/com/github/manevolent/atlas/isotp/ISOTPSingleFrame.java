@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.isotp;
 
+import com.github.manevolent.atlas.Address;
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.Frame;
@@ -39,7 +40,7 @@ public class ISOTPSingleFrame extends ISOTPDataSubFrame implements Frame {
         return 0x0;
     }
 
-    public ISOTPFrame coalesce() {
-        return new ISOTPFrame(data);
+    public ISOTPFrame coalesce(Address address) {
+        return new ISOTPFrame(address, data);
     }
 }

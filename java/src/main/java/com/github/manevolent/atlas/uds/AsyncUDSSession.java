@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.uds;
 
+import com.github.manevolent.atlas.Address;
 import com.github.manevolent.atlas.can.CanDevice;
 import com.github.manevolent.atlas.isotp.ISOTPFrameReader;
 import com.github.manevolent.atlas.isotp.ISOTPFrameWriter;
@@ -37,7 +38,7 @@ public class AsyncUDSSession extends Thread implements UDSSession {
 
     public UDSFrameWriter writer() throws IOException {
         ensureInitialized();
-        return new UDSFrameWriter(new ISOTPFrameWriter(device.writer()));
+        return writer;
     }
 
     @Override
@@ -88,9 +89,10 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         }
     }
 
-    public UDSTransaction request(UDSRequest request) throws IOException {
+    public <T extends UDSResponse> UDSTransaction<T> request(Address destination, UDSRequest<T> request)
+            throws IOException {
         final byte serviceId = request.getServiceId();
-        UDSTransaction transaction = new UDSTransaction() {
+        UDSTransaction<T> transaction = new UDSTransaction<T>() {
             @Override
             public void close() {
                 AsyncUDSSession.this.activeTransactions.remove((serviceId & 0xFF), this);
@@ -100,7 +102,7 @@ public class AsyncUDSSession extends Thread implements UDSSession {
             throw new IllegalStateException("There is an outstanding transaction for SID " + (serviceId & 0xFF));
         }
 
-        writer().write(new UDSFrame(request));
+        writer().write(destination, new UDSFrame(request));
         return transaction;
     }
 }

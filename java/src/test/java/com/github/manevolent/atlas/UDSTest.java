@@ -20,7 +20,7 @@ public class UDSTest {
         TestCanFrameWriter writer = new TestCanFrameWriter();
         TestCanDevice testDevice = new TestCanDevice(writer);
         AsyncUDSSession session = new AsyncUDSSession(testDevice);
-        session.request(new UDSReadDataByIDRequest(new int[] { did }));
+        session.request(null, new UDSReadDataByIDRequest(new int[] { did }));
 
         byte[] written = writer.getWritten();
 

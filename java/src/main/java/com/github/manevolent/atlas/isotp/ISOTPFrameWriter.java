@@ -1,8 +1,10 @@
 package com.github.manevolent.atlas.isotp;
 
+import com.github.manevolent.atlas.Address;
 import com.github.manevolent.atlas.BasicFrame;
 
 import com.github.manevolent.atlas.FrameWriter;
+import com.github.manevolent.atlas.can.CanArbitrationId;
 import com.github.manevolent.atlas.can.CanFrame;
 
 import java.io.IOException;
@@ -15,7 +17,7 @@ public class ISOTPFrameWriter implements FrameWriter<BasicFrame> {
     }
 
     @Override
-    public void write(BasicFrame frame) throws IOException {
+    public void write(Address address, BasicFrame frame) throws IOException {
         if (frame.getLength() <= 0)
             throw new IllegalArgumentException("Empty frame");
 
@@ -50,7 +52,7 @@ public class ISOTPFrameWriter implements FrameWriter<BasicFrame> {
             CanFrame canFrame = new CanFrame();
             canFrame.setData(wireFrame.write());
 
-            canWriter.write(canFrame);
+            canWriter.write(address, canFrame);
         }
     }
 }

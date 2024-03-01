@@ -4,12 +4,23 @@ import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
+import com.github.manevolent.atlas.uds.response.UDSSecurityAccessResponse;
 
 import java.io.IOException;
 
-public class UDSSecurityAccessRequest extends UDSRequest implements Frame {
+public class UDSSecurityAccessRequest
+        extends UDSRequest<UDSSecurityAccessResponse> implements Frame {
     private int seed; // Supposed to be odd values
     private byte[] data; // Vendor-specific key
+
+    public UDSSecurityAccessRequest() {
+
+    }
+
+    public UDSSecurityAccessRequest(int seed, byte[] data) {
+        this.seed = seed;
+        this.data = data;
+    }
 
     @Override
     public UDSFrameType getType() {

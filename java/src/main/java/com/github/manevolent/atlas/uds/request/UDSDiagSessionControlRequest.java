@@ -4,11 +4,12 @@ import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.uds.DiagnosticSessionType;
 import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
+import com.github.manevolent.atlas.uds.response.UDSDiagSessionControlResponse;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-public class UDSDiagSessionControlRequest extends UDSRequest {
+public class UDSDiagSessionControlRequest extends UDSRequest<UDSDiagSessionControlResponse> {
     private int code;
 
     @Override

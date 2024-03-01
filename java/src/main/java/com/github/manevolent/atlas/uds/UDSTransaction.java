@@ -6,14 +6,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class UDSTransaction implements AutoCloseable {
-    private List<UDSResponse> responses = new ArrayList<>();
+public abstract class UDSTransaction<T extends UDSResponse> implements AutoCloseable {
+    private List<T> responses = new ArrayList<>();
     private UDSNegativeResponse exception;
 
     public UDSTransaction() {
     }
 
-    public void supply(UDSResponse response) {
+    public void supply(T response) {
         synchronized (this) {
             this.responses.add(response);
             this.notify();
@@ -27,7 +27,7 @@ public abstract class UDSTransaction implements AutoCloseable {
         }
     }
 
-    public UDSResponse get() throws IOException, InterruptedException {
+    public T get() throws IOException, InterruptedException {
         synchronized (this) {
             while (this.responses.isEmpty() && exception == null) {
                 this.wait();

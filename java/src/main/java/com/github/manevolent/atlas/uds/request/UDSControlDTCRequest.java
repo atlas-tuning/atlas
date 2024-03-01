@@ -5,11 +5,12 @@ import com.github.manevolent.atlas.uds.DTCControlMode;
 import com.github.manevolent.atlas.uds.DiagnosticSessionType;
 import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
+import com.github.manevolent.atlas.uds.response.UDSControlDTCResponse;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-public class UDSControlDTCRequest extends UDSRequest {
+public class UDSControlDTCRequest extends UDSRequest<UDSControlDTCResponse> {
     private int code;
 
     @Override

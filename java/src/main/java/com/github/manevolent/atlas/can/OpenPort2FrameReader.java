@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.can;
 
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
+import net.codecrete.usb.linux.IO;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -17,6 +18,15 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
             0x61,
             0x72,
             0x35
+    };
+
+    /**
+     * "are" in ASCII
+     */
+    private static final byte[] READ_DATA_HEADER_ERROR = new byte[] {
+            0x61,
+            0x72,
+            0x65
     };
 
     private static final byte[] OK_HEADER = new byte[] {
@@ -53,18 +63,32 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
         if (Arrays.equals(tactrixHeader, READ_DATA_HEADER)) {
             int size = inputStream.read();
 
+            byte[] frame = inputStream.readNBytes(size);
+            BitReader frameReader = new BitReader(frame);
+
             byte[] header = new byte[5];
-            inputStream.read(header);
-
-            int arbitrationId = (int) new BitReader(inputStream.readNBytes(4)).read(32);
-
-            byte[] body = new byte[size - header.length - 4];
-            inputStream.read(body);
+            frameReader.read(header);
+            int arbitrationId = frameReader.readInt();
+            byte[] body = frameReader.readRemaining();
 
             return new OpenPort2Frame(header, arbitrationId, body);
         } else if (Arrays.equals(tactrixHeader, OK_HEADER)) {
-            while ((char) inputStream.read() != '\n');
+            while ((char) inputStream.read() != '\n') ;
             return null;
+        } else if (Arrays.equals(tactrixHeader, READ_DATA_HEADER_ERROR)) {
+            StringBuilder sb = new StringBuilder();
+            while (true) {
+                char c = (char) inputStream.read();
+                if (c == ' ') continue;
+                if (c == '\r') continue;
+                if (c == '\n') break;
+
+                sb.append(c);
+            }
+            int code = Integer.parseInt(sb.toString());
+            J2534Error error = Arrays.stream(J2534Error.values()).filter(err -> err.getCode() == code)
+                    .findFirst().orElse(null);
+            throw new IOException(code + "/" + error);
         } else {
             throw new IllegalArgumentException("Unexpected header: " + Frame.toHexString(tactrixHeader));
         }

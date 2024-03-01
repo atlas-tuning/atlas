@@ -1,5 +1,7 @@
 package com.github.manevolent.atlas.can;
 
+import com.github.manevolent.atlas.Address;
+
 import java.io.IOException;
 
 import java.io.OutputStream;
@@ -9,7 +11,7 @@ import java.nio.charset.StandardCharsets;
 // Much appreciation for https://github.com/brandonros/rust-tactrix-openport/blob/master/src/lib.rs
 public class OpenPort2FrameWriter implements CanFrameWriter, AutoCloseable {
     private static final byte channelId = 5;
-    private static final int txFlags = 0x00;
+    private static final int txFlags = 0x00; // CAN_11BIT_ID
 
     private final OutputStream outputStream;
 
@@ -23,15 +25,25 @@ public class OpenPort2FrameWriter implements CanFrameWriter, AutoCloseable {
     }
 
     @Override
-    public void write(CanFrame frame) throws IOException {
+    public void write(Address address, CanFrame frame) throws IOException {
         if (frame.getLength() > 8) {
             throw new IllegalArgumentException("Unexpected CAN frame length: " + frame.getLength() + " > 8");
         }
 
-        String command = String.format("att%d %d %d\r\n", channelId, 4 + frame.getLength(), txFlags);
+        String command = String.format("att%d %d %d\r\n",
+                channelId,
+                4 + 8, // 8 bytes CAN + 4 bytes arb ID
+                txFlags
+        );
         outputStream.write(command.getBytes(StandardCharsets.US_ASCII));
 
-        int arbitrationId = frame.getArbitrationId();
+        int arbitrationId;
+        if (address instanceof CanArbitrationId) {
+            arbitrationId = ((CanArbitrationId) address).getArbitrationId();
+        } else {
+            arbitrationId = frame.getArbitrationId();
+        }
+
         byte[] arbitrationIdBytes = new byte[4];
         arbitrationIdBytes[0] = (byte) ((arbitrationId >> 24) & 0xFF);
         arbitrationIdBytes[1] = (byte) ((arbitrationId >> 16) & 0xFF);

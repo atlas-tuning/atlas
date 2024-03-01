@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.uds;
 
+import com.github.manevolent.atlas.Address;
 import com.github.manevolent.atlas.BasicFrame;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.FrameWriter;
@@ -14,7 +15,7 @@ public class UDSFrameWriter implements FrameWriter<UDSFrame> {
     }
 
     @Override
-    public void write(UDSFrame frame) throws IOException {
-        transport.write(BasicFrame.from(frame));
+    public void write(Address address, UDSFrame frame) throws IOException {
+        transport.write(address, BasicFrame.from(frame));
     }
 }
