@@ -28,7 +28,7 @@ public class OpenPort2FrameWriter implements CanFrameWriter, AutoCloseable {
             throw new IllegalArgumentException("Unexpected CAN frame length: " + frame.getLength() + " > 8");
         }
 
-        String command = String.format("att%d %d %d\r\n", channelId, frame.getLength(), txFlags);
+        String command = String.format("att%d %d %d\r\n", channelId, 4 + frame.getLength(), txFlags);
         outputStream.write(command.getBytes(StandardCharsets.US_ASCII));
 
         int arbitrationId = frame.getArbitrationId();
