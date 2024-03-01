@@ -7,9 +7,11 @@ import java.io.IOException;
 
 public class UDSFrameReader implements FrameReader<UDSFrame> {
     private final FrameReader<?> transport;
+    private final UDSProtocol protocol;
 
-    public UDSFrameReader(FrameReader<?> transport) {
+    public UDSFrameReader(FrameReader<?> transport, UDSProtocol protocol) {
         this.transport = transport;
+        this.protocol = protocol;
     }
 
     @Override
@@ -18,7 +20,7 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
         if (frame == null) {
             return null;
         }
-        UDSFrame udsFrame = new UDSFrame();
+        UDSFrame udsFrame = new UDSFrame(protocol);
         try {
             udsFrame.read(frame.bitReader());
         } catch (Exception ex) {

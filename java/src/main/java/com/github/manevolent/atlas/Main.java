@@ -9,7 +9,11 @@ import com.github.manevolent.atlas.can.serial.SerialTactrixOpenPort;
 import com.github.manevolent.atlas.isotp.ISOTPFrame;
 import com.github.manevolent.atlas.isotp.ISOTPFrameReader;
 import com.github.manevolent.atlas.subaru.SubaruDITCommands;
+import com.github.manevolent.atlas.subaru.SubaruProtocols;
 import com.github.manevolent.atlas.uds.AsyncUDSSession;
+import com.github.manevolent.atlas.uds.UDSFrame;
+import com.github.manevolent.atlas.uds.UDSFrameReader;
+import com.github.manevolent.atlas.uds.UDSProtocol;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -27,7 +31,8 @@ public class Main {
         CanDeviceDescriptor deviceDescriptor = devices.stream().findFirst().orElseThrow(() ->
                 new IllegalArgumentException("No can devices found"));
         CanDevice device = deviceDescriptor.createDevice();
-        AsyncUDSSession session = new AsyncUDSSession(device);
+        UDSProtocol protocol = UDSProtocol.STANDARD;
+        AsyncUDSSession session = new AsyncUDSSession(device, protocol);
         session.start();
 
         boolean isIgnitionOn = SubaruDITCommands.IGNITION_ON.execute(session);
@@ -42,11 +47,11 @@ public class Main {
 
         CanFrameReader canReader = new OpenPort2FrameReader(new FileInputStream(file));
         ISOTPFrameReader isotpReader = new ISOTPFrameReader(canReader);
-        ISOTPFrame frame;
-
+        UDSFrameReader udsReader = new UDSFrameReader(isotpReader, SubaruProtocols.DIT);
+        UDSFrame frame;
         while (true) {
             try {
-                frame = isotpReader.read();
+                frame = udsReader.read();
             } catch (IOException ex) {
                 ex.printStackTrace();
                 continue;
@@ -56,7 +61,7 @@ public class Main {
                 break;
             }
 
-            System.out.println(frame.getAddress() + ": " + frame.toString());
+            System.out.println(frame.toString());
         }
     }
 

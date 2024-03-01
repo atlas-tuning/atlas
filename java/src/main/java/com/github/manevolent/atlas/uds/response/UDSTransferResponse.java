@@ -1,18 +1,12 @@
 package com.github.manevolent.atlas.uds.response;
 
 import com.github.manevolent.atlas.BitReader;
-import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSResponse;
 
 import java.io.IOException;
 
 public class UDSTransferResponse extends UDSResponse {
     private int index;
-
-    @Override
-    public UDSFrameType getType() {
-        return UDSFrameType.TRANSFER;
-    }
 
     @Override
     public void read(BitReader reader) throws IOException {

@@ -2,7 +2,6 @@ package com.github.manevolent.atlas.uds.response;
 
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
-import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSResponse;
 
 import java.io.IOException;
@@ -11,11 +10,6 @@ import java.io.IOException;
 public class UDSCommunicationControlResponse extends UDSResponse implements Frame {
     private int communicationType;
     private byte[] data;
-
-    @Override
-    public UDSFrameType getType() {
-        return UDSFrameType.COMMUNICATION_CONTROL;
-    }
 
     @Override
     public void read(BitReader reader) throws IOException {

@@ -2,7 +2,6 @@ package com.github.manevolent.atlas.uds.request;
 
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
-import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
 import com.github.manevolent.atlas.uds.response.UDSSecurityAccessResponse;
 
@@ -20,11 +19,6 @@ public class UDSSecurityAccessRequest
     public UDSSecurityAccessRequest(int seed, byte[] data) {
         this.seed = seed;
         this.data = data;
-    }
-
-    @Override
-    public UDSFrameType getType() {
-        return UDSFrameType.SECURITY_ACCESS;
     }
 
     @Override

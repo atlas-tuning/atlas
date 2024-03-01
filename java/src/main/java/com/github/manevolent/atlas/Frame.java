@@ -48,7 +48,9 @@ public interface Frame {
     }
 
     static String toHexString(byte[] data) {
-        if (data.length == 0) {
+        if (data == null) {
+            return "(null)";
+        } else if (data.length == 0) {
             return "(empty)";
         }
 

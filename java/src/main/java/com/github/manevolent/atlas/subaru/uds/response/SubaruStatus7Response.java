@@ -1,16 +1,18 @@
-package com.github.manevolent.atlas.uds.response;
+package com.github.manevolent.atlas.subaru.uds.response;
 
 import com.github.manevolent.atlas.BitReader;
-import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.uds.UDSResponse;
 
 import java.io.IOException;
 
-public class UDSReadDTCInformationResponse extends UDSResponse implements Frame {
+public class SubaruStatus7Response extends UDSResponse {
+
+    private int code;
     private byte[] data;
 
     @Override
     public void read(BitReader reader) throws IOException {
+        code = reader.readByte() & 0xFF;
         data = reader.readRemaining();
     }
 
@@ -21,6 +23,7 @@ public class UDSReadDTCInformationResponse extends UDSResponse implements Frame 
 
     @Override
     public String toString() {
-        return "data=" + toHexString();
+        return String.format("code=0x%02X data=%s", code, toHexString());
     }
+
 }

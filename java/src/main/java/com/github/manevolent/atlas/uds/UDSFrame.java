@@ -7,14 +7,21 @@ import com.github.manevolent.atlas.Frame;
 import java.io.IOException;
 
 public class UDSFrame implements Frame {
+    private final UDSProtocol protocol;
     private UDSBody body;
     private byte[] remaining;
 
-    public UDSFrame() {
+    public UDSFrame(UDSProtocol protocol) {
+        this.protocol = protocol;
     }
 
-    public UDSFrame(UDSBody body) {
+    public UDSFrame(UDSProtocol protocol, UDSBody body) {
+        this.protocol = protocol;
         this.body = body;
+    }
+
+    public UDSProtocol getProtocol() {
+        return protocol;
     }
 
     public UDSBody getBody() {
@@ -25,17 +32,25 @@ public class UDSFrame implements Frame {
         this.body = body;
     }
 
+    public int getServiceId() {
+        UDSBody body = getBody();
+        if (body == null) {
+            throw new NullPointerException("body");
+        }
+
+        return protocol.getSid(body.getClass());
+    }
+
     public void write(BitWriter writer) throws IOException {
-        writer.write(getBody().getServiceId());
+        int sid = getServiceId();
+        writer.write(sid);
         getBody().write(writer);
     }
 
     public void read(BitReader reader) throws IOException {
         byte serviceId = reader.readByte();
-        UDSFrameType type = UDSFrameType.resolveType(serviceId);
-
-        Class<? extends UDSBody> clazz = type.resolveBodyClass(serviceId);
-
+        Class<? extends UDSBody> clazz = protocol.getClassBySid(serviceId);
+        UDSBody body;
         try {
             body = clazz.newInstance();
         } catch (InstantiationException | IllegalAccessException e) {
@@ -45,11 +60,29 @@ public class UDSFrame implements Frame {
         try {
             body.read(reader);
         } catch (IOException ex) {
-            throw new IOException("Problem reading frame " + this.toString(), ex);
+            String frameString;
+            try {
+                frameString = toString();
+            } catch (Exception ex2) {
+                ex.addSuppressed(ex2);
+                frameString = "(error)";
+            }
+
+            throw new IOException("Problem reading frame " + frameString, ex);
         } catch (UnsupportedOperationException ex) {
+            String frameString;
+            try {
+                frameString = toString();
+            } catch (Exception ex2) {
+                ex.addSuppressed(ex2);
+                frameString = "(error)";
+            }
+
             throw new IOException("TODO Implement " + body.getClass().getName()
-                    + ": frame " + this.toString(), ex);
+                    + ": frame " + frameString, ex);
         }
+
+        setBody(body);
 
         if (reader.remaining() > 0) {
             remaining = reader.readRemaining();
@@ -58,13 +91,18 @@ public class UDSFrame implements Frame {
 
     @Override
     public byte[] getData() {
+        if (body == null) {
+            return null;
+        }
+
         return body.getData();
     }
 
     @Override
     public String toString() {
+        int sid = getServiceId();
         String fullyReadWarning = remaining != null ? " remaining=" + Frame.toHexString(remaining) : "";
-        return String.format("0x%02X", body.getServiceId()) + " " + body.getClass().getSimpleName()
+        return String.format("0x%02X", sid) + " " + body.getClass().getSimpleName()
                 + " " + body.toString() + fullyReadWarning;
     }
 }

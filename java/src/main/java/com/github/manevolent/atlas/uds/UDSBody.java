@@ -3,6 +3,15 @@ package com.github.manevolent.atlas.uds;
 import com.github.manevolent.atlas.Frame;
 
 public abstract class UDSBody implements Frame {
-    public abstract byte getServiceId();
-    public abstract UDSFrameType getType();
+    @Override
+    public String toString() {
+        String data;
+        try {
+            data = toHexString();
+        } catch (UnsupportedOperationException ex) {
+            data = "(unsupported)";
+        }
+
+        return "data=" + data;
+    }
 }

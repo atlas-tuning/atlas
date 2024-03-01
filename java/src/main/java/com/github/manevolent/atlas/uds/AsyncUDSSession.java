@@ -13,20 +13,28 @@ import java.util.Map;
 
 public class AsyncUDSSession extends Thread implements UDSSession {
     private final CanDevice device;
+    private final UDSProtocol protocol;
+
+    @SuppressWarnings("rawtypes")
+    private final Map<Integer, UDSTransaction> activeTransactions = new HashMap<>();
+
     private UDSFrameReader reader;
     private UDSFrameWriter writer;
 
-    private Map<Integer, UDSTransaction> activeTransactions = new HashMap<>();
+    public AsyncUDSSession(CanDevice device, UDSProtocol protocol) {
+        this.device = device;
+        this.protocol = protocol;
+    }
 
     public AsyncUDSSession(CanDevice device) {
-        this.device = device;
+        this(device, UDSProtocol.STANDARD);
     }
 
     private void ensureInitialized() throws IOException {
         synchronized (this) {
             if (this.reader == null || this.writer == null) {
-                this.reader = new UDSFrameReader(new ISOTPFrameReader(device.reader()));
-                this.writer = new UDSFrameWriter(new ISOTPFrameWriter(device.writer()));
+                this.reader = new UDSFrameReader(new ISOTPFrameReader(device.reader()), protocol);
+                this.writer = new UDSFrameWriter(new ISOTPFrameWriter(device.writer()), protocol);
             }
         }
     }
@@ -50,7 +58,7 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         }
     }
 
-    public long handle() throws IOException {
+    protected long handle() throws IOException {
         for (long n = 0;;n++) {
             try {
                 handleNext();
@@ -61,7 +69,8 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         }
     }
 
-    public UDSResponse handleNext() throws IOException {
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    protected UDSResponse handleNext() throws IOException {
         UDSFrame frame = reader().read();
         if (frame == null) {
             return null;
@@ -75,7 +84,7 @@ public class AsyncUDSSession extends Thread implements UDSSession {
                     transaction.supplyException(negativeResponse);
                 }
             } else {
-                byte serviceId = frame.getBody().getType().getRequestSid();
+                int serviceId = frame.getServiceId();
                 UDSTransaction transaction = activeTransactions.get(serviceId & 0xFF);
                 if (transaction != null) {
                     transaction.supply((UDSResponse) frame.getBody());
@@ -91,18 +100,20 @@ public class AsyncUDSSession extends Thread implements UDSSession {
 
     public <T extends UDSResponse> UDSTransaction<T> request(Address destination, UDSRequest<T> request)
             throws IOException {
-        final byte serviceId = request.getServiceId();
-        UDSTransaction<T> transaction = new UDSTransaction<T>() {
+        final int serviceId = protocol.getSid(request.getClass());
+
+        UDSTransaction<T> transaction = new UDSTransaction<>() {
             @Override
             public void close() {
                 AsyncUDSSession.this.activeTransactions.remove((serviceId & 0xFF), this);
             }
         };
-        if (this.activeTransactions.putIfAbsent((int)(serviceId & 0xFF), transaction) != null) {
+
+        if (this.activeTransactions.putIfAbsent((serviceId & 0xFF), transaction) != null) {
             throw new IllegalStateException("There is an outstanding transaction for SID " + (serviceId & 0xFF));
         }
 
-        writer().write(destination, new UDSFrame(request));
+        writer().write(destination, request);
         return transaction;
     }
 }

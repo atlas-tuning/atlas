@@ -3,7 +3,6 @@ package com.github.manevolent.atlas.uds.request;
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.uds.DataIdentifier;
-import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
 import com.github.manevolent.atlas.uds.response.UDSReadDataByIDResponse;
 
@@ -28,11 +27,6 @@ public class UDSReadDataByIDRequest extends UDSRequest<UDSReadDataByIDResponse> 
 
     public void setDids(int[] dids) {
         this.dids = dids;
-    }
-
-    @Override
-    public UDSFrameType getType() {
-        return UDSFrameType.READ_DATA_BY_ID;
     }
 
     @Override

@@ -1,9 +1,12 @@
 package com.github.manevolent.atlas.uds;
 
+import java.lang.reflect.ParameterizedType;
+
 public abstract class UDSRequest<T extends UDSResponse> extends UDSBody {
 
-    public byte getServiceId() {
-        return getType().getRequestSid();
+    @SuppressWarnings("unchecked")
+    public static Class<? extends UDSResponse> getResponseClass(Class<? extends UDSRequest<?>> clazz) {
+        return (Class<? extends UDSResponse>) ((ParameterizedType) clazz
+                .getGenericSuperclass()).getActualTypeArguments()[0];
     }
-
 }

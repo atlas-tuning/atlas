@@ -2,7 +2,6 @@ package com.github.manevolent.atlas.uds.request;
 
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
-import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
 import com.github.manevolent.atlas.uds.response.UDSTesterPresentResponse;
 
@@ -10,11 +9,6 @@ import java.io.IOException;
 
 public class UDSTesterPresentRequest extends UDSRequest<UDSTesterPresentResponse> implements Frame {
     private byte[] data;
-
-    @Override
-    public UDSFrameType getType() {
-        return UDSFrameType.TESTER_PRESENT;
-    }
 
     @Override
     public byte[] getData() {
