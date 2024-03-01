@@ -466,7 +466,7 @@ public class FlashTest {
                         DataFormat.UBYTE,
                         Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x80).withOperation(ArithmeticOperation.DIVIDE, 0xFF).withOperation(ArithmeticOperation.MULTIPLY, 100),
                         0x000a8888, 0x16, DataFormat.USHORT, rpm_16bit,
-                        0x000a95f0, 0x10, DataFormat.USHORT, calculated_load_16bit))
+                        0x000a797c, 0x10, DataFormat.USHORT, calculated_load_16bit))
                 .withTable(ignitionTimingCoolantCompTable(code, "Cold Start",
                         0x000a7b2c,
                         DataFormat.UBYTE,
