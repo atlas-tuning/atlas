@@ -10,7 +10,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.AccessFlag;
 
 import static com.github.manevolent.atlas.definition.Axis.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,11 +19,11 @@ public class FlashTest {
     private static final String fileFormat = "%s.bin";
     private static final String testRomResource = "/" + String.format(fileFormat, testRomName);
 
-    private static Table.Builder ignitionTimingCompTable(FlashRegion code,
-                                                         String gear,
-                                                         int dataAddress,
-                                                         int rpmAddress,
-                                                         int loadAddress) {
+    private static Table.Builder ignitionTimingGearCompTable(FlashRegion code,
+                                                             String gear,
+                                                             int dataAddress,
+                                                             int rpmAddress,
+                                                             int loadAddress) {
 
         return Table.builder()
                 .withName("Ignition Timing Compensation - " + gear + " Gear")
@@ -49,11 +48,73 @@ public class FlashTest {
                         .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
     }
 
+    private static Table.Builder[] ignitionTimingIatCompTables(FlashRegion code,
+                                                    String name,
+                                                    int dataAddress,
+                                                    int iatAddress,
+                                                    int activationDataAddress,
+                                                    int activationRpmAddress,
+                                                    int activationCalcLoadAddress) {
+        return new Table.Builder[] {
+                Table.builder()
+                    .withName("Ignition Timing Compensation IAT " + name)
+                    .withData(Series.builder()
+                        .withName("Timing")
+                        .withAddress(code, dataAddress)
+                        .withFormat(DataFormat.UBYTE)
+                        .withUnit(Unit.DEGREES)
+                    )
+                    .withAxis(X, Series.builder()
+                        .withName("Air Temperature")
+                        .withUnit(Unit.CELSIUS)
+                        .withAddress(code, iatAddress)
+                        .withLength(0x10)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(Scale.builder()
+                                .withOperation(ArithmeticOperation.MULTIPLY, 5f)
+                                .withOperation(ArithmeticOperation.ADD, 20480f)
+                                .withOperation(ArithmeticOperation.DIVIDE, 2048f)
+                        )
+                ),
+                Table.builder()
+                    .withName("Ignition Timing Compensation IAT " + name + " Activation")
+                    .withData(Series.builder()
+                        .withName("Activation")
+                        .withAddress(code, activationDataAddress)
+                        .withFormat(DataFormat.UBYTE)
+                        .withUnit(Unit.PERCENT)
+                        .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 255f))
+                    )
+                    .withAxis(Y, Series.builder()
+                        .withName("RPM")
+                        .withAddress(code, activationRpmAddress)
+                        .withLength(0x16)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)))
+                    .withAxis(X, Series.builder()
+                        .withName("Load")
+                        .withAddress(code, activationCalcLoadAddress)
+                        .withLength(0x1E)
+                        .withUnit(Unit.G_PER_REV)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f))
+                )
+        };
+    }
+
+
     private static Rom newRom() {
         FlashRegion code = new FlashRegion();
         code.setBaseAddress(0x0);
         code.setEncryption(SubaruDITFlashEncryption.WRX_MT_2022_USDM);
-        code.setSource(new StreamedFlashSource(() -> FlashTest.class.getResourceAsStream(testRomResource)));
+        //code.setSource(new StreamedFlashSource(() -> FlashTest.class.getResourceAsStream(testRomResource)));
+        code.setSource(new StreamedFlashSource(() -> {
+            try {
+                return new FileInputStream("/Users/matt/Documents/git/atlas/reverse-engineering/dumps/matt_e60.bin");
+            } catch (FileNotFoundException e) {
+                throw new RuntimeException(e);
+            }
+        }));
         code.setDataLength(0x003F0000);
 
         return Rom.builder()
@@ -162,11 +223,16 @@ public class FlashTest {
                                         .withFormat(DataFormat.USHORT)
                                         .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)))
                 )
-                .withTable(ignitionTimingCompTable(code, "1st", 0x000a8bf0, 0x000a7478, 0x000a7470))
-                .withTable(ignitionTimingCompTable(code, "2nd", 0x000a8bfc, 0x000a7478, 0x000a7470))
-                .withTable(ignitionTimingCompTable(code, "3rd", 0x000a8c08, 0x000a7478, 0x000a7470))
-                .withTable(ignitionTimingCompTable(code, "4th", 0x000a8c14, 0x000a7478, 0x000a7470))
-                .withTable(ignitionTimingCompTable(code, "5th", 0x000a8c20, 0x000a7478, 0x000a7470)).build();
+                .withTable(ignitionTimingGearCompTable(code, "1st", 0x000a8bf0, 0x000a7478, 0x000a7470))
+                .withTable(ignitionTimingGearCompTable(code, "2nd", 0x000a8bfc, 0x000a7478, 0x000a7470))
+                .withTable(ignitionTimingGearCompTable(code, "3rd", 0x000a8c08, 0x000a7478, 0x000a7470))
+                .withTable(ignitionTimingGearCompTable(code, "4th", 0x000a8c14, 0x000a7478, 0x000a7470))
+                .withTable(ignitionTimingGearCompTable(code, "5th", 0x000a8c20, 0x000a7478, 0x000a7470))
+                .withTables(ignitionTimingIatCompTables(code, "A", 0x000a80ec, 0x000a80cc,
+                        0x000ac830, 0x000a8914, 0x000a8980))
+                .withTables(ignitionTimingIatCompTables(code, "B", 0x000a7b5c, 0x000a80cc,
+                        0x000acac4, 0x000a8914, 0x000a8980))
+                .build();
     }
 
     @Test

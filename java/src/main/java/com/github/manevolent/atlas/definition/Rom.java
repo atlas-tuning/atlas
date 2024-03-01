@@ -70,6 +70,11 @@ public class Rom {
             return this;
         }
 
+        public Builder withTables(Table.Builder... builders) {
+            Arrays.stream(builders).forEach(this::withTable);
+            return this;
+        }
+
         public Builder withFlashMethod(FlashMethod method) {
             this.rom.setFlashMethod(method);
             return this;
