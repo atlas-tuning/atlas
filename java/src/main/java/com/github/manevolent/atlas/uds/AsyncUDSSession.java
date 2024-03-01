@@ -5,7 +5,6 @@ import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.j2534.ISOTPDevice;
 import com.github.manevolent.atlas.j2534.J2534Device;
 import com.github.manevolent.atlas.uds.response.UDSNegativeResponse;
-import net.codecrete.usb.linux.IO;
 
 import java.io.EOFException;
 import java.io.IOException;

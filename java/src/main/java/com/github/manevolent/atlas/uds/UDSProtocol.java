@@ -8,6 +8,7 @@ public interface UDSProtocol {
     BasicUDSProtocol STANDARD = new BasicUDSProtocol(
             UDSQuery.from("Diagnostic Session Control", 0x10, UDSDiagSessionControlRequest.class),
             UDSQuery.from("ECU Reset", 0x11, UDSECUResetRequest.class),
+            UDSQuery.from("Read DTC", 0x19, UDSReadDTCRequest.class),
             UDSQuery.from("Security Access", 0x27, UDSSecurityAccessRequest.class),
             UDSQuery.from("Communication Control", 0x28,UDSCommunicationControlRequest.class),
             UDSQuery.from("Authentication", 0x29, UDSAuthenticationRequest.class),
@@ -20,7 +21,6 @@ public interface UDSProtocol {
             UDSQuery.from("Routine Control", 0x31, UDSRoutineControlRequest.class),
             UDSQuery.from("Control DTC Settings", 0x85, UDSCommunicationControlRequest.class),
             UDSQuery.from("Reset DTC Information", 0x14, UDSClearDTCInformationRequest.class),
-            UDSQuery.from("Read DTC Information", 0x19, UDSReadDTCInformationRequest.class),
             UDSQuery.from("Download", 0x34, UDSDownloadRequest.class),
             UDSQuery.from("Upload", 0x35, UDSUploadRequest.class),
             UDSQuery.from("Transfer", 0x36, UDSTransferRequest.class),

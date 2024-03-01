@@ -5,7 +5,6 @@ import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.uds.UDSRequest;
 import com.github.manevolent.atlas.uds.response.UDSDownloadResponse;
 import com.github.manevolent.atlas.uds.response.UDSUploadResponse;
-import net.codecrete.usb.linux.IO;
 
 import java.io.IOException;
 

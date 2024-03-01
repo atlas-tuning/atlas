@@ -10,7 +10,6 @@ import com.rm5248.serial.NoSuchPortException;
 import com.rm5248.serial.NotASerialPortException;
 import com.rm5248.serial.SerialPort;
 import com.rm5248.serial.SerialPortBuilder;
-import net.codecrete.usb.linux.IO;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

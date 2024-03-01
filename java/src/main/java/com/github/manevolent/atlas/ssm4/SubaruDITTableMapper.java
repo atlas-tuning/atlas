@@ -89,8 +89,42 @@ public class SubaruDITTableMapper {
             return definition_address;
         }
 
+        public TableDimension getDimension(Dimension dimension) {
+            return getDimensions().get(dimension);
+        }
+
         public Map<Dimension, TableDimension> getDimensions() {
             return dimensions;
+        }
+
+        public boolean matchesSize(int... dimensionSizes) {
+            for (int i = 0; i < dimensionSizes.length; i ++) {
+                Dimension dimension;
+
+                switch (i) {
+                    case 0:
+                        dimension = Dimension.X;
+                        break;
+                    case 1:
+                        dimension = Dimension.Y;
+                        break;
+                    case 2:
+                        dimension = Dimension.Z;
+                        break;
+                    default:
+                        throw new IllegalArgumentException("Unknown dimension " + i);
+                }
+
+                TableDimension tableDimension = getDimension(dimension);
+
+                if (tableDimension == null)
+                    return false;
+
+                if (tableDimension.getSize() != dimensionSizes[i])
+                    return false;
+            }
+
+            return true;
         }
 
         public int getDataAddress() {
@@ -139,9 +173,9 @@ public class SubaruDITTableMapper {
 
                 long saved_offset = raf.getFilePointer();
 
-                if (!table.isEmpty(raf, 4)) {
+                //if (!table.isEmpty(raf, 4)) {
                     tables.add(table);
-                }
+                //}
 
                 raf.seek(saved_offset);
             }
@@ -197,6 +231,10 @@ public class SubaruDITTableMapper {
                 }
 
                 write_symbol(writer, table_name + "_DATA", table.getDataAddress());
+
+                if (table.matchesSize(16, 16)) {
+                    System.out.println(table);
+                }
             }
         }
 

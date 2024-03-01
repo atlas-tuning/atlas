@@ -1,7 +1,6 @@
 package com.github.manevolent.atlas.arduino;
 
 import com.github.manevolent.atlas.BitWriter;
-import net.codecrete.usb.linux.IO;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

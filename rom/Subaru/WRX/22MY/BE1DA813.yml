@@ -61,17 +61,26 @@ ROM:
         Type: 'AES'
         Key: 0x7692E7932F23A901568DDFA5FF580625
     Tables:
-      - Name: 'Ignition Timing'
-        Address: 0x00000000
-        Format: float
+      - Name: 'Intake Air Temperature Sensor Calibration'
+        Address: 0x00029780
+        Format: ubyte
+        Unit: Celsius
+        Scale: -50
         X:
-          Address: 0x00000000
-          Length: 12
-          Format: float
-        Y:
-          DataAddress: 0x00000000
-          Length: 12
-          Format: float
+          Unit: Volt
+          Address: 0x000297c0
+          Length: 32
+          Format: ushort
+      - Name: 'Manifold Air Temperature Sensor Calibration'
+        Address: 0x000297a0
+        Format: ubyte
+        Unit: Celsius
+        Scale: -50
+        X:
+          Unit: Volt
+          Address: 0x000297c0
+          Length: 32
+          Format: ushort
     Symbols:
       Tables:
         - RangeStart: 0x0013c468

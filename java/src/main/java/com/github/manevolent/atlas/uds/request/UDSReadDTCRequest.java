@@ -5,22 +5,23 @@ import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.uds.DiagnosticSessionType;
 import com.github.manevolent.atlas.uds.UDSRequest;
 import com.github.manevolent.atlas.uds.response.UDSDiagSessionControlResponse;
+import com.github.manevolent.atlas.uds.response.UDSReadDTCResponse;
 
 import java.io.IOException;
 import java.util.Arrays;
 
-public class UDSDiagSessionControlRequest extends UDSRequest<UDSDiagSessionControlResponse> {
+public class UDSReadDTCRequest extends UDSRequest<UDSReadDTCResponse> {
     private int code;
 
-    public UDSDiagSessionControlRequest() {
+    public UDSReadDTCRequest() {
 
     }
 
-    public UDSDiagSessionControlRequest(int code) {
+    public UDSReadDTCRequest(int code) {
         this.code = code;
     }
 
-    public UDSDiagSessionControlRequest(DiagnosticSessionType type) {
+    public UDSReadDTCRequest(DiagnosticSessionType type) {
         this.code = type.getCode();
     }
 
@@ -36,14 +37,6 @@ public class UDSDiagSessionControlRequest extends UDSRequest<UDSDiagSessionContr
 
     @Override
     public String toString() {
-        DiagnosticSessionType found = Arrays.stream(DiagnosticSessionType.values())
-                .filter(sf -> sf.getCode() == this.code).findFirst()
-                .orElse(null);
-
-        if (found != null) {
-            return found.name();
-        } else {
-            return String.format("Unknown 0x%02X", code);
-        }
+        return String.format("0x%02X", code);
     }
 }

@@ -6,7 +6,7 @@ import com.github.manevolent.atlas.uds.UDSResponse;
 
 import java.io.IOException;
 
-public class UDSReadDTCInformationResponse extends UDSResponse implements Frame {
+public class UDSReadDTCResponse extends UDSResponse implements Frame {
     private byte[] data;
 
     @Override

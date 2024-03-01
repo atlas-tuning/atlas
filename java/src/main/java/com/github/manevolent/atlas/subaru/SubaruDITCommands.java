@@ -53,12 +53,12 @@ public final class SubaruDITCommands {
             READ_DTC = new UDSSupplier<>() {
         @Override
         public UDSComponent getComponent() {
-            return ENGINE_1;
+            return ENGINE_2;
         }
 
         @Override
         public Address getSendAddress() {
-            return ENGINE_1.getSendAddress(); // Broadcast
+            return ENGINE_2.getSendAddress(); // Broadcast
         }
 
         @Override

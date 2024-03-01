@@ -4,11 +4,8 @@ import com.github.manevolent.atlas.j2534.J2534Device;
 import com.github.manevolent.atlas.j2534.J2534DeviceDescriptor;
 import com.github.manevolent.atlas.j2534.serial.SerialTatrixOpenPortFactory;
 import com.github.manevolent.atlas.j2534.tactrix.SerialTactrixOpenPort;
-import com.github.manevolent.atlas.ssm4.Crypto;
 import com.github.manevolent.atlas.subaru.SubaruDITCommands;
-import com.github.manevolent.atlas.subaru.SubaruDITReadMemoryCommand;
 import com.github.manevolent.atlas.subaru.SubaruProtocols;
-import com.github.manevolent.atlas.subaru.SubaruSecurityAccessCommandAES;
 import com.github.manevolent.atlas.subaru.uds.request.SubaruStatus1Request;
 import com.github.manevolent.atlas.uds.*;
 import com.github.manevolent.atlas.uds.request.*;
@@ -17,13 +14,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 
 import static com.github.manevolent.atlas.subaru.SubaruDITComponent.*;
 
-public class Main {
+public class MemoryDumper {
 
     public static void reverse(byte[] array) {
         if (array == null) {
