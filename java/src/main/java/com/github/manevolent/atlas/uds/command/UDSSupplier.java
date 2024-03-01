@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.uds.command;
 
+import com.github.manevolent.atlas.Address;
 import com.github.manevolent.atlas.uds.*;
 
 import java.io.IOException;
@@ -7,6 +8,10 @@ import java.io.IOException;
 public interface UDSSupplier<R extends UDSRequest<S>, S extends UDSResponse, T> {
 
     UDSComponent getComponent();
+
+    default Address getSendAddress() {
+        return getComponent().getSendAddress();
+    }
 
     R newRequest();
 
@@ -17,7 +22,7 @@ public interface UDSSupplier<R extends UDSRequest<S>, S extends UDSResponse, T> 
         UDSComponent component = getComponent();
         R request = newRequest();
         S response;
-        try (UDSTransaction<S> transaction = session.request(component.getSendAddress(), request)) {
+        try (UDSTransaction<S> transaction = session.request(getSendAddress(), request)) {
             response = transaction.get();
         } catch (Exception e) {
             throw new RuntimeException(e);

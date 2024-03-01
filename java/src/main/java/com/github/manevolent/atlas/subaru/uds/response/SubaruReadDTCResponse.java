@@ -20,6 +20,10 @@ public class SubaruReadDTCResponse extends UDSResponse {
         }
     }
 
+    public Set<Short> getDtcs() {
+        return dtcs;
+    }
+
     @Override
     public String toString() {
         return String.format("dtcs=%s",

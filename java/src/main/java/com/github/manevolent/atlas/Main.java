@@ -36,6 +36,8 @@ public class Main {
         UDSProtocol protocol = SubaruProtocols.DIT;
         AsyncUDSSession session = new AsyncUDSSession(device, protocol);
         session.start();
+
+        SubaruDITCommands.READ_DTC.execute(session);
     }
 
 
