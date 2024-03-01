@@ -7,6 +7,7 @@ import com.github.manevolent.atlas.j2534.tactrix.SerialTactrixOpenPort;
 import com.github.manevolent.atlas.ssm4.Crypto;
 import com.github.manevolent.atlas.subaru.SubaruProtocols;
 import com.github.manevolent.atlas.subaru.SubaruSecurityAccessCommand;
+import com.github.manevolent.atlas.subaru.uds.command.SubaruClearFlashCommand;
 import com.github.manevolent.atlas.subaru.uds.request.SubaruStatus1Request;
 import com.github.manevolent.atlas.uds.*;
 import com.github.manevolent.atlas.uds.request.*;
@@ -100,11 +101,15 @@ public class Main {
                         new UDSRoutineControlRequest(RoutineControlSubFunction.START_ROUTINE, 0x2, new byte[]{0x1})
                 );
 
+
+
+                session.writer().write(ENGINE_1, new UDSSecurityAccessRequest(61, new byte[0]));
+
                 System.out.println("Unlocking ECU...");
                 new SubaruSecurityAccessCommand(0x1, ENGINE_1, Crypto.toByteArray("667E3078219976B4EDF3D43BD1D8FFC9"))
                         .execute(session);
 
-                System.out.println("Entering programming session...");
+                /**System.out.println("Entering programming session...");
                 session.request(
                         ENGINE_1,
                         new UDSDiagSessionControlRequest(DiagnosticSessionType.PROGRAMMING_SESSION)
@@ -114,7 +119,12 @@ public class Main {
                 System.out.println("Starting routine...");
                 session.writer().write(BROADCAST, new UDSTesterPresentRequest((byte) 0x80));
 
+                 // CLEARS FLASH!
+                //new SubaruClearFlashCommand(ENGINE_1, 0x000100000, 0x003F0000).execute(session);
+                **/
+
                 break;
+
             } catch (Exception ex) {
                 ex.printStackTrace();
                 Thread.sleep(1000L);

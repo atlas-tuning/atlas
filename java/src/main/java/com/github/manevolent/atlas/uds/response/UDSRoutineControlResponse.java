@@ -26,6 +26,14 @@ public class UDSRoutineControlResponse extends UDSResponse implements Frame {
         return data;
     }
 
+    public int getRoutineId() {
+        return routineId;
+    }
+
+    public int getControlFunction() {
+        return controlFunction;
+    }
+
     @Override
     public String toString() {
         String controlRoutine = Arrays.stream(RoutineControlSubFunction.values())

@@ -1,14 +1,19 @@
 package com.github.manevolent.atlas.subaru;
 
 import com.github.manevolent.atlas.Address;
+import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.ssm4.Crypto;
 import com.github.manevolent.atlas.subaru.uds.request.SubaruReadDTCRequest;
 import com.github.manevolent.atlas.subaru.uds.response.SubaruReadDTCResponse;
 import com.github.manevolent.atlas.uds.UDSComponent;
+import com.github.manevolent.atlas.uds.UDSSession;
 import com.github.manevolent.atlas.uds.command.UDSDataByIdSupplier;
+import com.github.manevolent.atlas.uds.command.UDSRoutineCommand;
 import com.github.manevolent.atlas.uds.command.UDSSecurityAccessCommand;
 import com.github.manevolent.atlas.uds.command.UDSSupplier;
+import com.github.manevolent.atlas.uds.response.UDSRoutineControlResponse;
 
+import java.io.IOException;
 import java.util.Set;
 
 import static com.github.manevolent.atlas.subaru.SubaruDITComponent.ENGINE_1;

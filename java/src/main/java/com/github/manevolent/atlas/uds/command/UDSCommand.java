@@ -8,7 +8,7 @@ public interface UDSCommand<R extends UDSRequest<S>, S extends UDSResponse> {
 
     UDSComponent getComponent();
 
-    R newRequest();
+    R newRequest() throws IOException;
 
     void handle(UDSSession session, S response) throws IOException;
 
