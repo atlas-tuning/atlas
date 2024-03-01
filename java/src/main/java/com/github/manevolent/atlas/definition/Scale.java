@@ -8,6 +8,7 @@ public class Scale {
     public static Scale ONE = Scale.builder().build();
 
     private List<ScalingOperation> operations;
+    private Unit unit;
 
     public float forward(float a) {
         for (ScalingOperation operation : operations) {
@@ -29,10 +30,14 @@ public class Scale {
         this.operations = operations;
     }
 
+    public Unit getUnit() {
+        return unit;
+    }
 
     public static Builder builder() {
         return new Builder();
     }
+
 
     public static class Builder {
         private final Scale scale = new Scale();
@@ -72,6 +77,14 @@ public class Scale {
 
         public Builder withOperations(Scale.Builder builder) {
             this.scale.operations.addAll(builder.scale.operations);
+            if (builder.scale.unit != null) {
+                withUnit(builder.scale.unit);
+            }
+            return this;
+        }
+
+        public Builder withUnit(Unit unit) {
+            this.scale.unit = unit;
             return this;
         }
 

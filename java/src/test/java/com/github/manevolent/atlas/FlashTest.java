@@ -12,6 +12,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import static com.github.manevolent.atlas.definition.Axis.*;
+import static com.github.manevolent.atlas.definition.Unit.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class FlashTest {
@@ -19,48 +20,47 @@ public class FlashTest {
     private static final String fileFormat = "%s.bin";
     private static final String testRomResource = "/" + String.format(fileFormat, testRomName);
 
-    private static final Scale.Builder rpm_16bit =
-            Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f);
+    private static final Scale.Builder rpm_16bit = Scale.builder()
+            .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
+            .withUnit(RPM);
 
     private static final Scale.Builder rpm_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 8)
-            .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f);
+            .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
+            .withUnit(RPM);
 
     private static final Scale.Builder rpm_8bit_2 = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 3)
             .withOperation(ArithmeticOperation.MULTIPLY, 16f)
-            .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f);
+            .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
+            .withUnit(RPM);
 
-    /**
-     * Unit is newton-meters
-     */
-    private static final Scale.Builder req_torque_16bit =
-            Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x3E80)
-                           .withOperation(ArithmeticOperation.DIVIDE, 0x50);
+    private static final Scale.Builder req_torque_16bit = Scale.builder()
+            .withOperation(ArithmeticOperation.SUBTRACT, 0x3E80)
+            .withOperation(ArithmeticOperation.DIVIDE, 0x50)
+            .withUnit(NM);
 
-    private static final Scale.Builder calculated_load_16bit =
-            Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f);
+    private static final Scale.Builder calculated_load_16bit = Scale.builder()
+            .withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)
+            .withUnit(G_PER_REV);
 
     private static final Scale.Builder calculated_load_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 8)
-            .withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f);
+            .withOperations(calculated_load_16bit);
 
     private static final Scale.Builder percent_8bit = Scale.builder()
-            .withOperation(ArithmeticOperation.DIVIDE, 255.0f);
+            .withOperation(ArithmeticOperation.DIVIDE, 255.0f)
+            .withUnit(PERCENT);
 
-    /**
-     * Unit is kPa
-     */
     private static final Scale.Builder directInjectionFuelPressureScale_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x7D)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
-            .withOperation(ArithmeticOperation.MULTIPLY, 10.0f);
+            .withOperation(ArithmeticOperation.MULTIPLY, 10.0f)
+            .withUnit(KPA);
 
     private static final Scale.Builder directInjectionFuelPressureScale_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x96)
-            .withOperation(ArithmeticOperation.MULTIPLY, (float)0x7D)
-            .withOperation(ArithmeticOperation.RSHIFT, 0xB)
-            .withOperation(ArithmeticOperation.MULTIPLY, 10.0f);
+            .withOperations(directInjectionFuelPressureScale_16bit);
 
     /**
      * Unit is PSI
@@ -70,19 +70,19 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.MULTIPLY, 2)
             .withOperation(ArithmeticOperation.RSHIFT, 8)
             .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
-            .withOperation(ArithmeticOperation.SUBTRACT, (float) 14.70);
+            .withOperation(ArithmeticOperation.SUBTRACT, (float) 14.70)
+            .withUnit(PSI);
 
     private static final Scale.Builder absolutePressure_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.RSHIFT, 8)
-            .withOperation(ArithmeticOperation.DIVIDE, 6.895f);
+            .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
+            .withUnit(PSI);
 
-    /**
-     * Unit is percent
-     */
     private static final Scale.Builder boostTargetCompensation_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.SUBTRACT, 0x55)
             .withOperation(ArithmeticOperation.DIVIDE, 0x50)
-            .withOperation(ArithmeticOperation.MULTIPLY, 100);
+            .withOperation(ArithmeticOperation.MULTIPLY, 100)
+            .withUnit(Unit.PERCENT);
 
     /**
      * Unit is degrees celsius
@@ -90,7 +90,8 @@ public class FlashTest {
     private static final Scale.Builder coolantTemp16BitScale = Scale.builder()
             .withOperation(ArithmeticOperation.MULTIPLY, 5.0f)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
-            .withOperation(ArithmeticOperation.SUBTRACT, 40.0f);
+            .withOperation(ArithmeticOperation.SUBTRACT, 40.0f)
+            .withUnit(CELSIUS);
 
     private static final Scale.Builder coolantTemp8BitScale = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 8)
@@ -421,7 +422,7 @@ public class FlashTest {
     }
 
     private static final Table.Builder singleValueTable(FlashRegion code, String name, int dataAddress,
-                                                        DataFormat format, Scale.Builder scale, Unit unit) {
+                                                        DataFormat format, Scale.Builder scale) {
         return Table.builder()
                 .withName(name)
                 .withData(Series.builder()
@@ -429,7 +430,6 @@ public class FlashTest {
                         .withLength(1)
                         .withFormat(format)
                         .withScale(scale)
-                        .withUnit(unit)
                 );
     }
 
@@ -564,7 +564,7 @@ public class FlashTest {
                                 .withAddress(code, 0x0002cda8)
                                 .withFormat(DataFormat.USHORT)
                                 .withScale(boostTargetPressureScale_RelSL_16bit)
-                                .withUnit(Unit.PSI)
+                                .withUnit(PSI)
                         )
                         .withAxis(Y, Series.builder()
                                 .withName("RPM")
@@ -619,14 +619,23 @@ public class FlashTest {
                                 .withLength(0xB)
                                 .withScale(absolutePressure_16bit)
                                 .withFormat(DataFormat.USHORT)
-                                .withUnit(Unit.PSI)
+                                .withUnit(PSI)
                         )
                 )
                 .withTable(singleValueTable(code, "Boost Target - Maximum Limit",
                         0x00028bf0,
                         DataFormat.USHORT,
-                        boostTargetPressureScale_RelSL_16bit,
-                        Unit.PSI
+                        boostTargetPressureScale_RelSL_16bit
+                ))
+                .withTable(singleValueTable(code, "Boost Target - IAT Compensation - DTC",
+                        0x00028fe6,
+                        DataFormat.UBYTE,
+                        boostTargetCompensation_8bit
+                ))
+                .withTable(singleValueTable(code, "Boost Target - Barometric Compensation - DTC",
+                        0x00028fe7,
+                        DataFormat.UBYTE,
+                        boostTargetCompensation_8bit
                 ))
                 .build();
     }

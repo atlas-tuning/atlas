@@ -120,6 +120,9 @@ public class Series {
 
         public Builder withScale(Scale scale) {
             this.series.setScale(scale);
+            if (scale.getUnit() != null && series.getUnit() == null) {
+                withUnit(scale.getUnit());
+            }
             return this;
         }
 
