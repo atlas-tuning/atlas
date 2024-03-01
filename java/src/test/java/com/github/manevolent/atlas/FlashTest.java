@@ -6,8 +6,6 @@ import com.github.manevolent.atlas.definition.zip.StreamedFlashSource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -76,10 +74,10 @@ public class FlashTest {
                         .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
     }
 
-    private static Table.Builder fuelPressureTargetTable_1D(FlashRegion code,
-                                                                String name,
-                                                                int dataAddress,
-                                                                int coolantTempAddress) {
+    private static Table.Builder fuelPressureTargetWarmupTable_1D(FlashRegion code,
+                                                                  String name,
+                                                                  int dataAddress,
+                                                                  int coolantTempAddress) {
         return Table.builder()
                 .withName("Fuel Pressure Target - " + name)
                 .withData(Series.builder()
@@ -100,12 +98,12 @@ public class FlashTest {
     }
 
 
-    private static Table.Builder fuelPressureTargetTable_2D(FlashRegion code,
-                                                            String name,
-                                                            int dataAddress,
-                                                            boolean _16bit,
-                                                            int coolantTempAddress,
-                                                            int rpmAddress) {
+    private static Table.Builder fuelPressureTargetWarmupTable_2D(FlashRegion code,
+                                                                  String name,
+                                                                  int dataAddress,
+                                                                  boolean _16bit,
+                                                                  int coolantTempAddress,
+                                                                  int rpmAddress) {
         return Table.builder()
                 .withName("Fuel Pressure Target - " + name)
                 .withData(Series.builder()
@@ -132,6 +130,37 @@ public class FlashTest {
                     .withFormat(DataFormat.UBYTE)
                     .withScale(rpm_8bit)
         );
+    }
+
+
+    private static Table.Builder fuelPressureTargetMainTable_2D(FlashRegion code,
+                                                                  String name,
+                                                                  int dataAddress,
+                                                                  int rpmAddress,
+                                                                  int loadAddress) {
+        return Table.builder()
+                .withName("Fuel Pressure Target - " + name)
+                .withData(Series.builder()
+                        .withName("Fuel Pressure")
+                        .withAddress(code, dataAddress)
+                        .withFormat(DataFormat.UBYTE)
+                        .withScale(directInjectionFuelPressureScale_8bit)
+                        .withUnit(Unit.KPA)
+                )
+                .withAxis(Y, Series.builder()
+                        .withName("RPM")
+                        .withAddress(code, rpmAddress)
+                        .withLength(0x1E)
+                        .withFormat(DataFormat.UBYTE)
+                        .withUnit(Unit.RPM)
+                        .withScale(rpm_8bit))
+                .withAxis(X, Series.builder()
+                        .withName("Load")
+                        .withAddress(code, loadAddress)
+                        .withLength(0x10)
+                        .withUnit(Unit.G_PER_REV)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
     }
 
     private static Table.Builder ignitionTimingGearCompTable(FlashRegion code,
@@ -256,10 +285,12 @@ public class FlashTest {
                                         .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 13106.25f))
                                         .withLength(32))
                 )
+                // Ignition timing base tables
                 .withTable(ignitionTimingBaseTable(code, "TGVs Closed - AVCS Disabled", 0x000ad514, 0x000a88b4, 0x000a89bc))
                 .withTable(ignitionTimingBaseTable(code, "TGVs Closed - AVCS Enabled", 0x000ad7a8, 0x000a88b4, 0x000a89bc))
                 .withTable(ignitionTimingBaseTable(code, "TGVs Open - AVCS Disabled", 0x000ada3c, 0x000a88b4, 0x000a89bc))
                 .withTable(ignitionTimingBaseTable(code, "TGVs Open - AVCS Enabled", 0x000adcd0, 0x000a88b4, 0x000a89bc))
+                // Ignition timing compensation by gear
                 .withTable(ignitionTimingGearCompTable(code, "1st", 0x000a8bf0, 0x000a7478, 0x000a7470))
                 .withTable(ignitionTimingGearCompTable(code, "2nd", 0x000a8bfc, 0x000a7478, 0x000a7470))
                 .withTable(ignitionTimingGearCompTable(code, "3rd", 0x000a8c08, 0x000a7478, 0x000a7470))
@@ -269,16 +300,20 @@ public class FlashTest {
                         0x000ac830, 0x000a8914, 0x000a8980))
                 .withTables(ignitionTimingIatCompTables(code, "B", 0x000a7b5c, 0x000a80cc,
                         0x000acac4, 0x000a8914, 0x000a8980))
-                .withTable(fuelPressureTargetTable_1D(code, "Warmup Mode 3A #1", 0x000c85c4, 0x000c84e4))
-                .withTable(fuelPressureTargetTable_1D(code, "Warmup Mode 3A #2", 0x000c85a4, 0x000c84e4))
-                .withTable(fuelPressureTargetTable_1D(code, "Warmup Mode 1A", 0x000c85e4, 0x000c84e4))
-                .withTable(fuelPressureTargetTable_1D(code, "Warmup Mode 1A", 0x000c85e4, 0x000c84e4))
-                .withTable(fuelPressureTargetTable_1D(code, "Warmup Mode 1B #1", 0x000c8564, 0x000c84e4))
-                .withTable(fuelPressureTargetTable_1D(code, "Warmup Mode 1B #2", 0x000c8504, 0x000c84e4))
-                .withTable(fuelPressureTargetTable_1D(code, "Warmup Mode 3B #1", 0x000c8544, 0x000c84e4))
-                .withTable(fuelPressureTargetTable_1D(code, "Warmup Mode 3B #2", 0x000c8524, 0x000c84e4))
-                .withTable(fuelPressureTargetTable_2D(code, "Warmup Mode 4", 0x000c8654, true, 0x000c83e4, 0x000c82f8))
-                .withTable(fuelPressureTargetTable_2D(code, "Main", 0x000c83c4, false, 0x000c83b4, 0x000c82f8))
+                // Fuel pressure
+                .withTable(fuelPressureTargetMainTable_2D(code, "Main - TGVs Closed", 0x000cb2f0, 0x000c8880, 0x000c83a4))
+                .withTable(fuelPressureTargetMainTable_2D(code, "Main - TGVs Open", 0x000cb4d0, 0x000c8880, 0x000c83a4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3A #1", 0x000c85c4, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3A #2", 0x000c85a4, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1A", 0x000c85e4, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1A", 0x000c85e4, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1B #1", 0x000c8564, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1B #2", 0x000c8504, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3B #1", 0x000c8544, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3B #2", 0x000c8524, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup Mode 4", 0x000c8654, true, 0x000c83e4, 0x000c82f8))
+                .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup Default", 0x000c83c4, false, 0x000c83b4, 0x000c82f8))
+
                 .build();
     }
 
