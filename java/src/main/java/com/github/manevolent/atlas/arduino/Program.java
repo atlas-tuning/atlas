@@ -131,8 +131,10 @@ public final class Program {
                 "pin_33",
                 33,
                 GPIOResistorMode.NONE,
-                GPIOPinType.DIGITAL,
-                program.fromTable("invert")
+                GPIOPinType.PWM,
+                program.fromTable("invert"),
+                null,
+                new Variable("pwm", 100)
         ));
 
         program.write(new BitWriter(new FileOutputStream(args[0])));

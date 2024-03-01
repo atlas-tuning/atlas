@@ -7,17 +7,19 @@ import java.io.IOException;
 public class GPIOOutput extends GPIOPin implements Output {
     private final Table source;
     private final Table holdTime;
+    private final Value frequency;
 
     public GPIOOutput(String name, int pin, GPIOResistorMode resistorMode, GPIOPinType type,
-                      Table source, Table holdTime) {
+                      Table source, Table holdTime, Value frequency) {
         super(name, pin, resistorMode, type);
         this.source = source;
         this.holdTime = holdTime;
+        this.frequency = frequency;
     }
 
     public GPIOOutput(String name, int pin, GPIOResistorMode resistorMode, GPIOPinType type,
                       Table source) {
-        this(name, pin, resistorMode, type, source, null);
+        this(name, pin, resistorMode, type, source, null, null);
     }
 
     @Override
@@ -34,6 +36,19 @@ public class GPIOOutput extends GPIOPin implements Output {
             writer.writeShort((short) program.getTables().indexOf(holdTime));
         } else {
             writer.writeShort((short) 0xFFFF);
+        }
+
+        if (getType() == GPIOPinType.PWM) {
+            if (frequency instanceof Table && program.getTables().contains((Table) frequency)) {
+                writer.writeShort((short) program.getTables().indexOf(frequency));
+            } else {
+                writer.writeShort((short) 0xFFFF);
+                if (frequency != null) {
+                    writer.writeInt((int) frequency.get());
+                } else {
+                    throw new IllegalStateException("Frequency not supplied for PWM output");
+                }
+            }
         }
     }
 }
