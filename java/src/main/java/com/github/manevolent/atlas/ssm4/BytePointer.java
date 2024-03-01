@@ -1,5 +1,8 @@
 package com.github.manevolent.atlas.ssm4;
 
+import com.github.manevolent.atlas.BitReader;
+
+import java.io.IOException;
 import java.util.function.BiConsumer;
 
 public class BytePointer {
@@ -11,6 +14,12 @@ public class BytePointer {
         this.backing = backing;
         this.offs = 0;
         this.debugCallback = debugCallback;
+    }
+
+    public BytePointer(byte[] backing) {
+        this.backing = backing;
+        this.offs = 0;
+        this.debugCallback = (offs, data) -> {};
     }
 
     int addPtr(int num) {
@@ -32,6 +41,15 @@ public class BytePointer {
     byte at(int offs, int value) {
         if (debugCallback != null)
             debugCallback.accept(offs + this.offs, (byte) (value & 0xFF));
+
         return backing[offs + this.offs] = (byte) value;
+    }
+
+    short shortAt(int offs) {
+        try {
+            return new BitReader(backing, offs + this.offs).readShort();
+        } catch (IOException e) {
+            throw new IllegalArgumentException(e);
+        }
     }
 }

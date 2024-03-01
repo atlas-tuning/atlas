@@ -17,6 +17,12 @@ public class BitReader {
         this.totalSize = frame.length;
     }
 
+    public BitReader(byte[] frame, long offs) throws IOException {
+        this.is = new ByteArrayInputStream(frame);
+        assert this.is.skip(offs) == offs;
+        this.totalSize = frame.length;
+    }
+
     public BitReader(InputStream is) {
         this.is = is;
     }
@@ -166,5 +172,9 @@ public class BitReader {
         byte[] remaining = new byte[remainingBytes()];
         read(remaining);
         return remaining;
+    }
+
+    public int available() throws IOException {
+        return is.available();
     }
 }
