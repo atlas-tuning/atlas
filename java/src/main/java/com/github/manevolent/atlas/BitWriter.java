@@ -2,6 +2,8 @@ package com.github.manevolent.atlas;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 
 public class BitWriter extends OutputStream implements AutoCloseable {
     private OutputStream outputStream;
@@ -70,6 +72,14 @@ public class BitWriter extends OutputStream implements AutoCloseable {
         write((byte) (l>>16 & 0xFF));
         write((byte) (l>>8 & 0xFF));
         write((byte) (l & 0xFF));
+    }
+
+    public void writeFloatBE(float value) throws IOException {
+        write(ByteBuffer.allocate(4).order(ByteOrder.BIG_ENDIAN).putFloat(value).array());
+    }
+
+    public void writeFloatLE(float value) throws IOException {
+        write(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putFloat(value).array());
     }
 
     public void writeLSB(int data, int nbits) throws IOException {
