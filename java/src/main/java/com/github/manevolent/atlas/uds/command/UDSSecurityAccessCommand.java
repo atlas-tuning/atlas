@@ -45,5 +45,5 @@ public abstract class UDSSecurityAccessCommand implements UDSCommand<UDSSecurity
     }
 
     protected abstract UDSSecurityAccessRequest answer(UDSSecurityAccessResponse challenge);
-    protected abstract void handle(UDSSecurityAccessResponse result);
+    protected abstract void handle(UDSSecurityAccessResponse result) throws IOException;
 }

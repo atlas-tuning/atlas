@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.can;
+package com.github.manevolent.atlas.j2534;
 
 // See: https://www.opusivs.com/support/j2534-support/passthru-sae-j2534-dll/possible-error-codes
 public enum J2534Error {

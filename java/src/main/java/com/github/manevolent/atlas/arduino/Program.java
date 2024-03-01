@@ -6,6 +6,7 @@ import com.github.manevolent.atlas.BitWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -95,46 +96,68 @@ public final class Program {
         Program program = new Program();
 
         program.getInputs().add(new GPIOInput(
-                "v_gnd",
-                35,
-                GPIOResistorMode.NONE,
-                GPIOPinType.ANALOG
-        ));
-
-        program.getInputs().add(new GPIOInput(
-                "v_ref",
+                "clutch",
                 32,
-                GPIOResistorMode.NONE,
-                GPIOPinType.ANALOG
+                GPIOResistorMode.PULL_DOWN,
+                GPIOPinType.DIGITAL,
+                null,
+                null
         ));
 
         program.getInputs().add(new GPIOInput(
-                "pin_34",
-                34,
-                GPIOResistorMode.NONE,
-                GPIOPinType.ANALOG,
-                program.fromInput(0),
-                program.fromInput(1)
+                "brake",
+                35,
+                GPIOResistorMode.PULL_DOWN,
+                GPIOPinType.DIGITAL,
+                null,
+                null
         ));
 
         program.getTables().add(new Table(
-                "invert",
-                Collections.singletonList(new Dimension(
-                        program.fromInput("pin_34"),
-                        Integration.LINEAR,
-                        new float[] { 0f, 5f }
+                "clutch_and_brake_pressed",
+                TableType.ARITHMETIC,
+                Arrays.asList(new Dimension(
+                        program.fromInput("clutch"),
+                        GPIOInput.SubValue.NONE,
+                        Integration.FLOOR,
+                        new float[]{0f, 1f}
+                ),  new Dimension(
+                        program.fromInput("brake"),
+                        GPIOInput.SubValue.NONE,
+                        Integration.FLOOR,
+                        new float[]{0f, 1f}
                 )),
-                new float[] { 5f, 0f }
+                new float[] { 0.0f, 0.0f,
+                              0.0f, 1.0f }
+        ));
+
+        program.getTables().add(new Table(
+                "accelerator_value",
+                TableType.ARITHMETIC,
+                Arrays.asList(new Dimension(
+                        program.fromInput("clutch"),
+                        GPIOInput.SubValue.SECONDS_SINCE_LAST_CHANGE,
+                        Integration.FLOOR,
+                        new float[]{ 0f, 0.25f, 0.50f, 0.75f, 1f }
+                ), new Dimension(
+                        program.fromTable("clutch_and_brake_pressed"),
+                        GPIOInput.SubValue.NONE,
+                        Integration.LINEAR,
+                        new float[]{ 0f, 1f }
+                )),
+                new float[] { 0.0f, 0.0f, 0.0f, 0.0f, 0.0f,
+                              1.0f, 1.0f, 0.0f, 0.0f, 0.0f }
         ));
 
         program.getOutputs().add(new GPIOOutput(
-                "pin_33",
+                "accelerator_pedal",
                 33,
                 GPIOResistorMode.NONE,
-                GPIOPinType.PWM,
-                program.fromTable("invert"),
+                GPIOPinType.DIGITAL,
+                program.fromTable("accelerator_value"),
                 null,
-                new Variable("pwm", 100)
+                null,
+                null
         ));
 
         program.write(new BitWriter(new FileOutputStream(args[0])));

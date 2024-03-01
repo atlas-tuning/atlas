@@ -21,4 +21,8 @@ public class UDSFrameWriter implements FrameWriter<UDSBody> {
         frame.setAddress(address);
         transport.write(address, BasicFrame.from(frame));
     }
+
+    public void write(UDSComponent component, UDSBody body) throws IOException {
+        write(component.getSendAddress(), body);
+    }
 }

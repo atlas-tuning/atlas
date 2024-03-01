@@ -41,10 +41,6 @@ public class ISOTPConsecutiveFrame extends ISOTPDataSubFrame {
 
     public void write(BitWriter writer) throws IOException {
         writer.writeNibble((byte) index);
-
-        if (this.data.length != 7) {
-            throw new IllegalArgumentException("Unexpected data length: " + this.data.length + " != 7");
-        }
         writer.write(this.data);
     }
 

@@ -17,16 +17,16 @@ public class UDSTest {
     public void testWrite() throws IOException {
         int did = 0x1234;
 
-        TestCanFrameWriter writer = new TestCanFrameWriter();
-        TestCanDevice testDevice = new TestCanDevice(writer);
-        AsyncUDSSession session = new AsyncUDSSession(testDevice);
+        TestCANFrameWriter writer = new TestCANFrameWriter();
+        TestJ2534Device testDevice = new TestJ2534Device(writer);
+        AsyncUDSSession session = new AsyncUDSSession(testDevice.openISOTOP());
         session.request(null, new UDSReadDataByIDRequest(new int[] { did }));
 
         byte[] written = writer.getWritten();
 
         TestCanFrameReader reader = new TestCanFrameReader(new ByteArrayInputStream(written));
-        testDevice = new TestCanDevice(reader);
-        session = new AsyncUDSSession(testDevice);
+        testDevice = new TestJ2534Device(reader);
+        session = new AsyncUDSSession(testDevice.openISOTOP());
         UDSFrame read = session.reader().read();
 
         assertEquals(read.getBody().getClass(), UDSReadDataByIDRequest.class);

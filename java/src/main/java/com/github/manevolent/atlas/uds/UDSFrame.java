@@ -56,7 +56,7 @@ public class UDSFrame implements Frame, Addressed {
     }
 
     public void read(BitReader reader) throws IOException {
-        byte serviceId = reader.readByte();
+        int serviceId = (reader.readByte() & 0xFF);
         Class<? extends UDSBody> clazz = protocol.getClassBySid(serviceId);
         UDSBody body;
         try {

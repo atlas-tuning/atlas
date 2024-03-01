@@ -4,15 +4,14 @@ import com.github.manevolent.atlas.Address;
 import com.github.manevolent.atlas.BasicFrame;
 
 import com.github.manevolent.atlas.FrameWriter;
-import com.github.manevolent.atlas.can.CanArbitrationId;
-import com.github.manevolent.atlas.can.CanFrame;
+import com.github.manevolent.atlas.can.CANFrame;
 
 import java.io.IOException;
 
 public class ISOTPFrameWriter implements FrameWriter<BasicFrame> {
-    private final FrameWriter<CanFrame> canWriter;
+    private final FrameWriter<CANFrame> canWriter;
 
-    public ISOTPFrameWriter(FrameWriter<CanFrame> canWriter) {
+    public ISOTPFrameWriter(FrameWriter<CANFrame> canWriter) {
         this.canWriter = canWriter;
     }
 
@@ -49,7 +48,7 @@ public class ISOTPFrameWriter implements FrameWriter<BasicFrame> {
             ISOTPWireFrame wireFrame = new ISOTPWireFrame();
             wireFrame.setSubFrame(subFrame);
 
-            CanFrame canFrame = new CanFrame();
+            CANFrame canFrame = new CANFrame();
             canFrame.setData(wireFrame.write());
 
             canWriter.write(address, canFrame);

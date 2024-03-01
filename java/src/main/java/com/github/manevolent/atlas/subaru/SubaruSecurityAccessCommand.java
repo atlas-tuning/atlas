@@ -28,7 +28,9 @@ public class SubaruSecurityAccessCommand extends UDSSecurityAccessCommand {
     }
 
     @Override
-    protected void handle(UDSSecurityAccessResponse result) {
-
+    protected void handle(UDSSecurityAccessResponse result) throws IOException {
+       if (result.getData().length != 0) {
+           throw new IOException("Unexpected security access response: " + result.toString());
+       }
     }
 }

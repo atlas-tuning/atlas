@@ -8,18 +8,20 @@ public class GPIOOutput extends GPIOPin implements Output {
     private final Table source;
     private final Table holdTime;
     private final Value frequency;
+    private final Value updateFrequency;
 
     public GPIOOutput(String name, int pin, GPIOResistorMode resistorMode, GPIOPinType type,
-                      Table source, Table holdTime, Value frequency) {
+                      Table source, Table holdTime, Value frequency, Value updateFrequency) {
         super(name, pin, resistorMode, type);
         this.source = source;
         this.holdTime = holdTime;
         this.frequency = frequency;
+        this.updateFrequency = updateFrequency;
     }
 
     public GPIOOutput(String name, int pin, GPIOResistorMode resistorMode, GPIOPinType type,
                       Table source) {
-        this(name, pin, resistorMode, type, source, null, null);
+        this(name, pin, resistorMode, type, source, null, null, null);
     }
 
     @Override
@@ -36,6 +38,17 @@ public class GPIOOutput extends GPIOPin implements Output {
             writer.writeShort((short) program.getTables().indexOf(holdTime));
         } else {
             writer.writeShort((short) 0xFFFF);
+        }
+
+        if (updateFrequency instanceof Table && program.getTables().contains((Table) updateFrequency)) {
+            writer.writeShort((short) program.getTables().indexOf(updateFrequency));
+        } else {
+            writer.writeShort((short) 0xFFFF);
+            if (updateFrequency != null) {
+                writer.writeFloatLE((int) updateFrequency.get());
+            } else {
+                writer.writeFloatLE(0.0f); // as fast as possible
+            }
         }
 
         if (getType() == GPIOPinType.PWM) {

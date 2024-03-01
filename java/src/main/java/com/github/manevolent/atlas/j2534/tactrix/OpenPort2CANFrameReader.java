@@ -1,8 +1,10 @@
-package com.github.manevolent.atlas.can;
+package com.github.manevolent.atlas.j2534.tactrix;
 
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
-import net.codecrete.usb.linux.IO;
+import com.github.manevolent.atlas.can.CANFrame;
+import com.github.manevolent.atlas.can.CANFrameReader;
+import com.github.manevolent.atlas.j2534.J2534Error;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -10,7 +12,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 // Much appreciation for https://github.com/brandonros/rust-tactrix-openport/blob/master/src/lib.rs
-public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
+public class OpenPort2CANFrameReader implements CANFrameReader, AutoCloseable {
     /**
      * "ar5" in ASCII
      */
@@ -36,7 +38,7 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
     };
     private final InputStream inputStream;
 
-    public OpenPort2FrameReader(InputStream inputStream) {
+    public OpenPort2CANFrameReader(InputStream inputStream) {
         this.inputStream = inputStream;
     }
 
@@ -46,7 +48,7 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
     }
 
     @Override
-    public CanFrame read() throws IOException {
+    public CANFrame read() throws IOException {
         // Expect header
         byte[] tactrixHeader = new byte[READ_DATA_HEADER.length];
         try {
@@ -70,7 +72,6 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
             frameReader.read(header);
             int arbitrationId = frameReader.readInt();
             byte[] body = frameReader.readRemaining();
-
             return new OpenPort2Frame(header, arbitrationId, body);
         } else if (Arrays.equals(tactrixHeader, OK_HEADER)) {
             while ((char) inputStream.read() != '\n') ;
@@ -94,7 +95,7 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
         }
     }
 
-    private static class OpenPort2Frame extends CanFrame {
+    private static class OpenPort2Frame extends CANFrame {
         private final byte[] header;
 
         private OpenPort2Frame(byte[] header, int arbitrationId, byte[] body) {

@@ -4,15 +4,15 @@ import com.github.manevolent.atlas.Address;
 import com.github.manevolent.atlas.Addressed;
 import com.github.manevolent.atlas.Frame;
 
-public class CanFrame implements Frame, Addressed {
+public class CANFrame implements Frame, Addressed {
     private byte[] data;
     private Integer arbitrationId;
 
-    public CanFrame() {
+    public CANFrame() {
 
     }
 
-    public CanFrame(int arbitrationId, byte[] data) {
+    public CANFrame(int arbitrationId, byte[] data) {
         this.arbitrationId = arbitrationId;
         this.data = data;
     }
@@ -36,6 +36,6 @@ public class CanFrame implements Frame, Addressed {
 
     @Override
     public Address getAddress() {
-        return new CanArbitrationId(arbitrationId);
+        return new CANArbitrationId(arbitrationId);
     }
 }

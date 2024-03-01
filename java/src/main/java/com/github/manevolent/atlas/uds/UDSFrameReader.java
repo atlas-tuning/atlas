@@ -34,4 +34,9 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
         }
         return udsFrame;
     }
+
+    @Override
+    public void close() throws Exception {
+        transport.close();
+    }
 }

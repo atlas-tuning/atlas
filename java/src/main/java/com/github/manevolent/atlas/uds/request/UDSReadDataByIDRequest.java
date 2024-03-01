@@ -13,7 +13,7 @@ import java.util.stream.Collectors;
 public class UDSReadDataByIDRequest extends UDSRequest<UDSReadDataByIDResponse> {
     private int[] dids;
 
-    public UDSReadDataByIDRequest(int[] dids) {
+    public UDSReadDataByIDRequest(int... dids) {
         this.dids = dids;
     }
 

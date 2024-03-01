@@ -1,6 +1,6 @@
 package com.github.manevolent.atlas.isotp;
 
-import com.github.manevolent.atlas.can.CanArbitrationId;
+import com.github.manevolent.atlas.can.CANArbitrationId;
 
 import java.nio.ByteBuffer;
 
@@ -15,7 +15,7 @@ public class ISOTPPeer {
 
     public ISOTPFrame handleFrame(ISOTPSubFrame subFrame) {
         if (subFrame instanceof ISOTPSingleFrame) {
-            return ((ISOTPSingleFrame) subFrame).coalesce(new CanArbitrationId(arbitrationId));
+            return ((ISOTPSingleFrame) subFrame).coalesce(new CANArbitrationId(arbitrationId));
         } else if (subFrame instanceof ISOTPFirstFrame) {
             ISOTPFirstFrame firstFrame = (ISOTPFirstFrame) subFrame;
             if (expected > 0) {
@@ -34,11 +34,11 @@ public class ISOTPPeer {
             buffer.put(consFrame.getData());
             if (buffer.position() >= expected) {
                 // Assemble
-                byte[] reassembled = new byte[buffer.position()];
-                System.arraycopy(buffer.array(), 0, reassembled, 0, buffer.position());
+                byte[] reassembled = new byte[expected];
+                System.arraycopy(buffer.array(), 0, reassembled, 0, expected);
                 buffer.position(0);
                 expected = -1;
-                return new ISOTPFrame(new CanArbitrationId(arbitrationId), reassembled);
+                return new ISOTPFrame(new CANArbitrationId(arbitrationId), reassembled);
             }
         }
 

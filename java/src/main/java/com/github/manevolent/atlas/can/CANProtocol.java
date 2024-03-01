@@ -4,7 +4,7 @@ import com.github.manevolent.atlas.BitReader;
 
 import java.io.IOException;
 
-public class CanProtocol {
+public class CANProtocol {
     public static final boolean CAN_BIT_DOMINANT = false;
     public static final boolean CAN_BIT_RECESSIVE = true;
 

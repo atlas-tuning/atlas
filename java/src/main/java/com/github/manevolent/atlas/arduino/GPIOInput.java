@@ -10,10 +10,14 @@ public class GPIOInput extends GPIOPin implements Input {
     public GPIOInput(String name, int pin, GPIOResistorMode resistorMode, GPIOPinType type,
                      Input vGnd, Input vRef) {
         super(name, pin, resistorMode, type);
+
+        if (type == GPIOPinType.PWM) {
+            throw new UnsupportedOperationException("See " + GPIOPulseInput.class);
+        }
+
         v_gnd = vGnd;
         v_ref = vRef;
     }
-
 
     public GPIOInput(String name, int pin, GPIOResistorMode resistorMode, GPIOPinType type) {
         this(name, pin, resistorMode, type, null, null);
@@ -52,5 +56,21 @@ public class GPIOInput extends GPIOPin implements Input {
     @Override
     public boolean isStatic() {
         return false;
+    }
+
+    public enum SubValue implements com.github.manevolent.atlas.arduino.SubValue {
+        NONE(0x0),
+        SECONDS_SINCE_LAST_CHANGE(0x1),
+        DELTA(0x2);
+
+        private final int flag;
+
+        SubValue(int flag) {
+            this.flag = flag;
+        }
+
+        public int getCode() {
+            return flag;
+        }
     }
 }

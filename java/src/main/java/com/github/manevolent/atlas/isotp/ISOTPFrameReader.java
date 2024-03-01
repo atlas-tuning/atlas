@@ -1,23 +1,23 @@
 package com.github.manevolent.atlas.isotp;
 
 import com.github.manevolent.atlas.FrameReader;
-import com.github.manevolent.atlas.can.CanFrame;
+import com.github.manevolent.atlas.can.CANFrame;
 
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ISOTPFrameReader implements FrameReader<ISOTPFrame> {
-    private final FrameReader<CanFrame> canReader;
+    private final FrameReader<CANFrame> canReader;
     private final Map<Integer, ISOTPPeer> peers = new HashMap<>();
 
-    public ISOTPFrameReader(FrameReader<CanFrame> canReader) {
+    public ISOTPFrameReader(FrameReader<CANFrame> canReader) {
         this.canReader = canReader;
     }
 
     @Override
     public ISOTPFrame read() throws IOException {
-        CanFrame canFrame;
+        CANFrame canFrame;
         while ((canFrame = canReader.read()) != null) {
             if (canFrame.getLength() <= 0) {
                 continue;
@@ -34,5 +34,10 @@ public class ISOTPFrameReader implements FrameReader<ISOTPFrame> {
         }
 
         return null;
+    }
+
+    @Override
+    public void close() throws Exception {
+        canReader.close();
     }
 }
