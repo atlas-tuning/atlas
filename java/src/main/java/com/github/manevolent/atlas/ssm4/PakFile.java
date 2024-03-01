@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.ssm4;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.windows.CryptoAPI;
 
+import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -11,9 +12,38 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import static com.github.manevolent.atlas.windows.CryptoAPI.createRC2;
-
+/**
+ * This utility reads Subaru FlashWrite ".pak" files, which belong to the Subaru FlashWrite 1
+ * utility (FlashWrite2 uses pk2 etc., which are not covered here)
+ *
+ * The PAK format is specific to the Denso software package (FlashWrite); they're not standardized.
+ *
+ * PAK files are MFC CArchive objects, meaning they're directly serialized from C++ objects using
+ * the older MFC framework.  Each entry is protected with a 40-bit key, 64-bit block RC2 cipher
+ * which has been reverse engineered from the Microsoft CryptoAPI Base Cryptography Provider in
+ * the CryptoAPI.java sister file.
+ *
+ * This utility has a main method.  Point it at a Subaru-supplied CSV, and point at a directory
+ * containing PAK files (i.e. the "EcuData" folder shipped with SSM3/4).  This utility will
+ * auto-magically unpack each of the entries in the PAK file (there can be several) and save them
+ * to your disk using the "keyword" supplied in each file.
+ *
+ * Keep in mind that there is more reverse engineering needed with these PAK files, since each file
+ * contains multiple sub-files, incl. filenames.  Think of them like encrypted archives.
+ *
+ * NOTE ON COPYRIGHT:
+ * PAK files and the CSV themselves are not supplied as they are proprietary.  You need a copy
+ * of SSM3/SSM4 to run this utility and inspect the output(s).
+ *
+ * Example arg array:
+ * [0]: ".../flashwrite/Pack File Database_N_AMERICA.csv"
+ * [1] ".../flashwrite/EcuData/"
+ *
+ * ..outputs files like this:
+ * .../flashwrite/EcuData/FILENAME.pak.KEYWORD/(EcuDataMap,PcVerData,flash binaries,etc.)
+ */
 public class PakFile {
+    private static final byte[] anchor = "CClFileDataInfo".getBytes(StandardCharsets.US_ASCII);
 
     public static void main(String[] args) throws Exception {
         decrypt(args[0], args[1]);
@@ -53,13 +83,15 @@ public class PakFile {
                     filesToTry.add(pakNumberfilename);
                     filesToTry.add(partNumberFilename);
 
-                    if (!pakNumberfilename.equals("22611BC090")) continue;
-
                     for (String filename : filesToTry) {
                         String setKey = filename + "." + keyword;
                         if (!done.contains(setKey)) {
-                            decryptFile(keyword, pakDirectory + File.separator + filename + ".pak");
-                            done.add(setKey);
+                            try {
+                                decryptFile(keyword, pakDirectory + File.separator + filename + ".pak");
+                                done.add(setKey);
+                            } catch (BadPaddingException ex) {
+                                ex.printStackTrace();
+                            }
                         }
                     }
                 }
@@ -70,75 +102,165 @@ public class PakFile {
     private static void decryptFile(String keywordString, String pakFile) throws IOException, GeneralSecurityException {
         if (!new File(pakFile).exists()) return;
         System.out.println("Decrypt " + pakFile + " with keyword " + keywordString + "...");
-        StringBuilder sb = new StringBuilder();
-        Cipher rc2 = null;
-        try (InputStream inputStream = new FileInputStream(pakFile)) {
-            byte[] cipherText = inputStream.readAllBytes();
 
+        try (RandomAccessFile raf = new RandomAccessFile(pakFile, "r")) {
+            byte[] search = new byte[anchor.length];
             boolean locked = false;
-            int windowSize = 16;
-            List<byte[]> priorWindows = new ArrayList<>();
-
-            for (int offs = 0; offs < cipherText.length - 8; offs += (locked ? windowSize : 1)) {
-                int realWindowSize = Math.min(cipherText.length - offs, windowSize);
-                byte[] window = new byte[realWindowSize];
-                if (!locked) {
-                    rc2 = createRC2(keywordString.replaceAll(" ", ""));
-                    assert rc2.getBlockSize() == CryptoAPI.RC2_BLOCK_LENGTH;
-                }
-
-                System.arraycopy(cipherText, offs, window, 0, realWindowSize);
-                try {
-                    window = rc2.update(window, 0, realWindowSize);
-
-                    priorWindows.add(window);
-                    while (priorWindows.size() > 9) {
-                        priorWindows.remove(0);
-                    }
-
-                    if (window.length <= 0) {
-                        locked = false;
-                    } else {
-                        System.out.println(Frame.toHexString(window));
-                        boolean good = true;
-                        String windowString = new String(window);
-                        for (int i = 0; i < window.length; i++) {
-                            if (!Character.isLetterOrDigit(window[i]) && !Character.isWhitespace(window[i])) {
-                                good = false;
-                                break;
-                            }
-                        }
-                        if (good) {
-                            // From 22611BC090 (2009MY Forester),
-                            //S2140A306096554F6E96554F6E96554F6E96554F6EB1
-                            //chksum:                                   B1
-                            //data:     96554F6E96554F6E96554F6E96554F6E
-                            //    0A3060: suspect this is offset
-                            //S214 :unsure ('S' is 0x53, or dec 83, '2' is 0x32 or dec 50), 0x14 is dec 20
-
-                            if (!locked && !windowString.startsWith("S")) {
-                                good = false;
-                            } else {
-                                sb.append(windowString);
-                            }
-                        }
-                        locked = good;
-                    }
-                } catch (Exception ex) {
-                    if (locked)
-                        locked = false;
+            for (int offs = 0; offs < raf.length() - anchor.length; offs ++) {
+                raf.seek(offs);
+                raf.read(search, 0, search.length);
+                if (Arrays.equals(anchor, search)) {
+                    System.out.println(" Found anchor at offs " + offs + "...");
+                    locked = true;
+                    break;
                 }
             }
+
+            if (locked) {
+                List<PakSection> sections = new ArrayList<>();
+                PakSection section;
+                while (true) {
+                    section = decryptSection(raf, keywordString);
+                    sections.add(section);
+
+                    if (section.opcode == 0x8001) {
+                        // continue with current class
+                        continue;
+                    } else if (section.opcode == 0xFFFF) {
+                        // stop, change class
+                        int unused = raf.readUnsignedShort();
+                        String cpp_class = readString(raf);
+                        System.out.println(" Class=" + cpp_class);
+                        continue;
+                    } else if (section.opcode == 0x0000) {
+                        // EOF
+                        break;
+                    }
+                }
+
+                if (raf.length() - raf.getFilePointer() != 0) {
+                    throw new IllegalStateException("Didn't fully read PAK file");
+                }
+
+                for (PakSection recovered : sections) {
+                    String folder = pakFile + "." + keywordString + "/";
+                    new File(folder).mkdirs();
+                    String clearFilename = folder + recovered.filename;
+                    try (OutputStream writer = new FileOutputStream(clearFilename)) {
+                        writer.write(recovered.body);
+                    }
+                }
+            } else {
+                System.out.println("Failed to find expected file anchor!");
+            }
+        }
+    }
+
+    private static class PakSection {
+        private String filename;
+        private byte[] header;
+        private long start, end;
+        private byte[] body;
+        private int opcode;
+
+        private PakSection(String filename, byte[] header, byte[] body, long start, long end,
+                           int opcode) {
+            this.filename = filename;
+            this.header = header;
+            this.start = start;
+            this.end = end;
+            this.body = body;
+            this.opcode = opcode;
         }
 
-        if (sb.length() > 0) {
-            System.out.println("Decrypted " + sb.length() + " characters");
-            try (FileWriter writer = new FileWriter(pakFile + "." + keywordString + ".clear")) {
-                writer.write(sb.toString());
+        public String getFilename() {
+            return filename;
+        }
+
+        public byte[] getHeader() {
+            return header;
+        }
+
+        public byte[] getBody() {
+            return body;
+        }
+
+        public long getStart() {
+            return start;
+        }
+
+        public long getEnd() {
+            return end;
+        }
+
+        public int getOpcode() {
+            return opcode;
+        }
+    }
+
+    private static String readString(RandomAccessFile file) throws IOException {
+        int length = readLength(file);
+        byte[] stringData = new byte[length];
+        file.read(stringData);
+        return new String(stringData);
+    }
+
+    // See: https://github.com/pixelspark/corespark/blob/master/Libraries/atlmfc/src/mfc/arccore.cpp
+    private static int readLength(RandomAccessFile file) throws IOException {
+        int length;
+        byte[] wCount = new byte[2];
+        file.read(wCount);
+        if (wCount[0] != (byte)0xFF || wCount[1] != (byte)0xFF) {
+            length = (wCount[0] & 0xFF | ((wCount[1] << 8) & 0xFF00)) & 0xFFFF;
+
+            if (length < 0) {
+                throw new IllegalArgumentException(Integer.toString(length)
+                        + ": " + Frame.toHexString(wCount));
             }
         } else {
-            System.out.println("Failed to decrypt!");
+            byte[] dwCount = new byte[4];
+            file.read(dwCount);
+
+            length = (dwCount[0] & 0xFF) |
+                    ((dwCount[1] << 8) & 0xFF00) |
+                    ((dwCount[2] << 16) & 0xFF0000) |
+                    ((dwCount[3] << 24) & 0xFF000000);
+
+            if (length < 0) {
+                throw new IllegalArgumentException(Integer.toString(length)
+                        + ": " + Frame.toHexString(dwCount));
+            }
         }
+        return length;
+    }
+
+    private static PakSection decryptSection(RandomAccessFile file, String keywordString)
+            throws GeneralSecurityException, IOException {
+        int fileNameLength = file.readUnsignedByte();
+        byte[] fileName = new byte[fileNameLength];
+        file.read(fileName);
+        byte[] headerBytes = new byte[4];
+        file.read(headerBytes);
+
+        int length = readLength(file);
+
+        long start = file.getFilePointer(), end = start + length;
+
+        String filenameString = new String(fileName, StandardCharsets.US_ASCII);
+        System.out.println(" Decrypting file " + filenameString
+                + "(len=" + length + ") at range " + start + " - " + end + "...");
+
+        ByteArrayOutputStream body = new ByteArrayOutputStream();
+        byte[] block = new byte[length];
+        int read = file.read(block);
+        Cipher rc2 = CryptoAPI.createRC2(keywordString);
+        block = rc2.doFinal(block, 0, read);
+        body.write(block);
+
+        byte[] opcodeBytes = new byte[2];
+        file.read(opcodeBytes);
+        int opcode = (opcodeBytes[0] | ((opcodeBytes[1] << 8) & 0xFF00)) & 0xFFFF;
+        return new PakSection(filenameString, headerBytes, body.toByteArray(), start, end, opcode);
     }
 
 }
