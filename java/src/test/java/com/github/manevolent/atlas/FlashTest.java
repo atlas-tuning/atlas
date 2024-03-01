@@ -6,6 +6,8 @@ import com.github.manevolent.atlas.definition.zip.StreamedFlashSource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -29,7 +31,12 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.MULTIPLY, 16f)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f);
 
-
+    /**
+     * Unit is newton-meters
+     */
+    private static final Scale.Builder req_torque_16bit =
+            Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x3E80)
+                           .withOperation(ArithmeticOperation.DIVIDE, 0x50);
 
     private static final Scale.Builder calculated_load_16bit =
             Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f);
@@ -54,6 +61,16 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x7D)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
             .withOperation(ArithmeticOperation.MULTIPLY, 10.0f);
+
+    /**
+     * Unit is kPa
+     */
+    private static final Scale.Builder boostTargetPressureScale_RelSL_16bit = Scale.builder()
+            .withOperation(ArithmeticOperation.ADD, 0x6A6)
+            .withOperation(ArithmeticOperation.MULTIPLY, 2)
+            .withOperation(ArithmeticOperation.RSHIFT, 8)
+            .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
+            .withOperation(ArithmeticOperation.SUBTRACT, (float) 14.70);
 
     /**
      * Unit is degrees celsius
@@ -516,7 +533,29 @@ public class FlashTest {
                 .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3B #2", 0x000c8524, 0x000c84e4))
                 .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup Mode 4", 0x000c8654, true, 0x000c83e4, 0x000c82f8))
                 .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup Default", 0x000c83c4, false, 0x000c83b4, 0x000c82f8))
-
+                .withTable(Table.builder()
+                        .withName("Boost Target - Relative Sea Level")
+                        .withData(Series.builder()
+                                .withName("Boost (rel. sea level)")
+                                .withAddress(code, 0x0002cda8)
+                                .withFormat(DataFormat.USHORT)
+                                .withScale(boostTargetPressureScale_RelSL_16bit)
+                                .withUnit(Unit.PSI)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002afd8)
+                                .withLength(0x13)
+                                .withFormat(DataFormat.USHORT)
+                                .withUnit(Unit.RPM)
+                                .withScale(rpm_16bit))
+                        .withAxis(X, Series.builder()
+                                .withName("Requested Torque")
+                                .withAddress(code, 0x0002d300)
+                                .withLength(0x24)
+                                .withUnit(Unit.NM)
+                                .withFormat(DataFormat.USHORT)
+                                .withScale(req_torque_16bit)))
                 .build();
     }
 
@@ -563,7 +602,7 @@ public class FlashTest {
     public void test_WriteCsvs() throws IOException {
         Rom rom = newRom();
         for (Table table : rom.getTables()) {
-            table.writeCsv(new FileOutputStream("tables/" + testRomName + "/" + table.getName() + ".csv"));
+            table.writeCsv(new FileOutputStream("tables/" + testRomName + "/" + table.getName() + ".csv"), 2);
         }
     }
 

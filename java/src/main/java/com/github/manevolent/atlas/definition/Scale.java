@@ -53,6 +53,13 @@ public class Scale {
                    .build());
         }
 
+        public Builder withOperation(ArithmeticOperation operation, int coefficient) {
+            return withOperation(ScalingOperation.builder()
+                    .withOperation(operation)
+                    .withCoefficient((float) coefficient)
+                    .build());
+        }
+
         public Builder withOperations(ScalingOperation... operations) {
             scale.operations.addAll(Arrays.asList(operations));
             return this;

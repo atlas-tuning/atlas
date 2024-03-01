@@ -4,10 +4,9 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.github.manevolent.atlas.definition.Axis.X;
 import static com.github.manevolent.atlas.definition.Axis.Y;
@@ -70,7 +69,7 @@ public class Table {
         return this.axes.get(axis);
     }
 
-    public void writeCsv(OutputStream outputStream) throws IOException {
+    public void writeCsv(OutputStream outputStream, int rounding_precision) throws IOException {
         try (OutputStreamWriter osw = new OutputStreamWriter(outputStream);
                 BufferedWriter writer = new BufferedWriter(osw)) {
             Consumer<String> writeCell = (value) -> {
@@ -98,7 +97,7 @@ public class Table {
                     writeCell.accept(Float.toString(y.get(y_index)));
                     for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                         // Write the cell data
-                        writeCell.accept(Float.toString(getCell(x_index, y_index)));
+                        writeCell.accept(String.format("%." + rounding_precision + "f", getCell(x_index, y_index)));
                     }
                     writer.write("\r\n");
                 }
@@ -107,27 +106,28 @@ public class Table {
                 writeCell.accept("");
                 for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                     // Write the cell data
-                    writeCell.accept(Float.toString(getCell(x_index)));
+                    writeCell.accept(String.format("%." + rounding_precision + "f", getCell(x_index)));
                 }
                 writer.write("\r\n");
             }
 
             writeCell.accept("");
             writer.write("\r\n");
-            writeCell.accept("Table"); writeCell.accept(name);
+            writeCell.accept("Series"); writeCell.accept("Name"); writeCell.accept("Unit");
+            writer.write("\r\n");
+            writeCell.accept("Table"); writeCell.accept(name); writeCell.accept(data.getUnit().name());
             writer.write("\r\n");
 
-
-            writeCell.accept("Output"); writeCell.accept(data.getUnit().name());
-            writer.write("\r\n");
-
-            for (Axis axis : axes.keySet()) {
+            List<Axis> axes = new ArrayList<>(this.axes.keySet());
+            axes.sort(Comparator.comparing(Axis::name));
+            for (Axis axis : axes) {
                 writeCell.accept(axis.name() + " Axis");
-                Series series = axes.get(axis);
+                Series series = this.axes.get(axis);
+                writeCell.accept(series.getName());
                 if (series.getUnit() == null) {
                     writeCell.accept("Unknown!");
                 } else {
-                    writeCell.accept(axes.get(axis).getUnit().name());
+                    writeCell.accept(this.axes.get(axis).getUnit().name());
                 }
                 writer.write("\r\n");
             }
