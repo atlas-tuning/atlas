@@ -13,8 +13,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * This utility reads Subaru FlashWrite ".pak" files, which belong to the Subaru FlashWrite 1
- * utility (FlashWrite2 uses pk2 etc., which are not covered here)
+ * This utility reads Subaru FlashWrite ".pak" or ".pk2" files, which belong to the Subaru FlashWrite
+ * utility (versions 1 and 2)
  *
  * The PAK format is specific to the Denso software package (FlashWrite); they're not standardized.
  *
@@ -80,14 +80,16 @@ public class PakFile {
                     String partNumberFilename = cells.get(4).trim();
                     String pakNumberfilename = cells.get(5).trim();
                     Set<String> filesToTry = new HashSet<>();
-                    filesToTry.add(pakNumberfilename);
-                    filesToTry.add(partNumberFilename);
+                    filesToTry.add(pakNumberfilename + ".pak");
+                    filesToTry.add(partNumberFilename + ".pak");
+                    filesToTry.add(pakNumberfilename + ".pk2");
+                    filesToTry.add(partNumberFilename + ".pk2");
 
                     for (String filename : filesToTry) {
                         String setKey = filename + "." + keyword;
                         if (!done.contains(setKey)) {
                             try {
-                                decryptFile(keyword, pakDirectory + File.separator + filename + ".pak");
+                                decryptFile(keyword, pakDirectory + File.separator + filename);
                                 done.add(setKey);
                             } catch (BadPaddingException ex) {
                                 ex.printStackTrace();
