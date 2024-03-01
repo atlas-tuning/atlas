@@ -6,6 +6,8 @@ import com.github.manevolent.atlas.uds.UDSComponent;
 
 import java.nio.ByteBuffer;
 
+import static com.github.manevolent.atlas.can.CANArbitrationId.id;
+
 public enum SubaruDITComponent implements UDSComponent {
 
     // Just a handful for now
@@ -18,9 +20,7 @@ public enum SubaruDITComponent implements UDSComponent {
     POWER_STEERING(1201, id(0x746), id(0x74E)),
     KEYLESS_ACCESS(1301, id(0x751), id(0x759)); // and push start
 
-    public static CANArbitrationId id(int id) {
-        return new CANArbitrationId(id);
-    }
+
 
     private final int id;
 

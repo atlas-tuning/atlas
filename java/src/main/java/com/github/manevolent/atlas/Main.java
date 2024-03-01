@@ -21,9 +21,9 @@ import static com.github.manevolent.atlas.subaru.SubaruDITComponent.*;
 
 public class Main {
 
-    private static void readDataById(AsyncUDSSession session, CANArbitrationId arbitrationId, int did) throws IOException {
+    private static void readDataById(AsyncUDSSession session, UDSComponent component, int did) throws IOException {
         session.request(
-                arbitrationId,
+                component.getSendAddress(),
                 new UDSReadDataByIDRequest(did),
                 (response) -> {},
                 Throwable::printStackTrace
@@ -52,11 +52,11 @@ public class Main {
         );
 
         System.out.println("Reading active diagnostic session...");
-        readDataById(session, id(0x7A2), 0x11C8);
-        readDataById(session, id(0x7A2), 0xF40C);
-        readDataById(session, id(0x7A2), 0xF182);
-        readDataById(session, id(0x752), 0xF186);
-        readDataById(session, id(0x763), 0xF186);
+        readDataById(session, ENGINE_1, 0x11C8);
+        readDataById(session, ENGINE_1, 0xF40C);
+        readDataById(session, ENGINE_1, 0xF182);
+        readDataById(session, UNKNOWN_2, 0xF186);
+        readDataById(session, UNKNOWN_1, 0xF186);
 
         System.out.println("Entering diagnostic session with vehicle...");
         session.request(

@@ -3,6 +3,10 @@ package com.github.manevolent.atlas.can;
 import com.github.manevolent.atlas.Address;
 
 public class CANArbitrationId implements Address {
+    public static CANArbitrationId id(int id) {
+        return new CANArbitrationId(id);
+    }
+
     private final int arbitrationId;
 
     public CANArbitrationId(int arbitrationId) {
