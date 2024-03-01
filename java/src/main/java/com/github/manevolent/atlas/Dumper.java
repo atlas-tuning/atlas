@@ -13,6 +13,7 @@ import com.github.manevolent.atlas.uds.AsyncUDSSession;
 import com.github.manevolent.atlas.uds.UDSFrame;
 import com.github.manevolent.atlas.uds.UDSFrameReader;
 import com.github.manevolent.atlas.uds.UDSProtocol;
+import com.github.manevolent.atlas.uds.request.UDSTransferRequest;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -26,10 +27,13 @@ public class Dumper {
         String path = args[0];
         File file = new File(path);
 
+        RandomAccessFile raf = new RandomAccessFile(args[1], "rw");
+
         CANFrameReader canReader = new OpenPort2CANFrameReader(new FileInputStream(file));
         ISOTPFrameReader isotpReader = new ISOTPFrameReader(canReader);
         UDSFrameReader udsReader = new UDSFrameReader(isotpReader, SubaruProtocols.DIT);
         UDSFrame frame;
+
         while (true) {
             try {
                 frame = udsReader.read();
@@ -42,8 +46,14 @@ public class Dumper {
                 break;
             }
 
-            System.out.println(frame.toString());
+            if (frame.getBody() instanceof UDSTransferRequest) {
+                UDSTransferRequest transferRequest = (UDSTransferRequest) frame.getBody();
+                raf.seek(transferRequest.getAddress());
+                raf.write(transferRequest.getData());
+            }
         }
+
+        raf.close();
     }
 
 }

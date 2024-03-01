@@ -1,5 +1,41 @@
 package com.github.manevolent.atlas.ssm4;
 
+/**
+ * This is the flash encryption algorithm used for modules in the CAN network
+ * for Subaru DIT ECUs, i.e. Renesas RH850-based MCUs such as the engine control
+ * unit and so forth.
+ *
+ * The algorithm used is a Feistel cipher with a 32-bit block size and a 64-bit
+ * key comprised of 4x16-bit "shorts". There is also a lookup/scramble table involved
+ * for the 'F' function in Feistel. I go into more detail in the next paragraph.
+ *
+ * To learn more about Feistel, see: https://en.wikipedia.org/wiki/Feistel_cipher.
+ *
+ * In brief, Feistel divides the ciphertext/cleartext into 2 halves. In our case,
+ * that is two 16-bit pieces. For encryption, one half is encrypted with a key ('K'),
+ * and the halves are flipped. This is done 4 times for this particular implementation.
+ * For decryption, the reverse occurs. This is possible as one half is always used as
+ * a see for the other halves' key material. Furthermore, 'K' is always a list
+ * of 4 keys, and each time a 'K' is retrieved from the key list, a function 'F' is
+ * performed. In our case, this is a scrambling from a lookup table (feistel_lookup_table).
+ *
+ * The cipher used by these MCUs does not use chaining; each 32-bit
+ * ciphertext word (which herein I call a "symbol") is unique to the cleartext
+ * data and vice-versa. The same two 32-bit/word patterns always return the same ciphertext.
+ * In this manner, the ciphertext may appear to repeat throughout a flash file (see: PK2
+ * decryption in this repository).
+ *
+ * In order to decrypt an MCU you have such as a transmission control module, EyeSight,
+ * etc., you first need to know the 64-bit key. You can obtain this by dumping ECU memory,
+ * if the ECU offers that service. This service often requires an elevated security level.
+ * For the keys for that, see: https://github.com/jglim/UnlockECU, an open repository where
+ * the keys for each level are often easily discoverable. If you can't find the memory or
+ * an example of cleartext ECU flash, you are out of luck, sadly.
+ *
+ * Once you have the binary data (.bin, etc.) of the ECU flash, you can pass it through
+ * this cipher to decrypt the flash data or vice-versa.
+ *
+ */
 public class SubaruDITFlashEncryption {
 
     private static byte[] feistel_lookup_table = new byte[] {
@@ -12,21 +48,21 @@ public class SubaruDITFlashEncryption {
             (byte) 0x0e, (byte) 0x08
     };
 
-    public static short[] ENGINE_ECU_KEYS_ENCRYPTION = new short[] {
+    public static short[] ENGINE_ECU_KEYS_DECRYPTION = new short[] {
             (short)0x5fb1,
             (short)0xa7ca,
             (short)0x42da,
             (short)0xb740
     };
 
-    public static short[] ENGINE_ECU_KEYS_DECRYPTION = new short[] {
+    public static short[] ENGINE_ECU_KEYS_ENCRYPTION = new short[] {
             (short)0xb740,
             (short)0x42da,
             (short)0xa7ca,
             (short)0x5fb1,
     };
 
-    public static void feistel_encrypt(int cleartext_symbol,
+    public static void feistel_decrypt(int encrypted_symbol,
                                        byte[] data_out,
                                        short[] keys) {
         short uVar1;
@@ -41,7 +77,7 @@ public class SubaruDITFlashEncryption {
         byte[] abStack_4 = new byte[4];
 
         uVar2 = 4;
-        local_c = cleartext_symbol;
+        local_c = encrypted_symbol;
 
         int key_index = 0;
         do {
@@ -89,23 +125,19 @@ public class SubaruDITFlashEncryption {
             uVar2 = uVar6 - 1;
         } while (uVar6 - 1 != 0);
 
-        data_out[1] = (byte) ((local_c >> 16) & 0xFF);
-        data_out[0] = (byte) ((local_c >> 24) & 0xFF);
-        data_out[3] = (byte) ((local_c) & 0xFF);
-        data_out[2] = (byte) ((local_c >> 8) & 0xFF);
+        data_out[2] = (byte) ((local_c >> 24) & 0xFF);
+        data_out[3] = (byte) ((local_c >> 16) & 0xFF);
+        data_out[0] = (byte) ((local_c >> 8) & 0xFF);
+        data_out[1] = (byte) ((local_c) & 0xFF);
     }
 
-    /**
-     * See: https://en.wikipedia.org/wiki/Feistel_cipher
-     *
-     * This is run for each 32-bit block of data desired to be decrypted.
-     *
-     * @param encrypted_symbol
-     * @param
-     */
-    public static void feistel_decrypt(int encrypted_symbol,
+    public static void feistel_encrypt(int cleartext_symbol,
                                        byte[] data_out,
                                        short[] keys) {
+        short low = (short) (cleartext_symbol & 0xFFFF);
+        short high = (short) ((cleartext_symbol >> 16) & 0xFFFF);
+        cleartext_symbol = (low << 16) | (high & 0xFFFF);
+
         short uVar1;
         int uVar2;
         int uVar3;
@@ -118,7 +150,7 @@ public class SubaruDITFlashEncryption {
         byte[] abStack_4 = new byte[4];
 
         uVar2 = 4;
-        local_c = encrypted_symbol;
+        local_c = cleartext_symbol;
 
         int key_index = 0;
         do {
