@@ -6,6 +6,7 @@ import com.github.manevolent.atlas.subaru.uds.request.SubaruReadDTCRequest;
 import com.github.manevolent.atlas.subaru.uds.response.SubaruReadDTCResponse;
 import com.github.manevolent.atlas.uds.UDSComponent;
 import com.github.manevolent.atlas.uds.command.UDSDataByIdSupplier;
+import com.github.manevolent.atlas.uds.command.UDSReadMemoryCommand;
 import com.github.manevolent.atlas.uds.command.UDSSecurityAccessCommand;
 import com.github.manevolent.atlas.uds.command.UDSSupplier;
 
@@ -24,19 +25,13 @@ public final class SubaruDITCommands {
             };
 
     /**
-     * Used on the CGW (Central Gateway) module
-     */
-    public static final UDSSecurityAccessCommand SECURITY_ACCESS_LEVEL_7 =
-            new SubaruSecurityAccessCommandAES(0x7, CENTRAL_GATEWAY, Crypto.toByteArray("7692E7932F23A901568DDFA5FF580625"));
-
-    /**
      * Allows for a programming session and for flash to be written to
      */
     public static final UDSSecurityAccessCommand SECURITY_ACCESS_LEVEL_1 =
             new SubaruSecurityAccessCommandAES(0x1, ENGINE_1, Crypto.toByteArray("667E3078219976B4EDF3D43BD1D8FFC9"));
 
     /**
-     * Unknown purpose
+     * Allows you to write parameters (DIDs) to ECU, such as VIN
      */
     public static final UDSSecurityAccessCommand SECURITY_ACCESS_LEVEL_3 =
             new SubaruSecurityAccessCommandAES(0x3, ENGINE_1, Crypto.toByteArray("469A20AB308D5CA64BCD5BBE535BD85F"));
@@ -47,6 +42,11 @@ public final class SubaruDITCommands {
     public static final UDSSecurityAccessCommand SECURITY_ACCESS_LEVEL_5 =
             new SubaruSecurityAccessCommandAES(0x5, ENGINE_1, Crypto.toByteArray("E8CC52D5D8F20706424813126FA7ABDD"));
 
+    /**
+     * Used on the CGW (Central Gateway) module
+     */
+    public static final UDSSecurityAccessCommand SECURITY_ACCESS_LEVEL_7 =
+            new SubaruSecurityAccessCommandAES(0x7, CENTRAL_GATEWAY, Crypto.toByteArray("7692E7932F23A901568DDFA5FF580625"));
 
     public static final UDSSupplier<SubaruReadDTCRequest, SubaruReadDTCResponse, Set<Short>>
             READ_DTC = new UDSSupplier<>() {

@@ -57,7 +57,15 @@ public class UDSFrame implements Frame, Addressed {
 
     public void read(BitReader reader) throws IOException {
         int serviceId = (reader.readByte() & 0xFF);
-        Class<? extends UDSBody> clazz = protocol.getClassBySid(serviceId);
+
+        Class<? extends UDSBody> clazz;
+
+        try {
+            clazz = protocol.getClassBySid(serviceId);
+        } catch (IllegalArgumentException unknownSidException) {
+            clazz = UDSUnknownBody.class;
+        }
+
         UDSBody body;
         try {
             body = clazz.newInstance();
@@ -108,9 +116,14 @@ public class UDSFrame implements Frame, Addressed {
 
     @Override
     public String toString() {
-        int sid = getServiceId();
+        String sidString;
+        try {
+            sidString = String.format("0x%02X", getServiceId());
+        } catch (Exception ex) {
+            sidString = "(unknown)";
+        }
         String fullyReadWarning = remaining != null ? " remaining=" + Frame.toHexString(remaining) : "";
-        return getAddress().toString() + " " + String.format("0x%02X", sid) + " " + body.getClass().getSimpleName()
+        return getAddress().toString() + " " + sidString + " " + body.getClass().getSimpleName()
                 + " " + body.toString() + fullyReadWarning;
     }
 }

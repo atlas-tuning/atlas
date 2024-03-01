@@ -18,12 +18,18 @@ public class UDSDefineDataIdentifierRequest extends UDSRequest<UDSDefineDataIden
     public UDSDefineDataIdentifierRequest(int function, int did) {
         this.function = function;
         this.did = did;
+        this.data = new byte[0];
     }
 
     public UDSDefineDataIdentifierRequest(int function, int did, byte[] data) {
         this.function = function;
         this.did = did;
         this.data = data;
+    }
+
+    @Override
+    public byte[] getData() {
+        return data;
     }
 
     @Override

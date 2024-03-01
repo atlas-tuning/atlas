@@ -3,6 +3,8 @@ package com.github.manevolent.atlas.can;
 import com.github.manevolent.atlas.Address;
 
 public class CANArbitrationId implements Address {
+    public static final CANArbitrationId ZERO = id(0x0000);
+
     public static CANArbitrationId id(int id) {
         return new CANArbitrationId(id);
     }

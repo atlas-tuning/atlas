@@ -22,6 +22,12 @@ public class UDSSecurityAccessRequest
         this.data = data;
     }
 
+    public UDSSecurityAccessRequest(int seed) {
+        this.seed = seed;
+        this.data = new byte[0];
+    }
+
+
     @Override
     public void read(BitReader reader) throws IOException {
         this.seed = reader.readByte();

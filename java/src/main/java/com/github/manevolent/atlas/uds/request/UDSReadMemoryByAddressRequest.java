@@ -27,18 +27,18 @@ public class UDSReadMemoryByAddressRequest extends UDSRequest<UDSReadMemoryByAdd
 
     @Override
     public void read(BitReader reader) throws IOException {
-        this.addressLength = (int) reader.read(4);
         this.sizeLength = (int) reader.read(4);
-        this.address = reader.read(addressLength);
+        this.addressLength = (int) reader.read(4);
         this.size = reader.read(sizeLength);
+        this.address = reader.read(addressLength);
     }
 
     @Override
     public void write(BitWriter writer) throws IOException {
-        writer.writeNibble((byte) addressLength);
         writer.writeNibble((byte) sizeLength);
-        writer.writeLSB((int)address, addressLength * 8);
+        writer.writeNibble((byte) addressLength);
         writer.writeLSB((int)size, sizeLength * 8);
+        writer.writeLSB((int)address, addressLength * 8);
     }
 
     @Override

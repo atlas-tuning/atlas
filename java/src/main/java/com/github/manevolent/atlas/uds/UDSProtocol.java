@@ -11,6 +11,7 @@ public interface UDSProtocol {
             UDSQuery.from("Security Access", 0x27, UDSSecurityAccessRequest.class),
             UDSQuery.from("Communication Control", 0x28,UDSCommunicationControlRequest.class),
             UDSQuery.from("Authentication", 0x29, UDSAuthenticationRequest.class),
+            UDSQuery.from("Write Data by Identifier", 0x2E, UDSWriteDataByIDRequest.class),
             UDSQuery.from("Tester Present", 0x3E, UDSTesterPresentRequest.class),
             UDSQuery.from("Access Timing Parameters", 0x83, UDSAccessTimingParametersRequest.class),
             UDSQuery.from("Read Data by ID", 0x22, UDSReadDataByIDRequest.class),
@@ -21,6 +22,7 @@ public interface UDSProtocol {
             UDSQuery.from("Reset DTC Information", 0x14, UDSClearDTCInformationRequest.class),
             UDSQuery.from("Read DTC Information", 0x19, UDSReadDTCInformationRequest.class),
             UDSQuery.from("Download", 0x34, UDSDownloadRequest.class),
+            UDSQuery.from("Upload", 0x35, UDSUploadRequest.class),
             UDSQuery.from("Transfer", 0x36, UDSTransferRequest.class),
             UDSQuery.from("Negative", UDSSide.RESPONSE, 0x7F, UDSNegativeResponse.class)
     );
