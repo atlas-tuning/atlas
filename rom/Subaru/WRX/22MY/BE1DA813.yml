@@ -81,6 +81,41 @@ ROM:
           Address: 0x000297c0
           Length: 32
           Format: ushort
+      - Name: 'Fuel Pressure Target'
+        Address: 0x000c9320
+        X:
+          Address: 0x000c88a0
+        Y:
+          Address: 0x000c8494
+      - Name: 'Wastegate Position'
+
+      - Name: 'Base Ignition Timing'
+        Format: ushort
+        Unit: Degrees
+        Address: 0x00099c84
+        X:
+          Name: RPM
+          Format: ushort
+          Length: 18
+          Address: 0x00053490
+        Y:
+          Name: Calculated Load
+          Format: ubyte
+          Length: 30
+          Address: 0x00053668
+      - Name: 'Boost Target'
+        Address: 0x0002cda8
+        Format: ushort
+        X:
+          Name: RPM
+          Address: 0x0002afd8
+          Format: ushort
+          Length: 19
+        Y:
+          Name: Requested Torque
+          Address: 0x0002d300
+          Format: ushort
+          Length: 36
     Symbols:
       Tables:
         - RangeStart: 0x0013c468

@@ -8,7 +8,9 @@ import com.github.manevolent.atlas.j2534.tactrix.SerialTactrixOpenPort;
 import com.github.manevolent.atlas.subaru.SubaruProtocols;
 import com.github.manevolent.atlas.uds.UDSFrame;
 import com.github.manevolent.atlas.uds.UDSFrameReader;
+import com.github.manevolent.atlas.uds.request.UDSDefineDataIdentifierRequest;
 import com.github.manevolent.atlas.uds.request.UDSTransferRequest;
+import com.github.manevolent.atlas.uds.response.UDSReadDataByIDResponse;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -43,7 +45,10 @@ public class FlashDumper {
                 break;
             }
 
-            System.out.println(frame.toString());
+            if (frame.getBody() instanceof UDSDefineDataIdentifierRequest ||
+                frame.getBody() instanceof UDSReadDataByIDResponse) {
+                System.out.println(frame.toString());
+            }
 
             if (frame.getBody() instanceof UDSTransferRequest) {
                 UDSTransferRequest transferRequest = (UDSTransferRequest) frame.getBody();
