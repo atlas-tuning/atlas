@@ -68,6 +68,7 @@ public class SSM4AESTest {
     public void testAES_RealWorldData() {
         byte[] key_7_8 = Crypto.toByteArray("7692E7932F23A901568DDFA5FF580625");
         byte[] key_1_2 = Crypto.toByteArray("667E3078219976B4EDF3D43BD1D8FFC9");
+        byte[] key_1_2_COBB = Crypto.toByteArray("74C9A621CA3AB2A9BE2A8BB282A88115");
 
         byte[][][] challenges = {
                 { // 7->8
@@ -92,6 +93,12 @@ public class SSM4AESTest {
                         Crypto.toByteArray("5F344310801120D5B1D3CF12CB267188"),
                         Crypto.toByteArray("794F12E608FD0508329B2C42E5872E4F"),
                         key_7_8
+                },
+
+                { //1->2 (COBB)
+                    Crypto.toByteArray("2E140770AEC69C752F9E1A836CF3764D"),
+                    Crypto.toByteArray("0899C268FA3A48E1085E71914293C55B"),
+                        key_1_2_COBB
                 }
         };
 

@@ -1,5 +1,8 @@
 package com.github.manevolent.atlas.ssm4;
 
+import java.io.*;
+import java.nio.ByteBuffer;
+
 /**
  * This is the flash encryption algorithm used for modules in the CAN network
  * for Subaru DIT ECUs, i.e. Renesas RH850-based MCUs such as the engine control
@@ -48,6 +51,9 @@ public class SubaruDITFlashEncryption {
             (byte) 0x0e, (byte) 0x08
     };
 
+    /**
+     * Keys from a 2022 USDM WRX MT
+     */
     public static short[] ENGINE_ECU_KEYS_DECRYPTION = new short[] {
             (short)0x5fb1,
             (short)0xa7ca,
@@ -55,6 +61,9 @@ public class SubaruDITFlashEncryption {
             (short)0xb740
     };
 
+    /**
+     * Keys from a 2022 USDM WRX MT
+     */
     public static short[] ENGINE_ECU_KEYS_ENCRYPTION = new short[] {
             (short)0xb740,
             (short)0x42da,
@@ -202,6 +211,108 @@ public class SubaruDITFlashEncryption {
         data_out[0] = (byte) ((local_c >> 24) & 0xFF);
         data_out[3] = (byte) ((local_c) & 0xFF);
         data_out[2] = (byte) ((local_c >> 8) & 0xFF);
+    }
+
+    /**
+     * Encrypts cleartext from the provided input stream and produces an output in the provided output stream
+     * @param clearTextStream cipher text input stream
+     * @param cipherTextStream cipher text output stream
+     * @param keys an array of encryption keys
+     * @return Number of symbols encrypted. For the number of data bytes processed, multiply by 4.
+     */
+    public static int feistel_encrypt(InputStream clearTextStream, OutputStream cipherTextStream, short[] keys)
+            throws IOException {
+        int symbols = 0;
+
+        byte[] buffer = new byte[4];
+        while (true) {
+            try {
+                int read = clearTextStream.read(buffer);
+                if (read != 4) throw new EOFException();
+                int symbol = ByteBuffer.wrap(buffer).getInt();
+                feistel_encrypt(symbol, buffer, keys);
+                cipherTextStream.write(buffer);
+                symbols ++;
+            } catch (EOFException ex) {
+                // Softly break
+                break;
+            }
+        }
+
+        return symbols;
+    }
+
+    /**
+     * Decrypts ciphertext from the provided input stream and produces an output in the provided output stream
+     * @param cipherTextStream cipher text input stream
+     * @param clearTextStream cipher text output stream
+     * @param keys an array of decryption keys
+     * @return Number of symbols decrypted. For the number of data bytes processed, multiply by 4.
+     */
+    public static int feistel_decrypt(InputStream cipherTextStream, OutputStream clearTextStream, short[] keys)
+            throws IOException {
+        int symbols = 0;
+
+        byte[] buffer = new byte[4];
+        while (true) {
+            try {
+                int read = cipherTextStream.read(buffer);
+                if (read != 4) throw new EOFException();
+                int symbol = ByteBuffer.wrap(buffer).getInt();
+                feistel_decrypt(symbol, buffer, keys);
+                clearTextStream.write(buffer);
+                symbols ++;
+            } catch (EOFException ex) {
+                // Softly break
+                break;
+            }
+        }
+
+        return symbols;
+    }
+
+    public static void main(String[] args) throws IOException {
+        String mode = args[0];
+        String part = args[1];
+
+        String input = args[2];
+        File inputFile = new File(input);
+        String output = args[3];
+        File outputFile = new File(output);
+        short[] keys;
+        int processed;
+
+        if (mode.equalsIgnoreCase("encrypt")) {
+            switch (part) {
+                case "engine":
+                    keys = ENGINE_ECU_KEYS_ENCRYPTION;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown part: " + part);
+            }
+
+            FileInputStream cleartextInputStream = new FileInputStream(inputFile);
+            FileOutputStream ciphertextOutputStream = new FileOutputStream(outputFile);
+
+            processed = feistel_encrypt(cleartextInputStream, ciphertextOutputStream, keys);
+        } else if (mode.equalsIgnoreCase("decrypt")) {
+            switch (part) {
+                case "engine":
+                    keys = ENGINE_ECU_KEYS_DECRYPTION;
+                    break;
+                default:
+                    throw new IllegalArgumentException("Unknown part '" + part + "'");
+            }
+
+            FileInputStream ciphertextInputStream = new FileInputStream(inputFile);
+            FileOutputStream cleartextOutputStream = new FileOutputStream(outputFile);
+
+            processed = feistel_decrypt(ciphertextInputStream, cleartextOutputStream, keys);
+        } else {
+            throw new IllegalArgumentException("Unknown mode '" + mode + "'");
+        }
+
+        System.out.println(Integer.toString(processed));
     }
 
 }
