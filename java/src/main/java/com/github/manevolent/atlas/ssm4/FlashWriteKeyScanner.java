@@ -36,8 +36,8 @@ public class FlashWriteKeyScanner {
         RandomAccessFile flashWriteExe = new RandomAccessFile(args[0], "r");
 
         // Describe a known challenge and solution (UDS)
-        byte[] challenge = Crypto.toByteArray(args[1]);
-        byte[] solution = Crypto.toByteArray(args[2]);
+        byte[] challenge = Crypto.toByteArray(args[1].replace(" ", ""));
+        byte[] solution = Crypto.toByteArray(args[2].replace(" ", ""));
 
         if (challenge.length != solution.length) {
             throw new IllegalArgumentException("Challenge and solution lengths aren't " +

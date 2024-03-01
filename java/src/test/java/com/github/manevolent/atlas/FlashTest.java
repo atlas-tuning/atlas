@@ -65,9 +65,7 @@ public class FlashTest {
 
     private static final Scale.Builder coolantTemp8BitScale = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 8)
-            .withOperation(ArithmeticOperation.MULTIPLY, 5.0f)
-            .withOperation(ArithmeticOperation.RSHIFT, 0xB)
-            .withOperation(ArithmeticOperation.SUBTRACT, 40.0f);
+            .withOperations(coolantTemp16BitScale);
 
     private static Table.Builder ignitionTimingBaseTable(FlashRegion code, String name, int timingDataAddress,
                                                          int rpmAddress, int loadAddress) {
@@ -87,6 +85,7 @@ public class FlashTest {
                         .withAddress(code, rpmAddress)
                         .withLength(0x16)
                         .withFormat(DataFormat.USHORT)
+                        .withUnit(Unit.RPM)
                         .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)))
                 .withAxis(X, Series.builder()
                         .withName("Load")
@@ -114,6 +113,7 @@ public class FlashTest {
                         .withAddress(code, rpmAddress)
                         .withLength(rpmLength)
                         .withFormat(DataFormat.USHORT)
+                        .withUnit(Unit.RPM)
                         .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)))
                 .withAxis(X, Series.builder()
                         .withName("Load")
@@ -235,7 +235,8 @@ public class FlashTest {
                         .withAddress(code, rpmAddress)
                         .withLength(0x03)
                         .withFormat(DataFormat.USHORT)
-                        .withScale(rpm_16bit))
+                        .withScale(rpm_16bit)
+                        .withUnit(Unit.RPM))
                 .withAxis(X, Series.builder()
                         .withName("Load")
                         .withAddress(code, loadAddress)
@@ -290,7 +291,8 @@ public class FlashTest {
                         .withAddress(code, activationRpmAddress)
                         .withLength(0x16)
                         .withFormat(DataFormat.USHORT)
-                        .withScale(rpm_16bit))
+                        .withScale(rpm_16bit)
+                            .withUnit(Unit.RPM))
                     .withAxis(X, Series.builder()
                         .withName("Load")
                         .withAddress(code, activationCalcLoadAddress)
@@ -354,7 +356,8 @@ public class FlashTest {
                         .withAddress(code, activationRpmAddress)
                         .withLength(rpmLength)
                         .withFormat(rpmFormat)
-                        .withScale(rpmScale))
+                        .withScale(rpmScale)
+                        .withUnit(Unit.RPM))
                 .withAxis(X, Series.builder()
                         .withName("Load")
                         .withAddress(code, activationCalcLoadAddress)
@@ -410,6 +413,7 @@ public class FlashTest {
                                         .withName("Sensor Voltage")
                                         .withAddress(code, 0x000297c0)
                                         .withFormat(DataFormat.USHORT)
+                                        .withUnit(Unit.VOLTS)
                                         .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 13106.25f))
                                         .withLength(32))
                 ).withTable(
@@ -424,6 +428,7 @@ public class FlashTest {
                                         .withName("Sensor Voltage")
                                         .withAddress(code, 0x000297c0)
                                         .withFormat(DataFormat.USHORT)
+                                        .withUnit(Unit.VOLTS)
                                         .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 13106.25f))
                                         .withLength(32))
                 )

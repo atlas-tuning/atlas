@@ -84,7 +84,7 @@ public class Table {
             Series y = axes.get(Y);
             Series x = axes.get(X);
 
-            writeCell.accept(name);
+            writeCell.accept("");
 
             for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                 writeCell.accept(Float.toString(x.get(x_index)));
@@ -108,6 +108,26 @@ public class Table {
                 for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                     // Write the cell data
                     writeCell.accept(Float.toString(getCell(x_index)));
+                }
+                writer.write("\r\n");
+            }
+
+            writeCell.accept("");
+            writer.write("\r\n");
+            writeCell.accept("Table"); writeCell.accept(name);
+            writer.write("\r\n");
+
+
+            writeCell.accept("Output"); writeCell.accept(data.getUnit().name());
+            writer.write("\r\n");
+
+            for (Axis axis : axes.keySet()) {
+                writeCell.accept(axis.name() + " Axis");
+                Series series = axes.get(axis);
+                if (series.getUnit() == null) {
+                    writeCell.accept("Unknown!");
+                } else {
+                    writeCell.accept(axes.get(axis).getUnit().name());
                 }
                 writer.write("\r\n");
             }

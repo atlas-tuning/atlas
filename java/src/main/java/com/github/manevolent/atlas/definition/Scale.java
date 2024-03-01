@@ -58,6 +58,16 @@ public class Scale {
             return this;
         }
 
+        public Builder withOperations(Scale scale) {
+            this.scale.operations.addAll(scale.operations);
+            return this;
+        }
+
+        public Builder withOperations(Scale.Builder builder) {
+            this.scale.operations.addAll(builder.scale.operations);
+            return this;
+        }
+
         public Scale build() {
             return scale;
         }
