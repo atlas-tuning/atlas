@@ -15,6 +15,9 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
     @Override
     public UDSFrame read() throws IOException {
         Frame frame = transport.read();
+        if (frame == null) {
+            return null;
+        }
         UDSFrame udsFrame = new UDSFrame(frame);
         udsFrame.read();
         return udsFrame;

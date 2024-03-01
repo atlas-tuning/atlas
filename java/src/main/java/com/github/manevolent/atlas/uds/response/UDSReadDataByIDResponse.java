@@ -29,6 +29,6 @@ public class UDSReadDataByIDResponse extends UDSResponse implements Frame {
     @Override
     public String toString() {
         DataIdentifier found = DataIdentifier.findByDid((short)did);
-        return String.format("%04X(%s)", (short)did, found.text());
+        return String.format("%04X(%s) value=%s", (short)did, found.text(), Frame.toHexString(getData()));
     }
 }

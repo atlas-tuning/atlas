@@ -27,10 +27,10 @@ public class Main {
     }
 
     public static void main(String[] args) throws IOException {
-        String path = "../test_install_flash.bin";
+        String path = "install_flashing.bin";
         File file = new File(path);
 
-        RandomAccessFile extracted = new RandomAccessFile("tuned_matt_e60.bin", "rw");
+        RandomAccessFile extracted = new RandomAccessFile("out.bin", "rw");
 
         CanFrameReader canReader = new OpenPort2FrameReader(new FileInputStream(file));
         ISOTPFrameReader isotpReader = new ISOTPFrameReader(canReader);
@@ -41,8 +41,9 @@ public class Main {
         while ((frame = udsReader.read()) != null) {
             if (frame.getType() == null) {
                 System.out.println(frame.toString());
-            } else if (frame.getType() == UDSFrameType.SECURITY_ACCESS)
-                System.out.println(frame.toString());
+            }
+
+            System.out.println(frame.toString());
             readPackets ++;
 
             if (frame.getBody() instanceof UDSTransferRequest) {
