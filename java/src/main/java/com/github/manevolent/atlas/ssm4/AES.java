@@ -111,39 +111,6 @@ public class AES {
             (byte)0xcb,(byte)0xfc,(byte)0xd6,(byte)0x3a,
     };
 
-    private static class BytePointer {
-        private byte[] backing;
-        private int offs;
-        private BiConsumer<Integer, Byte> debugCallback;
-
-        private BytePointer(byte[] backing, BiConsumer<Integer, Byte> debugCallback) {
-            this.backing = backing;
-            this.offs = 0;
-            this.debugCallback = debugCallback;
-        }
-
-        int addPtr(int num) {
-            return ptr(ptr() + num);
-        }
-
-        int ptr() {
-            return offs;
-        }
-
-        int ptr(int offs) {
-            return this.offs = offs;
-        }
-
-        byte at(int offs) {
-            return backing[offs + this.offs];
-        }
-
-        byte at(int offs, int value) {
-            if (debugCallback != null)
-                debugCallback.accept(offs + this.offs, (byte) (value & 0xFF));
-            return backing[offs + this.offs] = (byte) value;
-        }
-    }
 
     public static int CONCAT31(int left, byte right) {
         return left << 8 | right;

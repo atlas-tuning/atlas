@@ -19,7 +19,11 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
             return null;
         }
         UDSFrame udsFrame = new UDSFrame();
-        udsFrame.read(frame.bitReader());
+        try {
+            udsFrame.read(frame.bitReader());
+        } catch (Exception ex) {
+            throw new IOException("Problem reading frame " + frame.toHexString(), ex);
+        }
         return udsFrame;
     }
 }

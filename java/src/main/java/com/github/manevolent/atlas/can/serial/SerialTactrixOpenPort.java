@@ -55,7 +55,7 @@ public class SerialTactrixOpenPort implements CanDevice {
                 }
 
                 int channelId = 5;
-                int flags = 0x10000800;
+                int flags = 0x00000800;
                 int baud = 500_000;
                 os.write(String.format("ato%d %d %d 0\r\n",
                                 channelId,

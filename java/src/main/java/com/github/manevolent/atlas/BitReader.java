@@ -1,15 +1,24 @@
 package com.github.manevolent.atlas;
 
+import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.io.IOException;
+import java.io.InputStream;
 
 public class BitReader {
-    private byte[] frame;
+    private InputStream is;
+    private long totalSize = -1;
 
-    private int offs, pos;
+    private Byte frame;
+    private int pos, offs;
 
     public BitReader(byte[] frame) {
-        this.frame = frame;
+        this.is = new ByteArrayInputStream(frame);
+        this.totalSize = frame.length;
+    }
+
+    public BitReader(InputStream is) {
+        this.is = is;
     }
 
     public boolean readBoolean() throws IOException {
@@ -23,17 +32,26 @@ public class BitReader {
         }
     }
 
+    private byte readNextFrame() throws IOException {
+        int symbol = is.read();
+        if (symbol < 0) throw new EOFException();
+        byte frame = (byte)(symbol & 0xFF);
+        this.frame = frame;
+        return frame;
+    }
+
     public int read() throws IOException {
-        if (offs >= frame.length)
-            return -1; // EOF
-
-        int b = (this.frame[offs] >> (8 - this.pos - 1)) & 0x1;
-
-        this.pos++;
-        if (this.pos >= 8){
-            offs++;
+        if (frame == null) {
+            readNextFrame();
+        } else if (this.pos >= 8){
+            readNextFrame();
+            this.offs ++;
             this.pos = 0;
         }
+
+        int b = (frame >> (8 - this.pos - 1)) & 0x1;
+
+        this.pos++;
 
         return b;
     }
@@ -121,7 +139,15 @@ public class BitReader {
 
 
     public int remaining() {
-        return ((frame.length - offs)*8) - pos;
+        try {
+            if (totalSize >= 0) {
+                return (((int)totalSize - offs)*8) - pos;
+            } else {
+                return (is.available()*8) - pos;
+            }
+        } catch (IOException e) {
+            return -1;
+        }
     }
 
     public int remainingBytes() {

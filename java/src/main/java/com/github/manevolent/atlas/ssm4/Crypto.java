@@ -1,19 +1,16 @@
 package com.github.manevolent.atlas.ssm4;
 
-import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.windows.CryptoAPI;
 
 import javax.crypto.*;
 import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.RC2ParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.io.*;
 import java.security.GeneralSecurityException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.security.spec.KeySpec;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
+import java.security.spec.AlgorithmParameterSpec;
 import java.util.function.Function;
 
 public class Crypto {
@@ -37,40 +34,56 @@ public class Crypto {
             (byte) 0x89, (byte) 0x85, (byte) 0xb4, (byte) 0x8c,
     };
 
-    public static byte[] computeEncryptionKey() {
+    public static byte[] computeSSM4EncryptionKey() {
+        return computeEncryptionKey(hashValue, "SHA", 32);
+    }
+
+    public static byte[] computeEncryptionKey(byte[] key, String algorithm, int keyLength) {
         Function<byte[], byte[]> hashFunction = (data) -> {
             try {
-                MessageDigest messageDigest = MessageDigest.getInstance("SHA");
+                MessageDigest messageDigest = MessageDigest.getInstance(algorithm);
                 return messageDigest.digest(data);
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
             }
         };
 
-        return CryptoAPI.deriveKey(hashValue, hashFunction, 32);
+        return CryptoAPI.deriveAESKey(key, hashFunction, keyLength);
     }
 
     public static Cipher createCipher(int mode) throws GeneralSecurityException {
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        SecretKey keySpec = new SecretKeySpec(computeEncryptionKey(), "AES");
+        SecretKey keySpec = new SecretKeySpec(computeSSM4EncryptionKey(), "AES");
         IvParameterSpec ivspec = new IvParameterSpec(ivValue);
         cipher.init(mode, keySpec, ivspec);
         return cipher;
     }
 
     public static Cipher createCipher(int mode, byte[] key, byte[] iv) throws GeneralSecurityException {
-        Cipher cipher = Cipher.getInstance("AES");
-        SecretKey keySpec = new SecretKeySpec(key, "AES");
+        return createCipher(mode, key, iv, "AES");
+    }
+
+    public static Cipher createCipher(int mode, byte[] key, byte[] iv, String instance) throws GeneralSecurityException {
         IvParameterSpec ivspec = null;
         if (iv != null) {
             ivspec = new IvParameterSpec(iv);
         }
-        cipher.init(mode, keySpec, ivspec);
+        return createCipher(mode, key, ivspec, instance);
+    }
+
+    public static Cipher createCipher(int mode, byte[] key, AlgorithmParameterSpec param, String instance) throws GeneralSecurityException {
+        Cipher cipher = Cipher.getInstance(instance);
+        SecretKey keySpec = new SecretKeySpec(key, instance.split("/")[0]);
+        cipher.init(mode, keySpec, param);
         return cipher;
     }
 
     public static byte[] decryptData(byte[] data) throws GeneralSecurityException {
         return createCipher(Cipher.DECRYPT_MODE).doFinal(data);
+    }
+
+    public static byte[] decryptData(byte[] data, byte[] key) throws GeneralSecurityException {
+        return createCipher(Cipher.DECRYPT_MODE, key, null).doFinal(data);
     }
 
     public static long decryptFile(String source, String target, Runnable mkdirs) throws GeneralSecurityException, IOException {

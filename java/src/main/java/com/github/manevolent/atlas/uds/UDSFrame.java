@@ -32,40 +32,28 @@ public class UDSFrame implements Frame {
 
     public void read(BitReader reader) throws IOException {
         byte serviceId = reader.readByte();
-        UDSFrameType type;
+        UDSFrameType type = UDSFrameType.resolveType(serviceId);
+
+        Class<? extends UDSBody> clazz = type.resolveBodyClass(serviceId);
+
         try {
-            type = UDSFrameType.resolveType(serviceId);
+            body = clazz.newInstance();
+        } catch (InstantiationException | IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            body.read(reader);
+        } catch (IOException ex) {
+            throw new IOException("Problem reading frame " + this.toString(), ex);
         } catch (UnsupportedOperationException ex) {
-            type = null;
+            throw new IOException("TODO Implement " + body.getClass().getName()
+                    + ": frame " + this.toString(), ex);
         }
 
-        UDSBody body;
-        if (type != null) {
-            Class<? extends UDSBody> clazz = type.resolveBodyClass(serviceId);
-
-            try {
-                body = clazz.newInstance();
-            } catch (InstantiationException | IllegalAccessException e) {
-                throw new RuntimeException(e);
-            }
-
-            try {
-                body.read(reader);
-            } catch (IOException ex) {
-                throw new IOException("Problem reading frame " + this.toString(), ex);
-            } catch (UnsupportedOperationException ex) {
-                throw new IOException("TODO Implement " + body.getClass().getName()
-                        + ": frame " + this.toString(), ex);
-            }
-
-            if (reader.remaining() > 0) {
-                remaining = reader.readRemaining();
-            }
-        } else {
-            body = null;
+        if (reader.remaining() > 0) {
+            remaining = reader.readRemaining();
         }
-
-        this.body = body;
     }
 
     @Override
