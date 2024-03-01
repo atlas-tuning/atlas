@@ -1,13 +1,12 @@
 package com.github.manevolent.atlas.uds;
 
-import com.github.manevolent.atlas.BitReader;
-import com.github.manevolent.atlas.BitWriter;
-import com.github.manevolent.atlas.Frame;
+import com.github.manevolent.atlas.*;
 
 import java.io.IOException;
 
-public class UDSFrame implements Frame {
+public class UDSFrame implements Frame, Addressed {
     private final UDSProtocol protocol;
+    private Address address;
     private UDSBody body;
     private byte[] remaining;
 
@@ -18,6 +17,15 @@ public class UDSFrame implements Frame {
     public UDSFrame(UDSProtocol protocol, UDSBody body) {
         this.protocol = protocol;
         this.body = body;
+    }
+
+    @Override
+    public Address getAddress() {
+        return address;
+    }
+
+    public void setAddress(Address address) {
+        this.address = address;
     }
 
     public UDSProtocol getProtocol() {
@@ -102,7 +110,7 @@ public class UDSFrame implements Frame {
     public String toString() {
         int sid = getServiceId();
         String fullyReadWarning = remaining != null ? " remaining=" + Frame.toHexString(remaining) : "";
-        return String.format("0x%02X", sid) + " " + body.getClass().getSimpleName()
+        return getAddress().toString() + " " + String.format("0x%02X", sid) + " " + body.getClass().getSimpleName()
                 + " " + body.toString() + fullyReadWarning;
     }
 }

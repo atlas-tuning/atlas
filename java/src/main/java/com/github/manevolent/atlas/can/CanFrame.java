@@ -1,10 +1,12 @@
 package com.github.manevolent.atlas.can;
 
+import com.github.manevolent.atlas.Address;
+import com.github.manevolent.atlas.Addressed;
 import com.github.manevolent.atlas.Frame;
 
-public class CanFrame implements Frame {
+public class CanFrame implements Frame, Addressed {
     private byte[] data;
-    private int arbitrationId;
+    private Integer arbitrationId;
 
     public CanFrame() {
 
@@ -30,5 +32,10 @@ public class CanFrame implements Frame {
 
     public void setData(byte[] data) {
         this.data = data;
+    }
+
+    @Override
+    public Address getAddress() {
+        return new CanArbitrationId(arbitrationId);
     }
 }

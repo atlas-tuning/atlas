@@ -1,9 +1,10 @@
 package com.github.manevolent.atlas.isotp;
 
 import com.github.manevolent.atlas.Address;
+import com.github.manevolent.atlas.Addressed;
 import com.github.manevolent.atlas.Frame;
 
-public class ISOTPFrame implements Frame {
+public class ISOTPFrame implements Frame, Addressed {
     private final Address address;
     private final byte[] reassembled;
 
@@ -22,6 +23,7 @@ public class ISOTPFrame implements Frame {
         return toHexString();
     }
 
+    @Override
     public Address getAddress() {
         return address;
     }

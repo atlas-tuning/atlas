@@ -25,6 +25,6 @@ public class CanArbitrationId implements Address {
 
     @Override
     public String toString() {
-        return Integer.toString(arbitrationId);
+        return Integer.toHexString(arbitrationId).toUpperCase();
     }
 }

@@ -5,24 +5,18 @@ import com.github.manevolent.atlas.uds.UDSResponse;
 
 import java.io.IOException;
 
-public class SubaruStatus3Response extends UDSResponse {
-    private int code;
+public class Subaru4Response extends UDSResponse {
+
     private byte[] data;
 
     @Override
     public void read(BitReader reader) throws IOException {
-        code = reader.readByte() & 0xFF;
         data = reader.readRemaining();
     }
 
     @Override
     public byte[] getData() {
         return data;
-    }
-
-    @Override
-    public String toString() {
-        return String.format("code=0x%02X data=%s", code, toHexString());
     }
 
 }

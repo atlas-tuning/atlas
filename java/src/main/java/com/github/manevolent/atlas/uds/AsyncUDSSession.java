@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.github.manevolent.atlas.uds.NegativeResponseCode.RESPONSE_PENDING;
+
 public class AsyncUDSSession extends Thread implements UDSSession {
     private final CanDevice device;
     private final UDSProtocol protocol;
@@ -76,15 +78,23 @@ public class AsyncUDSSession extends Thread implements UDSSession {
             return null;
         }
 
+        System.out.println(frame.toString());
+
         if (frame.getBody() instanceof UDSResponse) {
             if (frame.getBody() instanceof UDSNegativeResponse) {
                 UDSNegativeResponse negativeResponse = (UDSNegativeResponse) frame.getBody();
+                if (negativeResponse.getResponseCode() == RESPONSE_PENDING) {
+                    return null;
+                }
+
                 UDSTransaction transaction = activeTransactions.get(negativeResponse.getRejectedSid() & 0xFF);
                 if (transaction != null) {
                     transaction.supplyException(negativeResponse);
                 }
             } else {
-                int serviceId = frame.getServiceId();
+                int responseSid = frame.getServiceId();
+                UDSQuery query = protocol.getBySid(responseSid);
+                int serviceId = query.getMapping(UDSSide.REQUEST).getSid();
                 UDSTransaction transaction = activeTransactions.get(serviceId & 0xFF);
                 if (transaction != null) {
                     transaction.supply((UDSResponse) frame.getBody());

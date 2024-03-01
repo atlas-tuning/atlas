@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.uds;
 
+import com.github.manevolent.atlas.Addressed;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.FrameReader;
 
@@ -20,7 +21,12 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
         if (frame == null) {
             return null;
         }
+
         UDSFrame udsFrame = new UDSFrame(protocol);
+        if (frame instanceof Addressed) {
+            udsFrame.setAddress(((Addressed) frame).getAddress());
+        }
+
         try {
             udsFrame.read(frame.bitReader());
         } catch (Exception ex) {

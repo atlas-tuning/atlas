@@ -6,14 +6,16 @@ import com.github.manevolent.atlas.can.CanFrameReader;
 import com.github.manevolent.atlas.can.OpenPort2FrameReader;
 import com.github.manevolent.atlas.can.serial.SerialCanDeviceFactory;
 import com.github.manevolent.atlas.can.serial.SerialTactrixOpenPort;
-import com.github.manevolent.atlas.isotp.ISOTPFrame;
 import com.github.manevolent.atlas.isotp.ISOTPFrameReader;
 import com.github.manevolent.atlas.subaru.SubaruDITCommands;
+import com.github.manevolent.atlas.subaru.SubaruDITComponent;
 import com.github.manevolent.atlas.subaru.SubaruProtocols;
-import com.github.manevolent.atlas.uds.AsyncUDSSession;
-import com.github.manevolent.atlas.uds.UDSFrame;
-import com.github.manevolent.atlas.uds.UDSFrameReader;
-import com.github.manevolent.atlas.uds.UDSProtocol;
+import com.github.manevolent.atlas.subaru.uds.request.Subaru4Request;
+import com.github.manevolent.atlas.subaru.uds.request.SubaruReadDTCRequest;
+import com.github.manevolent.atlas.subaru.uds.request.SubaruStatus7Request;
+import com.github.manevolent.atlas.uds.*;
+import com.github.manevolent.atlas.uds.request.UDSClearDTCInformationRequest;
+import com.github.manevolent.atlas.uds.response.UDSClearDTCInformationResponse;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -23,7 +25,7 @@ import java.util.Collection;
 
 public class Main {
 
-    public static void main2(String[] args) throws Exception {
+    public static void main(String[] args) throws Exception {
         SerialCanDeviceFactory canDeviceFactory =
                 new SerialCanDeviceFactory(SerialTactrixOpenPort.CommunicationMode.DIRECT_SOCKET);
 
@@ -31,15 +33,13 @@ public class Main {
         CanDeviceDescriptor deviceDescriptor = devices.stream().findFirst().orElseThrow(() ->
                 new IllegalArgumentException("No can devices found"));
         CanDevice device = deviceDescriptor.createDevice();
-        UDSProtocol protocol = UDSProtocol.STANDARD;
+        UDSProtocol protocol = SubaruProtocols.DIT;
         AsyncUDSSession session = new AsyncUDSSession(device, protocol);
         session.start();
-
-        boolean isIgnitionOn = SubaruDITCommands.IGNITION_ON.execute(session);
     }
 
 
-    public static void main(String[] args) throws IOException {
+    public static void main2(String[] args) throws IOException {
         String path = args[0];
         File file = new File(path);
 

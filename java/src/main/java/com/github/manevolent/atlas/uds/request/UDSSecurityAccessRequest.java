@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.uds.request;
 
 import com.github.manevolent.atlas.BitReader;
+import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.uds.UDSRequest;
 import com.github.manevolent.atlas.uds.response.UDSSecurityAccessResponse;
@@ -27,6 +28,12 @@ public class UDSSecurityAccessRequest
 
         this.data = new byte[reader.remainingBytes()];
         reader.read(data);
+    }
+
+    @Override
+    public void write(BitWriter writer) throws IOException {
+        writer.write(this.seed);
+        writer.write(this.data);
     }
 
     @Override
