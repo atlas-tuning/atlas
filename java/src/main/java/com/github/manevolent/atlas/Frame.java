@@ -1,5 +1,8 @@
 package com.github.manevolent.atlas;
 
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
 public interface Frame {
@@ -13,7 +16,24 @@ public interface Frame {
         return new BitReader(data);
     }
 
-    byte[] getData();
+    default byte[] getData() {
+        throw new UnsupportedOperationException(getClass().getName() + " does not support getData()");
+    }
+
+    default void read(BitReader reader) throws IOException {
+        throw new UnsupportedOperationException(getClass().getName() + " does not support read()");
+    }
+
+    default void write(BitWriter writer) throws IOException {
+        throw new UnsupportedOperationException(getClass().getName() + " does not support write()");
+    }
+
+    default byte[] write() throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        BitWriter writer = new BitWriter(baos);
+        write(writer);
+        return baos.toByteArray();
+    }
 
     default int getLength() {
         return getData().length;

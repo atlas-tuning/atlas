@@ -1,8 +1,16 @@
 package com.github.manevolent.atlas.isotp;
 
-public class ISOTPConsecutiveFrame extends ISOTPSubFrame {
-    private final int index;
-    private final byte[] data;
+import com.github.manevolent.atlas.BitReader;
+import com.github.manevolent.atlas.BitWriter;
+
+import java.io.IOException;
+
+public class ISOTPConsecutiveFrame extends ISOTPDataSubFrame {
+    private int index;
+    private byte[] data;
+
+    public ISOTPConsecutiveFrame() {
+    }
 
     public ISOTPConsecutiveFrame(int index, byte[] data) {
         this.index = index;
@@ -13,7 +21,35 @@ public class ISOTPConsecutiveFrame extends ISOTPSubFrame {
         return index;
     }
 
+    public void setIndex(int index) {
+        this.index = index;
+    }
+
     public byte[] getData() {
         return data;
+    }
+
+    public void setData(byte[] data) {
+        this.data = data;
+    }
+
+    public void read(BitReader reader) throws IOException {
+        this.index = (int) reader.read(4);
+        this.data = new byte[7];
+        reader.read(this.data);
+    }
+
+    public void write(BitWriter writer) throws IOException {
+        writer.writeNibble((byte) index);
+
+        if (this.data.length != 7) {
+            throw new IllegalArgumentException("Unexpected data length: " + this.data.length + " != 7");
+        }
+        writer.write(this.data);
+    }
+
+    @Override
+    public byte getCode() {
+        return 0x2;
     }
 }

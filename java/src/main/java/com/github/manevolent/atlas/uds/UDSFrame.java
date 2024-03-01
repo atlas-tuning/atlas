@@ -1,38 +1,38 @@
 package com.github.manevolent.atlas.uds;
 
 import com.github.manevolent.atlas.BitReader;
+import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.Frame;
 
 import java.io.IOException;
 
 public class UDSFrame implements Frame {
-    private final Frame parent;
-
-    private byte serviceId;
-    private UDSFrameType type;
     private UDSBody body;
-
     private byte[] remaining;
 
-    public UDSFrame(Frame parent) {
-        this.parent = parent;
+    public UDSFrame() {
     }
 
-    public byte getServiceId() {
-        return serviceId;
+    public UDSFrame(UDSBody body) {
+        this.body = body;
     }
 
     public UDSBody getBody() {
         return body;
     }
 
-    public void read() throws IOException {
-        this.read(parent.bitReader());
+    public void setBody(UDSBody body) {
+        this.body = body;
+    }
+
+    public void write(BitWriter writer) throws IOException {
+        writer.write(getBody().getServiceId());
+        getBody().write(writer);
     }
 
     public void read(BitReader reader) throws IOException {
-        this.serviceId = reader.readByte();
-
+        byte serviceId = reader.readByte();
+        UDSFrameType type;
         try {
             type = UDSFrameType.resolveType(serviceId);
         } catch (UnsupportedOperationException ex) {
@@ -73,23 +73,10 @@ public class UDSFrame implements Frame {
         return body.getData();
     }
 
-    public UDSFrameType getType() {
-        return type;
-    }
-
     @Override
     public String toString() {
-        if (type == null) {
-            return String.format("Unknown 0x%02X", serviceId) + " " + parent.toString();
-        }
-
-        if (this.body == null) {
-            return String.format("0x%02X", serviceId) + " "
-                    + type.name() + " " + parent.toString();
-        } else {
-            String fullyReadWarning = remaining != null ? " remaining=" + Frame.toHexString(remaining) : "";
-            return String.format("0x%02X", serviceId) + " " + body.getClass().getSimpleName()
-                    + " " + body.toString() + fullyReadWarning;
-        }
+        String fullyReadWarning = remaining != null ? " remaining=" + Frame.toHexString(remaining) : "";
+        return String.format("0x%02X", body.getServiceId()) + " " + body.getClass().getSimpleName()
+                + " " + body.toString() + fullyReadWarning;
     }
 }

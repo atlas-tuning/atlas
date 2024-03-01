@@ -18,8 +18,8 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
         if (frame == null) {
             return null;
         }
-        UDSFrame udsFrame = new UDSFrame(frame);
-        udsFrame.read();
+        UDSFrame udsFrame = new UDSFrame();
+        udsFrame.read(frame.bitReader());
         return udsFrame;
     }
 }

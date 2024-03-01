@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.uds.response;
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.uds.DataIdentifier;
+import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSResponse;
 
 import java.io.IOException;
@@ -13,6 +14,11 @@ import java.util.stream.Collectors;
 public class UDSReadDataByIDResponse extends UDSResponse implements Frame {
     private int did;
     private byte[] value;
+
+    @Override
+    public UDSFrameType getType() {
+        return UDSFrameType.READ_DATA_BY_ID;
+    }
 
     @Override
     public void read(BitReader reader) throws IOException {

@@ -61,24 +61,16 @@ public class OpenPort2FrameReader implements CanFrameReader, AutoCloseable {
         return new OpenPort2Frame(header, arbitrationId, body);
     }
 
-    private static class OpenPort2Frame implements CanFrame {
-        private final int arbitrationId;
-        private final byte[] header, body;
+    private static class OpenPort2Frame extends CanFrame {
+        private final byte[] header;
 
         private OpenPort2Frame(byte[] header, int arbitrationId, byte[] body) {
+            super(arbitrationId, body);
             this.header = header;
-            this.arbitrationId = arbitrationId;
-            this.body = body;
         }
 
-        @Override
-        public int getArbitrationId() {
-            return arbitrationId;
-        }
-
-        @Override
-        public byte[] getData() {
-            return body;
+        public byte[] getHeader() {
+            return header;
         }
     }
 }

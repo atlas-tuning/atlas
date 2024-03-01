@@ -10,6 +10,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 public class SerialCanDeviceFactory implements CanDeviceFactory {
+    private final SerialTactrixOpenPort.CommunicationMode communicationMode;
+
+    public SerialCanDeviceFactory(SerialTactrixOpenPort.CommunicationMode communicationMode) {
+        this.communicationMode = communicationMode;
+    }
+
     @Override
     public Collection<CanDeviceDescriptor> findDevices() {
         return Arrays.stream(Objects.requireNonNull(new File("/dev").listFiles())).filter(deviceFile -> {
@@ -17,8 +23,7 @@ public class SerialCanDeviceFactory implements CanDeviceFactory {
         }).filter(deviceFile -> {
             // OSX:
             return deviceFile.getName().startsWith("cu.usbmodem");
-        }).map(deviceFile -> {
-            return new SerialTactrixOpenPort.Descriptor(deviceFile);
-        }).collect(Collectors.toList());
+        }).map(deviceFile -> new SerialTactrixOpenPort.Descriptor(deviceFile, communicationMode))
+                .collect(Collectors.toList());
     }
 }

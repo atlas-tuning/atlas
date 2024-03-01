@@ -1,58 +1,30 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.can.CanFrame;
-import com.github.manevolent.atlas.can.CanFrameReader;
-import com.github.manevolent.atlas.can.OpenPort2FrameReader;
-import com.github.manevolent.atlas.isotp.ISOTPFrame;
-import com.github.manevolent.atlas.isotp.ISOTPFrameReader;
-import com.github.manevolent.atlas.isotp.ISOTPWireFrame;
+import com.github.manevolent.atlas.can.CanDevice;
+import com.github.manevolent.atlas.can.CanDeviceDescriptor;
 import com.github.manevolent.atlas.can.serial.SerialCanDeviceFactory;
-import com.github.manevolent.atlas.uds.UDSFrame;
-import com.github.manevolent.atlas.uds.UDSFrameReader;
-import com.github.manevolent.atlas.uds.UDSFrameType;
-import com.github.manevolent.atlas.uds.request.UDSTransferRequest;
+import com.github.manevolent.atlas.can.serial.SerialTactrixOpenPort;
+import com.github.manevolent.atlas.uds.AsyncUDSSession;
+import com.github.manevolent.atlas.uds.request.UDSReadDataByIDRequest;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.util.Collection;
 
 public class Main {
 
-    public static void main_old(String[] args) {
-        var factory = new SerialCanDeviceFactory();
-        var devices = factory.findDevices();
-        var device = devices.stream().findFirst().orElseThrow();
-        var canDevice = device.createDevice();
-    }
+    public static void main(String[] args) throws Exception {
+        SerialCanDeviceFactory canDeviceFactory =
+                new SerialCanDeviceFactory(SerialTactrixOpenPort.CommunicationMode.DIRECT_SOCKET);
 
-    public static void main(String[] args) throws IOException {
-        String path = "install_flashing.bin";
-        File file = new File(path);
+        Collection<CanDeviceDescriptor> devices = canDeviceFactory.findDevices();
+        CanDeviceDescriptor deviceDescriptor = devices.stream().findFirst().orElseThrow(() ->
+                new IllegalArgumentException("No can devices found"));
+        CanDevice device = deviceDescriptor.createDevice();
+        AsyncUDSSession session = new AsyncUDSSession(device);
 
-        RandomAccessFile extracted = new RandomAccessFile("out.bin", "rw");
-
-        CanFrameReader canReader = new OpenPort2FrameReader(new FileInputStream(file));
-        ISOTPFrameReader isotpReader = new ISOTPFrameReader(canReader);
-        UDSFrameReader udsReader = new UDSFrameReader(isotpReader);
-        UDSFrame frame;
-        int readPackets = 0;
-
-        while ((frame = udsReader.read()) != null) {
-            if (frame.getType() == null) {
-                System.out.println(frame.toString());
-            }
-
-            System.out.println(frame.toString());
-            readPackets ++;
-
-            if (frame.getBody() instanceof UDSTransferRequest) {
-                UDSTransferRequest transferRequest = (UDSTransferRequest) frame.getBody();
-                extracted.seek(transferRequest.getAddress());
-                extracted.write(transferRequest.getData());
-            }
+        try (var transaction = session.request(new UDSReadDataByIDRequest(new int[] { 0x00 }))) {
+            System.out.println(transaction.get().toHexString());
         }
-        System.out.println("Read " + readPackets + " UDS packets");
     }
 
 }

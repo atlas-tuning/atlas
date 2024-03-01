@@ -1,7 +1,9 @@
 package com.github.manevolent.atlas.can;
 
+import java.io.IOException;
+
 public interface CanDeviceDescriptor {
 
-    CanDevice createDevice();
+    CanDevice createDevice() throws IOException;
 
 }

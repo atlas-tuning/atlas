@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.uds.response;
 
 import com.github.manevolent.atlas.BitReader;
+import com.github.manevolent.atlas.uds.UDSFrameType;
 import com.github.manevolent.atlas.uds.UDSRequest;
 import com.github.manevolent.atlas.uds.UDSResponse;
 
@@ -9,6 +10,11 @@ import java.io.IOException;
 // See: https://piembsystech.com/request-download-0x34-service-uds-protocol/
 public class UDSDownloadResponse extends UDSResponse {
     private long blockLength;
+
+    @Override
+    public UDSFrameType getType() {
+        return UDSFrameType.DOWNLOAD;
+    }
 
     @Override
     public void read(BitReader reader) throws IOException {
