@@ -37,8 +37,8 @@ public class UDSReadMemoryByAddressRequest extends UDSRequest<UDSReadMemoryByAdd
     public void write(BitWriter writer) throws IOException {
         writer.writeNibble((byte) sizeLength);
         writer.writeNibble((byte) addressLength);
-        writer.writeLSB((int)size, sizeLength * 8);
         writer.writeLSB((int)address, addressLength * 8);
+        writer.writeLSB((int)size, sizeLength * 8);
     }
 
     @Override

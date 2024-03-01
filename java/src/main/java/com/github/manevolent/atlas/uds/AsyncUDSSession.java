@@ -87,7 +87,7 @@ public class AsyncUDSSession extends Thread implements UDSSession {
             return null;
         }
 
-        System.out.println(frame.toString());
+        //System.out.println(frame.toString());
 
         if (frame.getBody() instanceof UDSResponse) {
             if (frame.getBody() instanceof UDSNegativeResponse) {
