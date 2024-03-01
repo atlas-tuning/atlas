@@ -43,8 +43,6 @@ import java.util.regex.Pattern;
  * .../flashwrite/EcuData/FILENAME.pak.KEYWORD/(EcuDataMap,PcVerData,flash binaries,etc.)
  */
 public class PakFile {
-    private static final byte[] anchor = "CClFileDataInfo".getBytes(StandardCharsets.US_ASCII);
-
     public static void main(String[] args) throws Exception {
         decrypt(args[0], args[1]);
     }
@@ -53,9 +51,7 @@ public class PakFile {
         Pattern pattern = Pattern.compile("(?:,|\\n|^)(\"(?:(?:\"\")*[^\"]*)*\"|[^\",\\n]*|(?:\\n|$))");
         try (FileReader fileReader = new FileReader(csvFile, StandardCharsets.UTF_16)) {
             try (BufferedReader reader = new BufferedReader(fileReader)) {
-
                 Set<String> done = new HashSet<>();
-
                 String line;
 
                 reader.readLine(); // header
@@ -105,55 +101,60 @@ public class PakFile {
         if (!new File(pakFile).exists()) return;
         System.out.println("Decrypt " + pakFile + " with keyword " + keywordString + "...");
 
-        try (RandomAccessFile raf = new RandomAccessFile(pakFile, "r")) {
-            byte[] search = new byte[anchor.length];
-            boolean locked = false;
-            for (int offs = 0; offs < raf.length() - anchor.length; offs ++) {
-                raf.seek(offs);
-                raf.read(search, 0, search.length);
-                if (Arrays.equals(anchor, search)) {
-                    System.out.println(" Found anchor at offs " + offs + "...");
-                    locked = true;
+        try (RandomAccessFile file = new RandomAccessFile(pakFile, "r")) {
+            byte[] headerBytes = new byte[4];
+            file.read(headerBytes);
+
+            List<PakSection> sections = new ArrayList<>();
+            PakSection first = new PakSection("header");
+            readSectionBody(first, file, keywordString);
+            sections.add(first);
+
+            int unknown = file.readUnsignedShort();
+
+            PakSection section;
+            int opcode = readOpCode(file);
+            while (true) {
+                if (opcode == 0x8001) {
+                    // continue with current class
+                } else if (opcode == 0xFFFF) {
+                    // stop, change class
+                    int unused = file.readUnsignedShort();
+                    String cpp_class = PakFile.readString(file);
+                    System.out.println(" Class=" + cpp_class);
+                } else if (opcode == 0x0000) {
+                    // EOF
                     break;
                 }
+
+                section = readSection(file, keywordString);
+                sections.add(section);
+
+                opcode = section.opcode;
             }
 
-            if (locked) {
-                List<PakSection> sections = new ArrayList<>();
-                PakSection section;
-                while (true) {
-                    section = decryptSection(raf, keywordString);
-                    sections.add(section);
+            if (file.length() - file.getFilePointer() != 0) {
+                throw new IllegalStateException("Didn't fully read PAK file");
+            }
 
-                    if (section.opcode == 0x8001) {
-                        // continue with current class
-                        continue;
-                    } else if (section.opcode == 0xFFFF) {
-                        // stop, change class
-                        int unused = raf.readUnsignedShort();
-                        String cpp_class = readString(raf);
-                        System.out.println(" Class=" + cpp_class);
-                        continue;
-                    } else if (section.opcode == 0x0000) {
-                        // EOF
-                        break;
+            for (PakSection recovered : sections) {
+                String folder = pakFile + "." + keywordString + "/";
+                new File(folder).mkdirs();
+                String clearFilename = folder + recovered.filename;
+                try (OutputStream writer = new FileOutputStream(clearFilename)) {
+
+                    if (!recovered.filename.equals("header")) {
+                        try {
+                            Cipher rc2 = CryptoAPI.createRC2(keywordString);
+                            recovered.body = rc2.doFinal(recovered.body, 0, recovered.body.length);
+                        } catch (Exception ex) {
+                            System.err.println(" Problem decrypting " + recovered.filename + ": " + ex.getMessage());
+                        }
                     }
-                }
 
-                if (raf.length() - raf.getFilePointer() != 0) {
-                    throw new IllegalStateException("Didn't fully read PAK file");
+                    System.out.println(" Writing " + clearFilename + "...");
+                    writer.write(recovered.body);
                 }
-
-                for (PakSection recovered : sections) {
-                    String folder = pakFile + "." + keywordString + "/";
-                    new File(folder).mkdirs();
-                    String clearFilename = folder + recovered.filename;
-                    try (OutputStream writer = new FileOutputStream(clearFilename)) {
-                        writer.write(recovered.body);
-                    }
-                }
-            } else {
-                System.out.println("Failed to find expected file anchor!");
             }
         }
     }
@@ -165,38 +166,8 @@ public class PakFile {
         private byte[] body;
         private int opcode;
 
-        private PakSection(String filename, byte[] header, byte[] body, long start, long end,
-                           int opcode) {
+        private PakSection(String filename) {
             this.filename = filename;
-            this.header = header;
-            this.start = start;
-            this.end = end;
-            this.body = body;
-            this.opcode = opcode;
-        }
-
-        public String getFilename() {
-            return filename;
-        }
-
-        public byte[] getHeader() {
-            return header;
-        }
-
-        public byte[] getBody() {
-            return body;
-        }
-
-        public long getStart() {
-            return start;
-        }
-
-        public long getEnd() {
-            return end;
-        }
-
-        public int getOpcode() {
-            return opcode;
         }
     }
 
@@ -236,7 +207,13 @@ public class PakFile {
         return length;
     }
 
-    private static PakSection decryptSection(RandomAccessFile file, String keywordString)
+    private static int readOpCode(RandomAccessFile file) throws IOException {
+        byte[] opcodeBytes = new byte[2];
+        file.read(opcodeBytes);
+        return (opcodeBytes[0] | ((opcodeBytes[1] << 8) & 0xFF00)) & 0xFFFF;
+    }
+
+    private static PakSection readSection(RandomAccessFile file, String keywordString)
             throws GeneralSecurityException, IOException {
         int fileNameLength = file.readUnsignedByte();
         byte[] fileName = new byte[fileNameLength];
@@ -244,25 +221,33 @@ public class PakFile {
         byte[] headerBytes = new byte[4];
         file.read(headerBytes);
 
+        String fileNameString = new String(fileName, StandardCharsets.US_ASCII);
+        PakSection section = new PakSection(fileNameString);
+        readSectionBody(section, file, keywordString);
+
+        section.opcode = readOpCode(file);
+        return section;
+    }
+
+    private static PakSection readSectionBody(PakSection section,
+                                                 RandomAccessFile file, String keywordString)
+            throws GeneralSecurityException, IOException {
         int length = readLength(file);
 
         long start = file.getFilePointer(), end = start + length;
 
-        String filenameString = new String(fileName, StandardCharsets.US_ASCII);
-        System.out.println(" Decrypting file " + filenameString
-                + "(len=" + length + ") at range " + start + " - " + end + "...");
+        String filenameString = section.filename;
+        System.out.println(" Reading section " + filenameString
+                + " (len=" + length + ") at range " + start + " - " + end + "...");
 
-        ByteArrayOutputStream body = new ByteArrayOutputStream();
         byte[] block = new byte[length];
         int read = file.read(block);
-        Cipher rc2 = CryptoAPI.createRC2(keywordString);
-        block = rc2.doFinal(block, 0, read);
-        body.write(block);
+        if (read != length) {
+            throw new EOFException();
+        }
+        section.body = block;
 
-        byte[] opcodeBytes = new byte[2];
-        file.read(opcodeBytes);
-        int opcode = (opcodeBytes[0] | ((opcodeBytes[1] << 8) & 0xFF00)) & 0xFFFF;
-        return new PakSection(filenameString, headerBytes, body.toByteArray(), start, end, opcode);
+        return section;
     }
 
 }
