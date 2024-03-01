@@ -18,6 +18,11 @@ public class UDSFrameWriter implements FrameWriter<UDSBody> {
     @Override
     public void write(Address address, UDSBody body) throws IOException {
         UDSFrame frame = new UDSFrame(protocol, body);
+
+
+        System.out.println(address.toString() + " 0x" + Integer.toHexString(frame.getServiceId()) + " " +
+                body.getClass().getSimpleName() + " " + body.toString());
+
         frame.setAddress(address);
         transport.write(address, BasicFrame.from(frame));
     }

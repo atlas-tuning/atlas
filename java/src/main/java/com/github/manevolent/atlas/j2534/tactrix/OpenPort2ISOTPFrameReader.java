@@ -10,6 +10,7 @@ import com.github.manevolent.atlas.j2534.J2534Error;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.SocketTimeoutException;
 import java.util.Arrays;
 
 // Much appreciation for https://github.com/brandonros/rust-tactrix-openport/blob/master/src/lib.rs
@@ -117,9 +118,15 @@ public class OpenPort2ISOTPFrameReader implements FrameReader<ISOTPFrame>, AutoC
 
                 sb.append(c);
             }
+
             int code = Integer.parseInt(sb.toString());
             J2534Error error = Arrays.stream(J2534Error.values()).filter(err -> err.getCode() == code)
                     .findFirst().orElse(null);
+
+            if (error == J2534Error.ERR_TIMEOUT) {
+                throw new SocketTimeoutException();
+            }
+
             throw new IOException(code + "/" + error);
         } else {
             throw new IllegalArgumentException("Unexpected header: " + Frame.toHexString(tactrixHeader));

@@ -5,11 +5,15 @@ import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.j2534.ISOTPDevice;
 import com.github.manevolent.atlas.j2534.J2534Device;
 import com.github.manevolent.atlas.uds.response.UDSNegativeResponse;
+import net.codecrete.usb.linux.IO;
 
 import java.io.EOFException;
 import java.io.IOException;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static com.github.manevolent.atlas.uds.NegativeResponseCode.RESPONSE_PENDING;
@@ -25,6 +29,9 @@ public class AsyncUDSSession extends Thread implements UDSSession {
     private UDSFrameWriter writer;
 
     public AsyncUDSSession(ISOTPDevice device, UDSProtocol protocol) {
+        this.setName("UDSSession/" +device.toString() + "/" + protocol.toString());
+        this.setDaemon(true);
+
         this.device = device;
         this.protocol = protocol;
     }
@@ -66,7 +73,7 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         for (long n = 0;;n++) {
             try {
                 handleNext();
-            } catch (EOFException ex) {
+            } catch (EOFException | SocketTimeoutException ex) {
                 // silently exit
                 return n;
             }
@@ -110,6 +117,22 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         }
     }
 
+    public <T extends UDSResponse> void request(UDSComponent component, UDSRequest<T> request)
+            throws IOException {
+        request(component, request, (response) -> { /*ignored*/ });
+    }
+
+    public <T extends UDSResponse> void request(UDSComponent component, UDSRequest<T> request,
+                                                Consumer<T> callback)
+            throws IOException {
+        AtomicReference<Throwable> error = new AtomicReference<>();
+        request(component.getSendAddress(), request, callback, error::set);
+        Throwable throwable = error.getAcquire();
+        if (throwable != null) {
+            throw new IOException(throwable);
+        }
+    }
+
     public <T extends UDSResponse> void request(UDSComponent component, UDSRequest<T> request,
                                                 Consumer<T> callback, Consumer<Exception> error)
             throws IOException {
@@ -128,8 +151,6 @@ public class AsyncUDSSession extends Thread implements UDSSession {
 
     public <T extends UDSResponse> UDSTransaction<T> request(Address destination, UDSRequest<T> request)
             throws IOException {
-        System.out.println("Request: " + Frame.toHexString(request.write()));
-
         final int serviceId = protocol.getSid(request.getClass());
 
         UDSTransaction<T> transaction = new UDSTransaction<>() {

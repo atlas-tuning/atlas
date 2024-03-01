@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.uds.request;
 
 import com.github.manevolent.atlas.BitReader;
+import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.uds.RoutineControlSubFunction;
 import com.github.manevolent.atlas.uds.UDSRequest;
@@ -16,11 +17,34 @@ public class UDSRoutineControlRequest
     private int routineId;
     private byte[] data;
 
+    public UDSRoutineControlRequest() {
+
+    }
+
+    public UDSRoutineControlRequest(int controlFunction, int routineId, byte[] data) {
+        this.controlFunction = controlFunction;
+        this.routineId = routineId;
+        this.data = data;
+    }
+
+    public UDSRoutineControlRequest(RoutineControlSubFunction subFunction, int routineId, byte[] data) {
+        this.controlFunction = subFunction.getCode();
+        this.routineId = routineId;
+        this.data = data;
+    }
+
     @Override
     public void read(BitReader reader) throws IOException {
         controlFunction = reader.readByte() & 0xFF;
         routineId = reader.readByte() & 0xFF;
         data = reader.readRemaining();
+    }
+
+    @Override
+    public void write(BitWriter writer) throws IOException {
+        writer.write(controlFunction);
+        writer.write(routineId);
+        writer.write(data);
     }
 
     @Override

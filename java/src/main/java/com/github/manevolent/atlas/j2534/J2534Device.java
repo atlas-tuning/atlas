@@ -61,6 +61,43 @@ public interface J2534Device {
         public byte[] getFlow() {
             return flow;
         }
+
+        public boolean testPattern(CANArbitrationId id) {
+            byte[] data = id.getData();
+            byte[] mask = getMask();
+            byte[] maskResult = new byte[getMask().length];
+            for (int i = 0; i < maskResult.length; i ++) {
+                maskResult[i] = (byte) ((data[i] & 0xFF) & (mask[i] & 0xFF));
+            }
+
+            byte[] pattern = getPattern();
+            for (int i = 0; i < pattern.length; i ++) {
+                if (pattern[i] != maskResult[i])
+                    return false;
+            }
+
+            return true;
+        }
+
+        public boolean testFlow(CANArbitrationId id) {
+            byte[] data = id.getData();
+            byte[] mask = getMask();
+            byte[] maskResult = new byte[getMask().length];
+            for (int i = 0; i < maskResult.length; i ++) {
+                maskResult[i] = (byte) ((data[i] & 0xFF) & (mask[i] & 0xFF));
+            }
+
+            byte[] flow = getFlow();
+            for (int i = 0; i < flow.length; i ++) {
+                if (flow[i] != maskResult[i])
+                    return false;
+            }
+
+            return true;
+        }
     }
+
+    public static CANFilter CAN_ALL = new CANFilter(new byte[4], new byte[4]);
+    public static ISOTPFilter ISOTP_ALL = new ISOTPFilter(new byte[4], new byte[4], new byte[4]);
 
 }

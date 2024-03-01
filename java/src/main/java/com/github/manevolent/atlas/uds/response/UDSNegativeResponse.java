@@ -36,6 +36,6 @@ public class UDSNegativeResponse extends UDSResponse {
 
     @Override
     public String toString() {
-        return "sid=" + rejectedSid + " reason=" + responseCode.name();
+        return "sid=" + Integer.toHexString(rejectedSid & 0xFF) + " reason=" + responseCode.name();
     }
 }

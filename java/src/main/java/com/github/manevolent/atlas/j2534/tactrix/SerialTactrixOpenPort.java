@@ -137,7 +137,7 @@ public class SerialTactrixOpenPort implements J2534Device {
             String answer = readLine();
             if (!answer.equals(String.format("arf%d %d %d",
                     protocol, index, J2534Error.STATUS_NOERROR.getCode()))) {
-                throw new IllegalStateException("Unexpected response: " + answer);
+                throw new IllegalStateException("Unexpected response at index " + index + ": " + answer);
             }
 
             index ++;
