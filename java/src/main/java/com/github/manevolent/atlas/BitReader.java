@@ -125,8 +125,16 @@ public class BitReader {
         return (byte) read(8);
     }
 
+    public int readUByte() throws IOException {
+        return (int) (read(8) & 0xFF);
+    }
+
     public short readShort() throws IOException {
         return (short) read(16);
+    }
+
+    public int readUShort() throws IOException {
+        return (int) (read(16) & 0xFFFF);
     }
 
     public int readInt() throws IOException {

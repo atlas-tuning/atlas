@@ -6,7 +6,7 @@ import com.github.manevolent.atlas.uds.response.UDSNegativeResponse;
 public interface UDSProtocol {
 
     BasicUDSProtocol STANDARD = new BasicUDSProtocol(
-        UDSQuery.from("Diagnostic Session Control", 0x10, UDSDiagSessionControlRequest.class),
+            UDSQuery.from("Diagnostic Session Control", 0x10, UDSDiagSessionControlRequest.class),
             UDSQuery.from("ECU Reset", 0x11, UDSECUResetRequest.class),
             UDSQuery.from("Security Access", 0x27, UDSSecurityAccessRequest.class),
             UDSQuery.from("Communication Control", 0x28,UDSCommunicationControlRequest.class),
@@ -14,6 +14,8 @@ public interface UDSProtocol {
             UDSQuery.from("Tester Present", 0x3E, UDSTesterPresentRequest.class),
             UDSQuery.from("Access Timing Parameters", 0x83, UDSAccessTimingParametersRequest.class),
             UDSQuery.from("Read Data by ID", 0x22, UDSReadDataByIDRequest.class),
+            UDSQuery.from("Read Memory by Address", 0x23, UDSReadMemoryByAddressRequest.class),
+            UDSQuery.from("Dynamically Define Data Identifier", 0x2C, UDSDefineDataIdentifierRequest.class),
             UDSQuery.from("Routine Control", 0x31, UDSRoutineControlRequest.class),
             UDSQuery.from("Control DTC Settings", 0x85, UDSCommunicationControlRequest.class),
             UDSQuery.from("Reset DTC Information", 0x14, UDSClearDTCInformationRequest.class),
@@ -35,6 +37,11 @@ public interface UDSProtocol {
         return mapping.getBodyClass();
     }
 
+    /**
+     * Layers the given protocol over another protocol
+     * @param lower lower layer protocol
+     * @return layered UDS protocol
+     */
     default LayeredUDSProtocol layer(UDSProtocol lower) {
         return new LayeredUDSProtocol(this, lower);
     }
