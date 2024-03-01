@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
  * of SSM3/SSM4 to run this utility and inspect the output(s).
  *
  * Example arg array:
- * [0]: ".../flashwrite/Pack File Database_N_AMERICA.csv"
+ * [0]: ".../flashwrite/"
  * [1] ".../flashwrite/EcuData/"
  *
  * ..outputs files like this:
@@ -44,7 +44,13 @@ import java.util.regex.Pattern;
  */
 public class PakFile {
     public static void main(String[] args) throws Exception {
-        decrypt(args[0], args[1]);
+        File directory = new File(args[0]);
+        for (File file : directory.listFiles()) {
+            if (file.getName().endsWith(".csv")) {
+                System.out.println("Process " + file.getName() + "...");
+                decrypt(file.getAbsolutePath(), args[1]);
+            }
+        }
     }
 
     private static void decrypt(String csvFile, String pakDirectory) throws Exception {
@@ -73,6 +79,10 @@ public class PakFile {
                     }
 
                     String keyword = cells.get(10).replaceAll(" ", "");
+                    if (keyword.length() <= 0) {
+                        continue;
+                    }
+
                     String partNumberFilename = cells.get(4).trim();
                     String pakNumberfilename = cells.get(5).trim();
                     Set<String> filesToTry = new HashSet<>();
@@ -106,7 +116,7 @@ public class PakFile {
             file.read(headerBytes);
 
             List<PakSection> sections = new ArrayList<>();
-            PakSection first = new PakSection("header");
+            PakSection first = new PakSection("header.csv");
             readSectionBody(first, file, keywordString);
             sections.add(first);
 
@@ -141,20 +151,21 @@ public class PakFile {
                 String folder = pakFile + "." + keywordString + "/";
                 new File(folder).mkdirs();
                 String clearFilename = folder + recovered.filename;
-                try (OutputStream writer = new FileOutputStream(clearFilename)) {
 
-                    if (!recovered.filename.equals("header")) {
-                        try {
-                            Cipher rc2 = CryptoAPI.createRC2(keywordString);
-                            recovered.body = rc2.doFinal(recovered.body, 0, recovered.body.length);
-                        } catch (Exception ex) {
-                            System.err.println(" Problem decrypting " + recovered.filename + ": " + ex.getMessage());
+                    try {
+                        String specificKeyword = recovered.filename.equals("header.csv") ?
+                                "CsvKey" :
+                                keywordString;
+                        Cipher rc2 = CryptoAPI.createRC2(specificKeyword);
+                        recovered.body = rc2.doFinal(recovered.body, 0, recovered.body.length);
+
+                        try (OutputStream writer = new FileOutputStream(clearFilename)) {
+                            System.out.println(" Writing " + clearFilename + "...");
+                            writer.write(recovered.body);
                         }
+                    } catch (Exception ex) {
+                        System.err.println(" Problem decrypting " + recovered.filename + ": " + ex.getMessage());
                     }
-
-                    System.out.println(" Writing " + clearFilename + "...");
-                    writer.write(recovered.body);
-                }
             }
         }
     }
