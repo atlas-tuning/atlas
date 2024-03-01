@@ -24,6 +24,20 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.LSHIFT, 8)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f);
 
+    private static final Scale.Builder rpm_8bit_2 = Scale.builder()
+            .withOperation(ArithmeticOperation.LSHIFT, 3)
+            .withOperation(ArithmeticOperation.MULTIPLY, 16f)
+            .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f);
+
+
+
+    private static final Scale.Builder calculated_load_16bit =
+            Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f);
+
+    private static final Scale.Builder calculated_load_8bit = Scale.builder()
+            .withOperation(ArithmeticOperation.LSHIFT, 8)
+            .withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f);
+
     private static final Scale.Builder percent_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.DIVIDE, 255.0f);
 
@@ -80,7 +94,7 @@ public class FlashTest {
                         .withLength(0x1E)
                         .withUnit(Unit.G_PER_REV)
                         .withFormat(DataFormat.USHORT)
-                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
+                        .withScale(calculated_load_16bit));
     }
 
     private static Table.Builder dynamicAdvanceIgnitionTimingTable(FlashRegion code, String name, int timingDataAddress,
@@ -107,7 +121,7 @@ public class FlashTest {
                         .withLength(loadLength)
                         .withUnit(Unit.G_PER_REV)
                         .withFormat(DataFormat.USHORT)
-                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
+                        .withScale(calculated_load_16bit));
     }
 
     private static Table.Builder fuelPressureTargetWarmupTable_1D(FlashRegion code,
@@ -196,7 +210,7 @@ public class FlashTest {
                         .withLength(0x10)
                         .withUnit(Unit.G_PER_REV)
                         .withFormat(DataFormat.USHORT)
-                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
+                        .withScale(calculated_load_16bit));
     }
 
     private static Table.Builder ignitionTimingGearCompTable(FlashRegion code,
@@ -228,7 +242,7 @@ public class FlashTest {
                         .withLength(0x03)
                         .withUnit(Unit.G_PER_REV)
                         .withFormat(DataFormat.USHORT)
-                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)));
+                        .withScale(calculated_load_16bit));
     }
 
     private static Table.Builder[] ignitionTimingIatCompTables(FlashRegion code,
@@ -283,8 +297,61 @@ public class FlashTest {
                         .withLength(0x1E)
                         .withUnit(Unit.G_PER_REV)
                         .withFormat(DataFormat.USHORT)
-                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f))
+                        .withScale(calculated_load_16bit)
                 )
+        };
+    }
+
+    private static Table.Builder[] ignitionTimingCoolantCompTables(FlashRegion code,
+                                                               String name,
+                                                               int dataAddress,
+                                                               int coolantAddress,
+                                                               int activationDataAddress,
+                                                               int activationRpmAddress,
+                                                               int activationCalcLoadAddress) {
+        return new Table.Builder[] {
+                Table.builder()
+                        .withName("Ignition Timing Compensation Coolant - " + name)
+                        .withData(Series.builder()
+                                .withName("Timing")
+                                .withAddress(code, dataAddress)
+                                .withFormat(DataFormat.USHORT)
+                                .withUnit(Unit.DEGREES)
+                                .withScale(Scale.builder().withOperations(
+                                        ScalingOperation.from(ArithmeticOperation.DIVIDE, 10)
+                                ))
+                        )
+                        .withAxis(X, Series.builder()
+                        .withName("Coolant Temperature")
+                        .withUnit(Unit.CELSIUS)
+                        .withAddress(code, coolantAddress)
+                        .withLength(0x10)
+                        .withFormat(DataFormat.USHORT)
+                        .withScale(coolantTemp16BitScale)
+                ),
+                Table.builder()
+                        .withName("Ignition Timing Compensation Coolant Activation - " + name)
+                        .withData(Series.builder()
+                                .withName("Activation")
+                                .withAddress(code, activationDataAddress)
+                                .withFormat(DataFormat.USHORT)
+                                .withUnit(Unit.PERCENT)
+                                .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 100f))
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, activationRpmAddress)
+                                .withLength(0x16)
+                                .withFormat(DataFormat.UBYTE)
+                                .withScale(rpm_8bit_2))
+                        .withAxis(X, Series.builder()
+                            .withName("Load")
+                            .withAddress(code, activationCalcLoadAddress)
+                            .withLength(0x1E)
+                            .withUnit(Unit.G_PER_REV)
+                            .withFormat(DataFormat.UBYTE)
+                            .withScale(calculated_load_8bit)
+                        )
         };
     }
 
@@ -339,6 +406,8 @@ public class FlashTest {
                 .withTable(ignitionTimingGearCompTable(code, "3rd", 0x000a8c08, 0x000a7478, 0x000a7470))
                 .withTable(ignitionTimingGearCompTable(code, "4th", 0x000a8c14, 0x000a7478, 0x000a7470))
                 .withTable(ignitionTimingGearCompTable(code, "5th", 0x000a8c20, 0x000a7478, 0x000a7470))
+
+                // Ignition timing compensation by IAT
                 .withTables(ignitionTimingIatCompTables(code, "A", 0x000a80ec, 0x000a80cc,
                         0x000ac830, 0x000a8914, 0x000a8980))
                 .withTables(ignitionTimingIatCompTables(code, "B", 0x000a7b5c, 0x000a80cc,
@@ -349,6 +418,10 @@ public class FlashTest {
                 .withTable(dynamicAdvanceIgnitionTimingTable(code, "Base - TGVs Open", 0x000b6254, 0x000b54e4, 0x16, 0x000b5510, 0x1E))
                 .withTable(dynamicAdvanceIgnitionTimingTable(code, "Adder - TGVs Closed", 0x000b64e8, 0x000b5624, 0x15, 0x000b5578, 0x1E))
                 .withTable(dynamicAdvanceIgnitionTimingTable(code, "Adder - TGVs Open", 0x000b6760, 0x000b5650, 0x15, 0x000b55b4, 0x1E))
+
+                //Ignition timing compensation by coolant temperature
+                .withTables(ignitionTimingCoolantCompTables(code, "TGVs Closed", 0x000a7e9c, 0x00030a68, 0x000abde0, 0x000a8b34, 0x000a8b6c))
+                .withTables(ignitionTimingCoolantCompTables(code, "TGVs Open", 0x000a7ebc, 0x00030a68, 0x000ac308, 0x000a8b34, 0x000a8b6c))
 
                 // Fuel pressure
                 .withTable(Table.builder()
