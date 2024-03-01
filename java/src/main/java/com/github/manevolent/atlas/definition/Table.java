@@ -85,10 +85,11 @@ public class Table {
 
             writeCell.accept("");
 
-            for (int x_index = 0; x_index < x.getLength(); x_index ++) {
-                writeCell.accept(String.format("%." + rounding_precision + "f", x.get(x_index)));
+            if (axes.size() > 0) {
+                for (int x_index = 0; x_index < x.getLength(); x_index++) {
+                    writeCell.accept(String.format("%." + rounding_precision + "f", x.get(x_index)));
+                }
             }
-
             writer.write("\r\n");
 
             if (axes.size() == 2) {
@@ -104,6 +105,15 @@ public class Table {
             } else if (axes.size() == 1) {
                 // Write the row header
                 writeCell.accept("");
+                for (int x_index = 0; x_index < x.getLength(); x_index ++) {
+                    // Write the cell data
+                    writeCell.accept(String.format("%." + rounding_precision + "f", getCell(x_index)));
+                }
+                writer.write("\r\n");
+            } else if (axes.size() == 0) {
+                // Write the row header
+                writeCell.accept("");
+                x = data;
                 for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                     // Write the cell data
                     writeCell.accept(String.format("%." + rounding_precision + "f", getCell(x_index)));

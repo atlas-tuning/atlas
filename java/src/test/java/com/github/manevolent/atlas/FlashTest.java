@@ -420,6 +420,18 @@ public class FlashTest {
         };
     }
 
+    private static final Table.Builder singleValueTable(FlashRegion code, String name, int dataAddress,
+                                                        DataFormat format, Scale.Builder scale, Unit unit) {
+        return Table.builder()
+                .withName(name)
+                .withData(Series.builder()
+                        .withAddress(code, dataAddress)
+                        .withLength(1)
+                        .withFormat(format)
+                        .withScale(scale)
+                        .withUnit(unit)
+                );
+    }
 
     private static Rom newRom() {
         FlashRegion code = new FlashRegion();
@@ -610,6 +622,12 @@ public class FlashTest {
                                 .withUnit(Unit.PSI)
                         )
                 )
+                .withTable(singleValueTable(code, "Boost Target - Maximum Limit",
+                        0x00028bf0,
+                        DataFormat.USHORT,
+                        boostTargetPressureScale_RelSL_16bit,
+                        Unit.PSI
+                ))
                 .build();
     }
 
