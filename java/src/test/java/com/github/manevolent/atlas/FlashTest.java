@@ -24,6 +24,9 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.LSHIFT, 8)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f);
 
+    private static final Scale.Builder percent_8bit = Scale.builder()
+            .withOperation(ArithmeticOperation.DIVIDE, 255.0f);
+
     /**
      * Unit is kPa
      */
@@ -42,6 +45,12 @@ public class FlashTest {
      * Unit is degrees celsius
      */
     private static final Scale.Builder coolantTemp16BitScale = Scale.builder()
+            .withOperation(ArithmeticOperation.MULTIPLY, 5.0f)
+            .withOperation(ArithmeticOperation.RSHIFT, 0xB)
+            .withOperation(ArithmeticOperation.SUBTRACT, 40.0f);
+
+    private static final Scale.Builder coolantTemp8BitScale = Scale.builder()
+            .withOperation(ArithmeticOperation.LSHIFT, 8)
             .withOperation(ArithmeticOperation.MULTIPLY, 5.0f)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
             .withOperation(ArithmeticOperation.SUBTRACT, 40.0f);
@@ -301,8 +310,33 @@ public class FlashTest {
                 .withTables(ignitionTimingIatCompTables(code, "B", 0x000a7b5c, 0x000a80cc,
                         0x000acac4, 0x000a8914, 0x000a8980))
                 // Fuel pressure
+                .withTable(Table.builder()
+                        .withName("Fuel Pressure Target - Main - Adder Activation")
+                        .withData(Series.builder()
+                                .withName("Activation")
+                                .withAddress(code, 0x000c84a4)
+                                .withFormat(DataFormat.UBYTE)
+                                .withScale(percent_8bit)
+                                .withUnit(Unit.PERCENT)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("Intake Air Temperature")
+                                .withAddress(code, 0x000c82f0)
+                                .withLength(0x8)
+                                .withFormat(DataFormat.UBYTE)
+                                .withScale(Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 50))
+                                .withUnit(Unit.CELSIUS))
+                        .withAxis(X, Series.builder()
+                                .withName("Coolant Temperature")
+                                .withAddress(code, 0x000c82e8)
+                                .withLength(0x8)
+                                .withUnit(Unit.G_PER_REV)
+                                .withFormat(DataFormat.UBYTE)
+                                .withScale(coolantTemp8BitScale)))
+                .withTable(fuelPressureTargetMainTable_2D(code, "Main - Adder", 0x000c9320, 0x000c8880, 0x000c8494))
                 .withTable(fuelPressureTargetMainTable_2D(code, "Main - TGVs Closed", 0x000cb2f0, 0x000c8880, 0x000c83a4))
                 .withTable(fuelPressureTargetMainTable_2D(code, "Main - TGVs Open", 0x000cb4d0, 0x000c8880, 0x000c83a4))
+                .withTable(fuelPressureTargetMainTable_2D(code, "Main - Idle", 0x000c9140, 0x000c8880, 0x000c83a4))
                 .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3A #1", 0x000c85c4, 0x000c84e4))
                 .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3A #2", 0x000c85a4, 0x000c84e4))
                 .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1A", 0x000c85e4, 0x000c84e4))
