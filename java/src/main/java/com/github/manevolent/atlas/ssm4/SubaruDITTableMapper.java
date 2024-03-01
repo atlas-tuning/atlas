@@ -96,6 +96,31 @@ public class SubaruDITTableMapper {
         public int getDataAddress() {
             return data_address;
         }
+
+        public byte[] getData(RandomAccessFile raf, int num_bytes_per_data) throws IOException {
+            int dimension_size = 1;
+            for (Dimension dimension : dimensions.keySet()) {
+                dimension_size *= dimensions.get(dimension).size;
+            }
+
+            byte[] data_range = new byte[num_bytes_per_data * dimension_size];
+            raf.seek(data_address & 0xFFFFFF);
+            raf.read(data_range);
+
+            return data_range;
+        }
+
+        public boolean isEmpty(RandomAccessFile raf, int num_bytes_per_data) throws IOException {
+            byte[] data_range = getData(raf, num_bytes_per_data);
+
+            for (int i = 0; i < data_range.length; i ++) {
+                if (data_range[i] != 0x0) {
+                    return false;
+                }
+            }
+
+            return true;
+        }
     }
 
     public static class Range {
@@ -110,7 +135,15 @@ public class SubaruDITTableMapper {
             raf.seek(start);
             List<Table> tables = new ArrayList<>();
             while (raf.getFilePointer() < end) {
-                tables.add(Table.read(raf));
+                Table table = Table.read(raf);
+
+                long saved_offset = raf.getFilePointer();
+
+                if (!table.isEmpty(raf, 4)) {
+                    tables.add(table);
+                }
+
+                raf.seek(saved_offset);
             }
             return tables;
         }
