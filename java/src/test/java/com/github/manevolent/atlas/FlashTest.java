@@ -701,21 +701,26 @@ public class FlashTest {
                         .withName("Wastegate Position - Barometric Compensation")
                         .withData(Series.builder()
                                 .withName("Percent")
-                                .withAddress(code, 0x0002c594)
+                                .withAddress(code, 0x0002c730)
                                 .withScale(boostTargetCompensation_8bit)
                         )
                         .withAxis(Y, Series.builder()
                                 .withName("RPM")
-                                .withAddress(code, 0x0002afa8)
-                                .withLength(0xB)
+                                .withAddress(code, 0x0002ae98)
+                                .withLength(0x12)
                                 .withScale(rpm_16bit))
                         .withAxis(X, Series.builder()
                                 .withName("Barometric Temperature")
-                                .withAddress(code, 0x0002afc0)
-                                .withLength(0xB)
+                                .withAddress(code, 0x0002a3b8)
+                                .withLength(0x10)
                                 .withScale(absolutePressure_16bit)
                         )
                 )
+                .withTable(singleValueTable(code, "Boost Target - Maximum Limit",
+                        0x00028bf0,
+                        DataFormat.USHORT,
+                        boostTargetPressureScale_RelSL_16bit
+                ))
                 .build();
     }
 
