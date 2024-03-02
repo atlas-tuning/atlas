@@ -79,6 +79,12 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.SUBTRACT, (float) 14.70)
             .withUnit(PSI)
             .withFormat(DataFormat.USHORT);
+    private static final Scale.Builder boostTargetPressureScale_16bit = Scale.builder()
+            .withOperation(ArithmeticOperation.ADD, 0x6A6)
+            .withOperation(ArithmeticOperation.MULTIPLY, 2)
+            .withOperation(ArithmeticOperation.DIVIDE, 255)
+            .withUnit(KPA)
+            .withFormat(DataFormat.USHORT);
 
     private static final Scale.Builder absolutePressure_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.RSHIFT, 8)
@@ -88,8 +94,8 @@ public class FlashTest {
 
     private static final Scale.Builder boostTargetCompensation_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.SUBTRACT, 0x55)
-            .withOperation(ArithmeticOperation.DIVIDE, 0x50)
-            .withOperation(ArithmeticOperation.MULTIPLY, 100)
+            .withOperation(ArithmeticOperation.MULTIPLY, 1/85f) // This takes a while to figure out
+            .withOperation(ArithmeticOperation.MULTIPLY, 100f)
             .withUnit(Unit.PERCENT)
             .withFormat(DataFormat.UBYTE);;
 
@@ -111,6 +117,11 @@ public class FlashTest {
             .withOperation(ArithmeticOperation.DIVIDE, 0x666)
             .withFormat(DataFormat.USHORT)
             .withUnit(Unit.MILLIMETER);
+
+    private static final Scale.Builder intakeAirTemperature8bitScale = Scale.builder()
+            .withOperation(ArithmeticOperation.SUBTRACT, 50)
+            .withFormat(DataFormat.UBYTE)
+            .withUnit(Unit.CELSIUS);
 
     private static Table.Builder ignitionTimingBaseTable(FlashRegion code, String name, int timingDataAddress,
                                                          int rpmAddress, int loadAddress) {
@@ -601,16 +612,14 @@ public class FlashTest {
                                 .withName("Percent")
                                 .withAddress(code, 0x0002a318)
                                 .withScale(boostTargetCompensation_8bit)
-                                .withFormat(DataFormat.UBYTE)
-                                .withUnit(Unit.PERCENT)
                         )
                         .withAxis(X, Series.builder()
                                 .withName("Intake Air Temperature")
                                 .withAddress(code, 0x00036e6c)
                                 .withLength(0x10)
-                                .withFormat(DataFormat.UBYTE)
-                                .withScale(Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 50))
-                                .withUnit(Unit.CELSIUS))
+                                .withScale(intakeAirTemperature8bitScale)
+                        )
+
                 )
                 .withTable(Table.builder()
                         .withName("Boost Target - Barometric Compensation")
@@ -653,7 +662,7 @@ public class FlashTest {
                         boostTargetCompensation_8bit
                 ))
                 .withTable(Table.builder()
-                        .withName("Wastegate - Position")
+                        .withName("Wastegate Position - Main")
                         .withData(Series.builder()
                                 .withName("Position")
                                 .withAddress(code, 0x0002c970)
@@ -669,6 +678,24 @@ public class FlashTest {
                                 .withAddress(code, 0x0002ae5c)
                                 .withLength(0x1E)
                                 .withScale(boostTargetPressureScale_RelSL_16bit)
+                        )
+                ).withTable(Table.builder()
+                        .withName("Wastegate Position - IAT Compensation")
+                        .withData(Series.builder()
+                                .withName("Percent")
+                                .withAddress(code, 0x0002c610)
+                                .withScale(boostTargetCompensation_8bit)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002ae98)
+                                .withLength(0x12)
+                                .withScale(rpm_16bit))
+                        .withAxis(X, Series.builder()
+                                .withName("Intake Air Temperature")
+                                .withAddress(code, 0x0002a328)
+                                .withLength(0x10)
+                                .withScale(intakeAirTemperature8bitScale)
                         )
                 )
                 .build();
