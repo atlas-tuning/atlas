@@ -448,13 +448,12 @@ public class FlashTest {
     }
 
     private static final Table.Builder singleValueTable(FlashRegion code, String name, int dataAddress,
-                                                        DataFormat format, Scale.Builder scale) {
+                                                        Scale.Builder scale) {
         return Table.builder()
                 .withName(name)
                 .withData(Series.builder()
                         .withAddress(code, dataAddress)
                         .withLength(1)
-                        .withFormat(format)
                         .withScale(scale)
                 );
     }
@@ -648,17 +647,14 @@ public class FlashTest {
                 )
                 .withTable(singleValueTable(code, "Boost Target - Maximum Limit",
                         0x00028bf0,
-                        DataFormat.USHORT,
                         boostTargetPressureScale_RelSL_16bit
                 ))
                 .withTable(singleValueTable(code, "Boost Target - IAT Compensation - DTC",
                         0x00028fe6,
-                        DataFormat.UBYTE,
                         boostTargetCompensation_8bit
                 ))
                 .withTable(singleValueTable(code, "Boost Target - Barometric Compensation - DTC",
                         0x00028fe7,
-                        DataFormat.UBYTE,
                         boostTargetCompensation_8bit
                 ))
                 .withTable(Table.builder()
@@ -716,11 +712,10 @@ public class FlashTest {
                                 .withScale(absolutePressure_16bit)
                         )
                 )
-                .withTable(singleValueTable(code, "Boost Target - Maximum Limit",
-                        0x00028bf0,
-                        DataFormat.USHORT,
-                        boostTargetPressureScale_RelSL_16bit
-                ))
+                .withTable(singleValueTable(code, "Wastegate Position - Maximum Limit",
+                        0x00028c00, wastegatePosition16bitScale))
+                .withTable(singleValueTable(code, "Wastegate Position - Minimum Limit",
+                        0x00028bfe, wastegatePosition16bitScale))
                 .build();
     }
 
