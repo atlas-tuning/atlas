@@ -6,8 +6,6 @@ import com.github.manevolent.atlas.definition.zip.StreamedFlashSource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -21,106 +19,116 @@ public class FlashTest {
     private static final String testRomResource = "/" + String.format(fileFormat, testRomName);
 
     private static final Scale.Builder rpm_16bit = Scale.builder()
+            .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
-            .withUnit(RPM)
-            .withFormat(DataFormat.USHORT);
+            .withUnit(RPM);
 
     private static final Scale.Builder rpm_8bit = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.LSHIFT, 8)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
-            .withUnit(RPM)
-            .withFormat(DataFormat.UBYTE);
+            .withUnit(RPM);
 
     private static final Scale.Builder rpm_8bit_2 = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.LSHIFT, 3)
             .withOperation(ArithmeticOperation.MULTIPLY, 16f)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
-            .withUnit(RPM)
-            .withFormat(DataFormat.UBYTE);
+            .withUnit(RPM);
 
     private static final Scale.Builder req_torque_16bit = Scale.builder()
+            .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.SUBTRACT, 0x3E80)
             .withOperation(ArithmeticOperation.DIVIDE, 0x50)
-            .withUnit(NM)
-            .withFormat(DataFormat.USHORT);
+            .withUnit(NM);
 
     private static final Scale.Builder calculated_load_16bit = Scale.builder()
+            .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)
-            .withUnit(G_PER_REV)
-            .withFormat(DataFormat.USHORT);
+            .withUnit(G_PER_REV);
 
     private static final Scale.Builder calculated_load_8bit = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.LSHIFT, 8)
-            .withOperations(calculated_load_16bit)
-            .withFormat(DataFormat.UBYTE);;
+            .withOperations(calculated_load_16bit);
 
     private static final Scale.Builder percent_8bit = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.DIVIDE, 255.0f)
-            .withUnit(PERCENT)
-            .withFormat(DataFormat.UBYTE);;
+            .withUnit(PERCENT);
 
     private static final Scale.Builder directInjectionFuelPressureScale_16bit = Scale.builder()
+            .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x7D)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
             .withOperation(ArithmeticOperation.MULTIPLY, 10.0f)
-            .withUnit(KPA)
-            .withFormat(DataFormat.USHORT);
+            .withUnit(KPA);
 
     private static final Scale.Builder directInjectionFuelPressureScale_8bit = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x96)
-            .withOperations(directInjectionFuelPressureScale_16bit)
-            .withFormat(DataFormat.UBYTE);
-
-    private static final Scale.Builder boostTargetPressureScale_RelSL_16bit = Scale.builder()
-            .withOperation(ArithmeticOperation.ADD, 0x6A6)
-            .withOperation(ArithmeticOperation.MULTIPLY, 2)
-            .withOperation(ArithmeticOperation.RSHIFT, 8)
-            .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
-            .withOperation(ArithmeticOperation.SUBTRACT, (float) 14.70)
-            .withUnit(PSI)
-            .withFormat(DataFormat.USHORT);
+            .withOperations(directInjectionFuelPressureScale_16bit);
     private static final Scale.Builder boostTargetPressureScale_16bit = Scale.builder()
+            .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.ADD, 0x6A6)
             .withOperation(ArithmeticOperation.MULTIPLY, 2)
-            .withOperation(ArithmeticOperation.DIVIDE, 255)
-            .withUnit(KPA)
-            .withFormat(DataFormat.USHORT);
+            .withOperation(ArithmeticOperation.RSHIFT, 8)
+            .withUnit(KPA);
 
-    private static final Scale.Builder absolutePressure_16bit = Scale.builder()
+    private static final Scale.Builder barometricPressure_16bit = Scale.builder()
+            .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.RSHIFT, 8)
             .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
-            .withUnit(PSI)
-            .withFormat(DataFormat.USHORT);
+            .withUnit(PSI);
+    private static final Scale.Builder manifoldPressure_16bit = Scale.builder()
+            .withFormat(DataFormat.USHORT)
+            .withOperation(ArithmeticOperation.MULTIPLY, 2)
+            .withOperations(barometricPressure_16bit)
+            .withUnit(PSI);
+    private static final Scale.Builder boostErrorPressure_16bit = Scale.builder()
+            .withFormat(DataFormat.SSHORT) // This is important
+            .withOperations(manifoldPressure_16bit);
+    private static final Scale.Builder boostTargetPressureScale_RelSL_16bit = Scale.builder()
+            .withFormat(DataFormat.USHORT)
+            .withOperation(ArithmeticOperation.ADD, 0x6A6)
+            .withOperation(ArithmeticOperation.MULTIPLY, 2)
+            .withOperations(barometricPressure_16bit)
+            .withOperation(ArithmeticOperation.SUBTRACT, (float) 14.70)
+            .withUnit(PSI);
 
     private static final Scale.Builder boostTargetCompensation_8bit = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.SUBTRACT, 0x55)
             .withOperation(ArithmeticOperation.MULTIPLY, 1/85f) // This takes a while to figure out
             .withOperation(ArithmeticOperation.MULTIPLY, 100f)
-            .withUnit(Unit.PERCENT)
-            .withFormat(DataFormat.UBYTE);;
+            .withUnit(Unit.PERCENT);
 
     private static final Scale.Builder coolantTemp16BitScale = Scale.builder()
+            .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, 5.0f)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
             .withOperation(ArithmeticOperation.SUBTRACT, 40.0f)
-            .withUnit(CELSIUS)
-            .withFormat(DataFormat.USHORT);
+            .withUnit(CELSIUS);
 
     private static final Scale.Builder coolantTemp8BitScale = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.LSHIFT, 8)
-            .withOperations(coolantTemp16BitScale)
-            .withFormat(DataFormat.UBYTE);
+            .withOperations(coolantTemp16BitScale);
 
 
     private static final Scale.Builder wastegatePosition16bitScale = Scale.builder()
+            .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.SUBTRACT, 0x4000)
             .withOperation(ArithmeticOperation.DIVIDE, 0x666)
-            .withFormat(DataFormat.USHORT)
+            .withUnit(Unit.MILLIMETER);
+    private static final Scale.Builder wastegatePositionErrorCorr16bitScale = Scale.builder()
+            .withFormat(DataFormat.SSHORT)
+            .withOperation(ArithmeticOperation.DIVIDE, 0x666)
             .withUnit(Unit.MILLIMETER);
 
     private static final Scale.Builder intakeAirTemperature8bitScale = Scale.builder()
-            .withOperation(ArithmeticOperation.SUBTRACT, 50)
             .withFormat(DataFormat.UBYTE)
+            .withOperation(ArithmeticOperation.SUBTRACT, 50)
             .withUnit(Unit.CELSIUS);
 
     private static Table.Builder ignitionTimingBaseTable(FlashRegion code, String name, int timingDataAddress,
@@ -640,7 +648,7 @@ public class FlashTest {
                                 .withName("Barometric Pressure")
                                 .withAddress(code, 0x0002afc0)
                                 .withLength(0xB)
-                                .withScale(absolutePressure_16bit)
+                                .withScale(barometricPressure_16bit)
                                 .withFormat(DataFormat.USHORT)
                                 .withUnit(PSI)
                         )
@@ -709,7 +717,46 @@ public class FlashTest {
                                 .withName("Barometric Temperature")
                                 .withAddress(code, 0x0002a3b8)
                                 .withLength(0x10)
-                                .withScale(absolutePressure_16bit)
+                                .withScale(barometricPressure_16bit)
+                        )
+                ).withTable(singleValueTable(code, "Wastegate Position - Transient Boost Threshold",
+                        0x00028c1e,
+                        boostErrorPressure_16bit
+                )).withTable(Table.builder()
+                        .withName("Wastegate Position - Boost Error Compensation - Continuous")
+                        .withData(Series.builder()
+                                .withName("Position")
+                                .withAddress(code, 0x0002d348)
+                                .withScale(wastegatePositionErrorCorr16bitScale)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002aebc)
+                                .withLength(0x12)
+                                .withScale(rpm_16bit))
+                        .withAxis(X, Series.builder()
+                                .withName("Boost Error")
+                                .withAddress(code, 0x0002af28)
+                                .withLength(0x1E)
+                                .withScale(boostErrorPressure_16bit)
+                        )
+                ).withTable(Table.builder()
+                        .withName("Wastegate Position - Boost Error Compensation - Transient Boost")
+                        .withData(Series.builder()
+                                .withName("Position")
+                                .withAddress(code, 0x0002d780)
+                                .withScale(wastegatePositionErrorCorr16bitScale)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002aebc)
+                                .withLength(0x12)
+                                .withScale(rpm_16bit))
+                        .withAxis(X, Series.builder()
+                                .withName("Boost Error")
+                                .withAddress(code, 0x0002af28)
+                                .withLength(0x1E)
+                                .withScale(boostErrorPressure_16bit)
                         )
                 )
                 .withTable(singleValueTable(code, "Wastegate Position - Maximum Limit",
@@ -755,6 +802,26 @@ public class FlashTest {
     public void test_coolantTemp16BitScale() {
         float degreesCelsius = coolantTemp16BitScale.build().forward(0x59D3);
         assertEquals(degreesCelsius, 16f, 1f);
+    }
+
+    @Test
+    public void test_BoostError() {
+        int target = 0x0917;
+        int manifold = 0x229f;
+
+        float target_psi = manifoldPressure_16bit.build().forward(target);
+        float manifold_psi = manifoldPressure_16bit.build().forward(manifold);
+        float calculated_error = target_psi - manifold_psi;
+        float error_psi = boostErrorPressure_16bit.build().forward((short) 0xE678);
+
+        assertEquals(calculated_error, error_psi, 0.0001f);
+    }
+
+    @Test
+    public void test_wastegate_position() {
+        int position = 0x4000;
+        float mm = wastegatePosition16bitScale.build().forward(position);
+        assertEquals(0.00f, mm, 0.00f);
     }
 
     @Test

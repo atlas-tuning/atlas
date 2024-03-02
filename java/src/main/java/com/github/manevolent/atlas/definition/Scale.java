@@ -86,6 +86,9 @@ public class Scale {
             if (builder.scale.unit != null) {
                 withUnit(builder.scale.unit);
             }
+            if (builder.scale.format != null && this.scale.format == null) {
+                withFormat(builder.scale.format);
+            }
             return this;
         }
 

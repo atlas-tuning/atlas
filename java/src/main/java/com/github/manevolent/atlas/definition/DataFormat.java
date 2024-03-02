@@ -31,8 +31,8 @@ public enum DataFormat {
     }),
 
     SSHORT(2, (data) -> {
-        byte low = data[0];
-        byte high = data[1];
+        int low = data[0] & 0xFF;
+        int high = data[1] & 0xFF;
         int combined = low | (high << 8);
         return (float) (short) (combined & 0xFFFF);
     }, (f) -> {
