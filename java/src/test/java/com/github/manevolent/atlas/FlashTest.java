@@ -22,80 +22,95 @@ public class FlashTest {
 
     private static final Scale.Builder rpm_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
-            .withUnit(RPM);
+            .withUnit(RPM)
+            .withFormat(DataFormat.USHORT);
 
     private static final Scale.Builder rpm_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 8)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
-            .withUnit(RPM);
+            .withUnit(RPM)
+            .withFormat(DataFormat.UBYTE);
 
     private static final Scale.Builder rpm_8bit_2 = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 3)
             .withOperation(ArithmeticOperation.MULTIPLY, 16f)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
-            .withUnit(RPM);
+            .withUnit(RPM)
+            .withFormat(DataFormat.UBYTE);
 
     private static final Scale.Builder req_torque_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.SUBTRACT, 0x3E80)
             .withOperation(ArithmeticOperation.DIVIDE, 0x50)
-            .withUnit(NM);
+            .withUnit(NM)
+            .withFormat(DataFormat.USHORT);
 
     private static final Scale.Builder calculated_load_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)
-            .withUnit(G_PER_REV);
+            .withUnit(G_PER_REV)
+            .withFormat(DataFormat.USHORT);
 
     private static final Scale.Builder calculated_load_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 8)
-            .withOperations(calculated_load_16bit);
+            .withOperations(calculated_load_16bit)
+            .withFormat(DataFormat.UBYTE);;
 
     private static final Scale.Builder percent_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.DIVIDE, 255.0f)
-            .withUnit(PERCENT);
+            .withUnit(PERCENT)
+            .withFormat(DataFormat.UBYTE);;
 
     private static final Scale.Builder directInjectionFuelPressureScale_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x7D)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
             .withOperation(ArithmeticOperation.MULTIPLY, 10.0f)
-            .withUnit(KPA);
+            .withUnit(KPA)
+            .withFormat(DataFormat.USHORT);
 
     private static final Scale.Builder directInjectionFuelPressureScale_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x96)
-            .withOperations(directInjectionFuelPressureScale_16bit);
+            .withOperations(directInjectionFuelPressureScale_16bit)
+            .withFormat(DataFormat.UBYTE);
 
-    /**
-     * Unit is PSI
-     */
     private static final Scale.Builder boostTargetPressureScale_RelSL_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.ADD, 0x6A6)
             .withOperation(ArithmeticOperation.MULTIPLY, 2)
             .withOperation(ArithmeticOperation.RSHIFT, 8)
             .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
             .withOperation(ArithmeticOperation.SUBTRACT, (float) 14.70)
-            .withUnit(PSI);
+            .withUnit(PSI)
+            .withFormat(DataFormat.USHORT);
 
     private static final Scale.Builder absolutePressure_16bit = Scale.builder()
             .withOperation(ArithmeticOperation.RSHIFT, 8)
             .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
-            .withUnit(PSI);
+            .withUnit(PSI)
+            .withFormat(DataFormat.USHORT);
 
     private static final Scale.Builder boostTargetCompensation_8bit = Scale.builder()
             .withOperation(ArithmeticOperation.SUBTRACT, 0x55)
             .withOperation(ArithmeticOperation.DIVIDE, 0x50)
             .withOperation(ArithmeticOperation.MULTIPLY, 100)
-            .withUnit(Unit.PERCENT);
+            .withUnit(Unit.PERCENT)
+            .withFormat(DataFormat.UBYTE);;
 
-    /**
-     * Unit is degrees celsius
-     */
     private static final Scale.Builder coolantTemp16BitScale = Scale.builder()
             .withOperation(ArithmeticOperation.MULTIPLY, 5.0f)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
             .withOperation(ArithmeticOperation.SUBTRACT, 40.0f)
-            .withUnit(CELSIUS);
+            .withUnit(CELSIUS)
+            .withFormat(DataFormat.USHORT);
 
     private static final Scale.Builder coolantTemp8BitScale = Scale.builder()
             .withOperation(ArithmeticOperation.LSHIFT, 8)
-            .withOperations(coolantTemp16BitScale);
+            .withOperations(coolantTemp16BitScale)
+            .withFormat(DataFormat.UBYTE);
+
+
+    private static final Scale.Builder wastegatePosition16bitScale = Scale.builder()
+            .withOperation(ArithmeticOperation.SUBTRACT, 0x4000)
+            .withOperation(ArithmeticOperation.DIVIDE, 0x666)
+            .withFormat(DataFormat.USHORT)
+            .withUnit(Unit.MILLIMETER);
 
     private static Table.Builder ignitionTimingBaseTable(FlashRegion code, String name, int timingDataAddress,
                                                          int rpmAddress, int loadAddress) {
@@ -637,6 +652,25 @@ public class FlashTest {
                         DataFormat.UBYTE,
                         boostTargetCompensation_8bit
                 ))
+                .withTable(Table.builder()
+                        .withName("Wastegate - Position")
+                        .withData(Series.builder()
+                                .withName("Position")
+                                .withAddress(code, 0x0002c970)
+                                .withScale(wastegatePosition16bitScale)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002ae38)
+                                .withLength(0x12)
+                                .withScale(rpm_16bit))
+                        .withAxis(X, Series.builder()
+                                .withName("Target Boost Pressure")
+                                .withAddress(code, 0x0002ae5c)
+                                .withLength(0x1E)
+                                .withScale(boostTargetPressureScale_RelSL_16bit)
+                        )
+                )
                 .build();
     }
 

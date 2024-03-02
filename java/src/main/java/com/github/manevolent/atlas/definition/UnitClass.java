@@ -14,7 +14,10 @@ public enum UnitClass {
             conversions().with(Unit.FAHRENHEIT, (value) -> (value * 9f / 5f) + 32f)
     ),
     TORQUE(() -> Unit.NM),
-    PRESSURE(() -> Unit.IN_HG);
+    PRESSURE(() -> Unit.IN_HG),
+    DISTANCE(
+            () -> Unit.METER
+    ),;
 
     private final Supplier<Unit> commonUnit;
     private final Map<Unit, Function<Float, Float>> conversionsToCommon;

@@ -9,6 +9,7 @@ public class Scale {
 
     private List<ScalingOperation> operations;
     private Unit unit;
+    private DataFormat format;
 
     public float forward(float a) {
         for (ScalingOperation operation : operations) {
@@ -34,9 +35,14 @@ public class Scale {
         return unit;
     }
 
+    public DataFormat getFormat() {
+        return format;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
+
 
 
     public static class Builder {
@@ -85,6 +91,11 @@ public class Scale {
 
         public Builder withUnit(Unit unit) {
             this.scale.unit = unit;
+            return this;
+        }
+
+        public Builder withFormat(DataFormat format) {
+            this.scale.format = format;
             return this;
         }
 

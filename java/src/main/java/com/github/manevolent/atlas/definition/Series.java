@@ -123,6 +123,9 @@ public class Series {
             if (scale.getUnit() != null && series.getUnit() == null) {
                 withUnit(scale.getUnit());
             }
+            if (scale.getFormat() != null && series.getFormat() == null) {
+                withFormat(scale.getFormat());
+            }
             return this;
         }
 

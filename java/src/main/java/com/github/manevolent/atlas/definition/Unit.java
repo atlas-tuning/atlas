@@ -16,7 +16,10 @@ public enum Unit {
     VOLTS(() -> UnitClass.NONE),
     HZ(() -> UnitClass.NONE),
     G_PER_REV(() -> UnitClass.NONE),
-    STEPS(() -> UnitClass.NONE);
+    STEPS(() -> UnitClass.NONE),
+
+    METER(() -> UnitClass.DISTANCE),
+    MILLIMETER(() -> UnitClass.DISTANCE);
 
     private final Supplier<UnitClass> unitClass;
 

@@ -125,7 +125,12 @@ public class Table {
             writer.write("\r\n");
             writeCell.accept("Series"); writeCell.accept("Name"); writeCell.accept("Unit");
             writer.write("\r\n");
-            writeCell.accept("Table"); writeCell.accept(name); writeCell.accept(data.getUnit().name());
+            writeCell.accept("Table"); writeCell.accept(name);
+            if (data.getUnit() != null) {
+                writeCell.accept(data.getUnit().name());
+            } else {
+                writeCell.accept("Unknown!");
+            }
             writer.write("\r\n");
 
             List<Axis> axes = new ArrayList<>(this.axes.keySet());
