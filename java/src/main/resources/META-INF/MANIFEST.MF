@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Codebase: *.atlas.manevolent.github.com
+Permissions: sandbox
+Application-Name: Atlas Tuning Suite
+SplashScreen-Image: atlas.png

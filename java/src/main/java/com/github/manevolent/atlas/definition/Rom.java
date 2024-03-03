@@ -99,6 +99,15 @@ public class Rom {
             return this;
         }
 
+        public Builder withVehicle(Vehicle.Builder builder) {
+            return withVehicle(builder.build());
+        }
+
+        public Builder withVehicle(Vehicle vehicle) {
+            rom.setVehicle(vehicle);
+            return this;
+        }
+
         public Rom build() {
             return rom;
         }

@@ -16,6 +16,14 @@ public class Table {
     private Series data;
     private Map<Axis, Series> axes;
 
+    public Table(String name) {
+        this.name = name;
+    }
+
+    public Table() {
+
+    }
+
     public float getCell(Map<Axis, Integer> coordinates) throws IOException {
         int index = coordinates.get(X);
 
@@ -153,6 +161,9 @@ public class Table {
         return new Builder();
     }
 
+    public Collection<Axis> getAxes() {
+        return axes.keySet();
+    }
 
     public static class Builder {
         private final Table table = new Table();
