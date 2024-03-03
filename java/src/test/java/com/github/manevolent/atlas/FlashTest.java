@@ -6,6 +6,8 @@ import com.github.manevolent.atlas.definition.zip.StreamedFlashSource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -719,7 +721,7 @@ public class FlashTest {
                                 .withLength(0x10)
                                 .withScale(barometricPressure_16bit)
                         )
-                ).withTable(singleValueTable(code, "Wastegate Position - Transient Boost Threshold",
+                ).withTable(singleValueTable(code, "Wastegate Position - Boost Error Compensation - Transient Boost Threshold",
                         0x00028c1e,
                         boostErrorPressure_16bit
                 )).withTable(Table.builder()
@@ -759,10 +761,75 @@ public class FlashTest {
                                 .withScale(boostErrorPressure_16bit)
                         )
                 )
+                .withTable(singleValueTable(code, "Wastegate Position - Boost Error Compensation - Maximum Limit",
+                        0x00028c1a, wastegatePosition16bitScale))
+                .withTable(singleValueTable(code, "Wastegate Position - Boost Error Compensation - Minimum Limit",
+                        0x00028c18, wastegatePosition16bitScale))
                 .withTable(singleValueTable(code, "Wastegate Position - Maximum Limit",
                         0x00028c00, wastegatePosition16bitScale))
                 .withTable(singleValueTable(code, "Wastegate Position - Minimum Limit",
                         0x00028bfe, wastegatePosition16bitScale))
+                .withTable(Table.builder()
+                        .withName("Turbo Limits - Coolant")
+                        .withData(Series.builder()
+                                .withName("Minimum RPM")
+                                .withAddress(code, 0x0002a378)
+                                .withScale(rpm_16bit)
+                        )
+                        .withAxis(X, Series.builder()
+                                .withName("Coolant Temperature")
+                                .withAddress(code, 0x0002a398)
+                                .withLength(0x10)
+                                .withScale(coolantTemp16BitScale)))
+                .withTable(Table.builder()
+                        .withName("Turbo Limits - Requested Torque")
+                        .withData(Series.builder()
+                                .withName("Requested Torque")
+                                .withAddress(code, 0x0002aee0)
+                                .withScale(req_torque_16bit)
+                        )
+                        .withAxis(X, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002af04)
+                                .withLength(0x12)
+                                .withScale(rpm_16bit)))
+                .withTable(Table.builder()
+                        .withName("Turbo Limits - Requested Torque - Barometric Compensation")
+                        .withData(Series.builder()
+                                .withName("Percent")
+                                .withAddress(code, 0x0002e3e0)
+                                .withScale(boostTargetCompensation_8bit)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002b020)
+                                .withLength(0x0B)
+                                .withScale(rpm_16bit))
+                        .withAxis(X, Series.builder()
+                                .withName("Barometric Temperature")
+                                .withAddress(code, 0x0002b038)
+                                .withLength(0x0B)
+                                .withScale(barometricPressure_16bit)
+                        )
+                ).withTable(Table.builder()
+                        .withName("Turbo Limits - Requested Torque - IAT Compensation")
+                        .withData(Series.builder()
+                                .withName("Percent")
+                                .withAddress(code, 0x0002ec5c)
+                                .withScale(boostTargetCompensation_8bit)
+                        )
+                        .withAxis(Y, Series.builder()
+                                .withName("RPM")
+                                .withAddress(code, 0x0002a3f8)
+                                .withLength(0x10)
+                                .withScale(rpm_16bit))
+                        .withAxis(X, Series.builder()
+                                .withName("Intake Air Temperature")
+                                .withAddress(code, 0x0002a658)
+                                .withLength(0x10)
+                                .withScale(intakeAirTemperature8bitScale)
+                        )
+                )
                 .build();
     }
 
