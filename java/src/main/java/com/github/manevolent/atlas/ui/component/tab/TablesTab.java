@@ -1,7 +1,9 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.definition.Table;
+import com.github.manevolent.atlas.ui.IconHelper;
 import com.github.manevolent.atlas.ui.window.EditorForm;
+import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
@@ -10,18 +12,27 @@ import javax.swing.tree.*;
 import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Enumeration;
+import java.util.*;
 import java.util.List;
 
 public class TablesTab
         extends Tab
         implements TreeSelectionListener, MouseListener {
     private JTree tree;
+    private Map<Table, TableNode> nodeMap = new HashMap<>();
 
     public TablesTab(EditorForm form) {
         super(form);
+    }
+
+    @Override
+    public String getTitle() {
+        return "Tables";
+    }
+
+    @Override
+    public Icon getIcon() {
+        return IconHelper.get(CarbonIcons.DATA_TABLE, Color.WHITE);
     }
 
     protected void initComponent(JPanel panel) {
@@ -33,6 +44,7 @@ public class TablesTab
         // You can only be focused on one table at a time
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
+        nodeMap.clear();
         DefaultMutableTreeNode treeRoot = new DefaultMutableTreeNode();
         for (Table table : getEditor().getActiveRom().getTables()) {
             List<String> items = Arrays.stream(table.getName().split("\\-"))
@@ -42,7 +54,7 @@ public class TablesTab
                 String text = items.get(i);
 
                 // Find an existing child, if possible
-                MutableTreeNode child = Collections.list(parent.children())
+                MutableTreeNode child = Collections.list(Objects.requireNonNull(parent.children()))
                         .stream()
                         .filter(x -> x instanceof DefaultMutableTreeNode)
                         .map(x -> (DefaultMutableTreeNode)x)
@@ -53,7 +65,9 @@ public class TablesTab
                 if (child == null) {
                     boolean isLeaf = i == items.size() - 1;
                     if (isLeaf) {
-                        child = new TableNode(table, text);
+                        TableNode tableNode = new TableNode(table, text);
+                        nodeMap.put(table, tableNode);
+                        child = tableNode;
                     } else {
                         child = new DefaultMutableTreeNode(text);
                     }
@@ -90,7 +104,21 @@ public class TablesTab
     }
 
     public void tableOpened(Table table) {
-        //TODO switch TablesTab active table
+        TableNode node = nodeMap.get(table);
+        if (node == null) {
+            return;
+        }
+
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        TreeNode[] nodes = model.getPathToRoot(node);
+        TreePath path = new TreePath(nodes);
+
+        tree.getSelectionModel().setSelectionPath(path);
+        tree.makeVisible(path);
+        tree.scrollPathToVisible(path);
+
+        // Bugfix for UI elements that seemingly repaint in a strange way
+        this.getComponent().repaint();
     }
 
     @Override
@@ -118,16 +146,16 @@ public class TablesTab
         }
     }
 
-
-
     @Override
     public void mousePressed(MouseEvent e) {
-
+        // Bugfix for UI elements that seemingly repaint in a strange way
+        this.getComponent().repaint();
     }
 
     @Override
     public void mouseReleased(MouseEvent e) {
-
+        // Bugfix for UI elements that seemingly repaint in a strange way
+        this.getComponent().repaint();
     }
 
     @Override
@@ -143,6 +171,7 @@ public class TablesTab
     private class TableNode implements MutableTreeNode {
         private final Table table;
         private final String text;
+        private TreeNode parent;
 
         private TableNode(Table table, String text) {
             this.table = table;
@@ -161,7 +190,7 @@ public class TablesTab
 
         @Override
         public TreeNode getParent() {
-            return null;
+            return parent;
         }
 
         @Override
@@ -216,7 +245,7 @@ public class TablesTab
 
         @Override
         public void setParent(MutableTreeNode newParent) {
-
+            this.parent = newParent;
         }
     }
 

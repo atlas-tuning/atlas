@@ -9,8 +9,6 @@ import com.github.manevolent.atlas.ui.window.SplashForm;
 public class Main {
 
     public static void main(String[] args) throws Exception {
-        FlatDarculaLaf.setup();
-
         SplashForm splashForm = new SplashForm();
         java.awt.EventQueue.invokeLater(() -> {
             splashForm.setVisible(true);
@@ -20,14 +18,21 @@ public class Main {
 
         Thread.sleep(250L);
         splashForm.setProgress(0f);
-        Rom rom = SubaruWRX2022MT.newRom();
 
-        splashForm.setProgress(1.0f);
-        Thread.sleep(500L);
-        splashForm.dispose();
+        FlatDarculaLaf.setup();
+        splashForm.setProgress(0.1f);
+
+        Rom rom = SubaruWRX2022MT.newRom();
+        splashForm.setProgress(0.5f);
 
         EditorForm editorForm = new EditorForm(rom);
+        splashForm.setProgress(0.7f);
+
         editorForm.openRom(rom);
+        splashForm.setProgress(1.0f);
+
+        Thread.sleep(500L);
+        splashForm.dispose();
 
         java.awt.EventQueue.invokeLater(() -> {
             editorForm.setVisible(true);

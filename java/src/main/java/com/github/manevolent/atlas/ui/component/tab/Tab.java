@@ -12,6 +12,10 @@ public abstract class Tab extends EditorComponent<JPanel> {
 
     @Override
     public JPanel newComponent() {
-        return new JPanel();
+        JPanel panel = new JPanel();
+        return panel;
     }
+
+    public abstract String getTitle();
+    public abstract Icon getIcon();
 }

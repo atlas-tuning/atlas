@@ -22,6 +22,7 @@ public class SplashForm extends JFrame {
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0));
         setResizable(false);
+        setType(Type.UTILITY);
 
         timer = new Timer(250, (e) -> {
             if (isVisible()) {
@@ -38,6 +39,11 @@ public class SplashForm extends JFrame {
             @Override
             public void paintComponent(Graphics g) {
                 super.paintComponent(g);
+
+                if (g instanceof Graphics2D) {
+                    ((Graphics2D) g).setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                            RenderingHints.VALUE_ANTIALIAS_ON);
+                }
 
                 // Draw the background image.
                 g.drawImage(splashImage, 0, 0,

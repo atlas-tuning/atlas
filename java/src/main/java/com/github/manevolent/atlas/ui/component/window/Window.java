@@ -5,6 +5,7 @@ import com.github.manevolent.atlas.ui.window.EditorForm;
 
 import javax.swing.*;
 import java.awt.*;
+import java.beans.PropertyVetoException;
 
 public abstract class Window extends EditorComponent<JInternalFrame> {
     protected Window(EditorForm editor) {
@@ -15,6 +16,8 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
     protected void postInitComponent(JInternalFrame component) {
         component.pack();
     }
+
+    public abstract Icon getIcon();
 
     @Override
     protected JInternalFrame newComponent() {
@@ -28,6 +31,37 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
         internalFrame.setIconifiable(false);
         internalFrame.setResizable(true);
 
+        Icon icon = getIcon();
+
+        try {
+            internalFrame.setIcon(icon != null);
+
+            if (icon != null) {
+                internalFrame.setFrameIcon(icon);
+            }
+        } catch (PropertyVetoException e) {
+            throw new RuntimeException(e);
+        }
+
         return internalFrame;
+    }
+
+    public void focus() {
+        JDesktopPane desktop = getEditor().getDesktop();
+        JInternalFrame component = getComponent();
+
+        if (!component.getParent().equals(desktop)) {
+            return;
+        }
+
+        component.setVisible(true);
+        component.grabFocus();
+        desktop.moveToFront(component);
+
+        try {
+            component.setSelected(true);
+        } catch (PropertyVetoException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

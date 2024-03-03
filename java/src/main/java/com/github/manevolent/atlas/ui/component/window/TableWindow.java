@@ -3,8 +3,14 @@ package com.github.manevolent.atlas.ui.component.window;
 import com.github.manevolent.atlas.definition.Axis;
 import com.github.manevolent.atlas.definition.Series;
 import com.github.manevolent.atlas.definition.Table;
+import com.github.manevolent.atlas.ui.IconHelper;
+import com.github.manevolent.atlas.ui.component.JRotateLabel;
 import com.github.manevolent.atlas.ui.component.RowNumberTable;
 import com.github.manevolent.atlas.ui.window.EditorForm;
+import org.kordamp.ikonli.Ikonli;
+import org.kordamp.ikonli.carbonicons.CarbonIcons;
+import org.kordamp.ikonli.swing.FontIcon;
+import org.kordamp.ikonli.swing.IkonResolver;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -13,6 +19,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 
 import java.awt.*;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,7 +31,7 @@ import java.util.stream.IntStream;
 import static com.github.manevolent.atlas.definition.Axis.X;
 import static com.github.manevolent.atlas.definition.Axis.Y;
 
-public class TableWindow extends Window {
+public class TableWindow extends Window implements FocusListener {
     private static final Font font = new Font(Font.MONOSPACED, Font.PLAIN, 12);
     private final Table table;
 
@@ -44,12 +52,23 @@ public class TableWindow extends Window {
     }
 
     @Override
+    protected void postInitComponent(JInternalFrame component) {
+        super.postInitComponent(component);
+
+        component.setPreferredSize(tableComponent.getPreferredSize());
+        component.setSize(tableComponent.getPreferredSize());
+    }
+
+    @Override
     protected void initComponent(JInternalFrame window) {
         int x_size = table.getSeries(X) == null ? 1 : table.getSeries(X).getLength();
         int y_size = table.getSeries(Y) == null ? 1 : table.getSeries(Y).getLength();
         Object[][] data = new Float[y_size][x_size];
 
+        window.addFocusListener(this);
+
         tableComponent = new JTable();
+        tableComponent.setBackground(Color.GRAY.darker().darker());
         tableComponent.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
         tableComponent.getColumnModel().setColumnSelectionAllowed(true);
         tableComponent.setBorder(BorderFactory.createEmptyBorder());
@@ -59,8 +78,10 @@ public class TableWindow extends Window {
 
         // Possibly add X series headers
         Object[] columns;
-        if (table.getSeries(X) != null) {
-            Series x = table.getSeries(X);
+        Series x = table.getSeries(X);
+        Series y = table.getSeries(Y);
+
+        if (x != null) {
             columns = new Object[x.getLength()];
             for (int i = 0; i < x.getLength(); i ++) {
                 try {
@@ -135,17 +156,61 @@ public class TableWindow extends Window {
 
         JScrollPane scrollPane = new JScrollPane(tableComponent);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-
         if (table.getAxes().contains(Y)) {
             java.util.List<String> rowHeaders = generateRowHeaders();
             rowNumberTable = new RowNumberTable(tableComponent, rowHeaders);
+            rowNumberTable.getTableHeader().setFont(font);
             rowNumberTable.updateWidth();
 
             scrollPane.setRowHeader(new JViewport());
             scrollPane.getRowHeader().add(rowNumberTable);
         }
 
-        window.add(scrollPane);
+        JPanel panel = new JPanel(new BorderLayout());
+        JRotateLabel y_label;
+        if (y != null) {
+            y_label = new JRotateLabel(getAxisHeaderString(y));
+            y_label.setForeground(Color.GRAY);
+            panel.add(y_label, BorderLayout.WEST);
+        } else {
+            y_label = null;
+        }
+
+        if (x != null) {
+            JLabel x_label = new JLabel(getAxisHeaderString(x));
+            x_label.setHorizontalAlignment(JLabel.LEFT);
+            x_label.setForeground(Color.GRAY);
+            if (y_label != null) {
+                x_label.setBorder(BorderFactory.createEmptyBorder(
+                        2,
+                        (int) (y_label.getPreferredSize().width + rowNumberTable.getPreferredSize().getWidth()),
+                        2,
+                        0
+                ));
+            }
+            panel.add(x_label, BorderLayout.NORTH);
+        }
+
+        if (y != null) {
+            y_label.setBorder(BorderFactory.createEmptyBorder(
+                    (int) (tableComponent.getTableHeader().getPreferredSize().getHeight()),
+                    0,
+                    0,
+                    0
+            ));
+        }
+
+        panel.add(scrollPane, BorderLayout.CENTER);
+
+        window.add(panel);
+    }
+
+    private String getAxisHeaderString(Series series) {
+        if (series.getUnit() != null && !series.getUnit().getText().equalsIgnoreCase(series.getName())) {
+            return STR."\{series.getName()} (\{series.getUnit().getText()})";
+        } else {
+            return series.getName();
+        }
     }
 
     private java.util.List<String> generateRowHeaders() {
@@ -184,8 +249,10 @@ public class TableWindow extends Window {
         }
     }
 
-    private static final Color getColor(float min, float value, float max) {
+    private Color getColor(float min, float value, float max) {
         if (min == max) {
+            return Color.WHITE;
+        } else if (table.getData().getLength() <= 1) {
             return Color.WHITE;
         }
 
@@ -197,6 +264,25 @@ public class TableWindow extends Window {
                 green,
                 0
         );
+    }
+
+    @Override
+    public Icon getIcon() {
+       return IconHelper.get(CarbonIcons.DATA_TABLE, Color.WHITE);
+    }
+
+    @Override
+    public void focusGained(FocusEvent e) {
+        getEditor().tableFocused(table);
+    }
+
+    @Override
+    public void focusLost(FocusEvent e) {
+
+    }
+
+    public Table getTable() {
+        return table;
     }
 
     public class TableCellRenderer extends DefaultTableCellRenderer {

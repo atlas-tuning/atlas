@@ -25,6 +25,10 @@ public class Table {
     }
 
     public float getCell(Map<Axis, Integer> coordinates) throws IOException {
+        if (coordinates.isEmpty()) {
+            return data.get(0);
+        }
+
         int index = coordinates.get(X);
 
         if (coordinates.containsKey(Y)) {

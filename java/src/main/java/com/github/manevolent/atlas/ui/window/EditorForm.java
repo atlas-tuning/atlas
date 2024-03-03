@@ -2,36 +2,57 @@ package com.github.manevolent.atlas.ui.window;
 
 import com.github.manevolent.atlas.definition.Rom;
 import com.github.manevolent.atlas.definition.Table;
+import com.github.manevolent.atlas.ui.IconHelper;
+import com.github.manevolent.atlas.ui.component.menu.FileMenu;
+import com.github.manevolent.atlas.ui.component.menu.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
 import com.github.manevolent.atlas.ui.component.window.TableWindow;
 import com.github.manevolent.atlas.ui.component.window.Window;
-import net.codecrete.usb.windows.Win;
+import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 import java.awt.*;
+import java.util.*;
+import java.util.function.Consumer;
+import java.util.function.Predicate;
 
-public class EditorForm extends JFrame {
+public class EditorForm extends JFrame implements InternalFrameListener {
     private static final Color splitPaneBorderColor = Color.GRAY.darker();
 
+    // Desktop
     private JDesktopPane desktop;
-    private Rom rom;
 
+    // Menus
+    private FileMenu fileMenu;
+    private WindowMenu windowMenu;
+
+    // Tabs
     private TablesTab tablesTab;
     private ProjectTab projectTab;
     private ConsoleTab consoleTab;
     private DataLoggingTab dataLoggingTab;
     private HelpTab helpTab;
 
+    // State variables (open windows, etc.)
+    private Rom rom;
+    private java.util.List<Window> openWindows = new ArrayList<>();
+    private Map<Table, TableWindow> openedTables = new LinkedHashMap<>();
+
     public EditorForm(Rom rom) {
+        // Just to make sure it shows up in the taskbar/dock/etc.
+        setType(Type.NORMAL);
+
         openRom(rom);
 
         initComponents();
 
-        setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
+        pack();
 
         setBackground(Color.BLACK);
-
-        pack();
+        setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
+        setLocationRelativeTo(null);
     }
 
     public Rom getActiveRom() {
@@ -43,7 +64,20 @@ public class EditorForm extends JFrame {
         setTitle("Atlas Tuning - " + rom.getVehicle().toString());
     }
 
+    public JDesktopPane getDesktop() {
+        return desktop;
+    }
+
+    public TablesTab getTablesTab() {
+        return tablesTab;
+    }
+
+    public WindowMenu getWindowMenu() {
+        return windowMenu;
+    }
+
     private void initComponents() {
+        setIconImage(IconHelper.getImage(CarbonIcons.METER_ALT, Color.WHITE).getImage());
         setJMenuBar(initMenu());
 
         this.desktop = initDesktop();
@@ -72,41 +106,8 @@ public class EditorForm extends JFrame {
 
         menuBar = new JMenuBar();
 
-        JMenu fileMenu = new JMenu("File");
-        menuBar.add(fileMenu);
-        {
-            JMenuItem newRom = new JMenuItem("New ROM...");
-            newRom.addActionListener((e) -> {
-                NewRomForm newRomForm = new NewRomForm();
-                newRomForm.setVisible(true);
-            });
-            fileMenu.add(newRom);
-
-            JMenuItem openRom = new JMenuItem("Open ROM...");
-            fileMenu.add(openRom);
-
-            JMenuItem recentRoms = new JMenu("Recent ROMs");
-
-            //TODO: Recent roms
-            JMenuItem noRecentRoms = new JMenuItem("No recent ROMs");
-            noRecentRoms.setEnabled(false);
-            recentRoms.add(noRecentRoms);
-
-            fileMenu.add(recentRoms);
-
-            fileMenu.addSeparator();
-
-            JMenuItem saveRom = new JMenuItem("Save ROM");
-            saveRom.setEnabled(false);
-            fileMenu.add(saveRom);
-
-            fileMenu.addSeparator();
-            JMenuItem exit = new JMenuItem("Exit");
-            exit.addActionListener((e) -> {
-                EditorForm.this.dispose();
-            });
-            fileMenu.add(exit);
-        }
+        fileMenu = new FileMenu(this);
+        menuBar.add(fileMenu.getComponent());
 
         JMenu editMenu = new JMenu("Edit");
         menuBar.add(editMenu);
@@ -137,11 +138,8 @@ public class EditorForm extends JFrame {
             vehicleMenu.add(disconnect);
         }
 
-        JMenu windowMenu = new JMenu("Window");
-        menuBar.add(windowMenu);
-        {
-
-        }
+        windowMenu = new WindowMenu(this);
+        menuBar.add(windowMenu.getComponent());
 
         JMenu helpMenu = new JMenu("Help");
         menuBar.add(helpMenu);
@@ -152,33 +150,40 @@ public class EditorForm extends JFrame {
         return menuBar;
     }
 
+    public Collection<Window> getOpenWindows() {
+        return Collections.unmodifiableCollection(openWindows);
+    }
+
     /**
      * Opens a Window in the editor, keeping track of its state.
      * @param window Window to open.
      * @return opened Window.
      */
-    public Window openWindow(Window window) {
-        //TODO track state
-
+    public <T extends Window> T openWindow(T window) {
+        window.getComponent().addInternalFrameListener(this);
         window.getComponent().setFocusable(true);
         window.getComponent().setVisible(true);
+        window.getComponent().addInternalFrameListener(this);
 
+        openWindows.add(window);
         desktop.add(window.getComponent());
+        windowMenu.update();
 
         return window;
     }
 
     public void openTable(Table table) {
-        Window opened;
+        TableWindow opened;
 
-        //TODO don't reopen the same table
+        opened = openedTables.get(table);
 
-        opened = openWindow(new TableWindow(this, table));
+        if (opened == null) {
+            opened = openWindow(new TableWindow(this, table));
+        }
 
-        desktop.moveToFront(opened.getComponent());
-        opened.getComponent().grabFocus();
+        opened.focus();
 
-        tablesTab.tableOpened(table);
+        openedTables.put(table, opened);
     }
 
     private JDesktopPane initDesktop() {
@@ -194,20 +199,20 @@ public class EditorForm extends JFrame {
         leftPane.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1,
                 splitPaneBorderColor));
 
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Project", initProjectTab());
-        tabbedPane.addTab("Tables", initTablesTab());
-        leftPane.add(tabbedPane);
+        TabbedPane tabbedPane = new TabbedPane(this);
+        tabbedPane.addTab(initProjectTab());
+        tabbedPane.addTab(initTablesTab());
+        leftPane.add(tabbedPane.getComponent());
 
         return leftPane;
     }
 
-    private Component initTablesTab() {
-        return (tablesTab = new TablesTab(this)).getComponent();
+    private Tab initTablesTab() {
+        return (tablesTab = new TablesTab(this));
     }
 
-    private Component initProjectTab() {
-        return (projectTab = new ProjectTab(this)).getComponent();
+    private Tab initProjectTab() {
+        return (projectTab = new ProjectTab(this));
     }
 
     private JPanel initBottomPane() {
@@ -216,29 +221,130 @@ public class EditorForm extends JFrame {
                 splitPaneBorderColor));
         bottomPane.setLayout(new BoxLayout(bottomPane, BoxLayout.Y_AXIS));
 
-        JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Console", initConsoleTab());
-        tabbedPane.addTab("Data Logging", initLoggingTab());
-        tabbedPane.addTab("Help", initHelpTab());
-        bottomPane.add(tabbedPane);
+        TabbedPane tabbedPane = new TabbedPane(this);
+        tabbedPane.addTab(initConsoleTab());
+        tabbedPane.addTab(initLoggingTab());
+        tabbedPane.addTab(initHelpTab());
+        bottomPane.add(tabbedPane.getComponent());
 
         return bottomPane;
     }
 
-    private JPanel initConsoleTab() {
-       return (consoleTab = new ConsoleTab(this)).getComponent();
+    private Tab initConsoleTab() {
+       return (consoleTab = new ConsoleTab(this));
     }
 
-    private JPanel initLoggingTab() {
-        return (dataLoggingTab = new DataLoggingTab(this)).getComponent();
+    private Tab initLoggingTab() {
+        return (dataLoggingTab = new DataLoggingTab(this));
     }
 
-    private JPanel initHelpTab() {
-        return (helpTab = new HelpTab(this)).getComponent();
+    private Tab initHelpTab() {
+        return (helpTab = new HelpTab(this));
     }
 
     @Override
     public void dispose() {
         super.dispose();
+    }
+
+    public Window getWindowByComponent(JInternalFrame internalFrame) {
+        return openWindows.stream()
+                .filter(x -> x.getComponent().equals(internalFrame))
+                .findFirst().orElse(null);
+    }
+
+    public Window withWindowComponent(JInternalFrame internalFrame,
+                                      Predicate<Window> predicate,
+                                      Consumer<Window> action) {
+        Window window = getWindowByComponent(internalFrame);
+
+        if (window == null) {
+            return null;
+        }
+
+        if (predicate.test(window)) {
+            action.accept(window);
+        }
+
+        return window;
+    }
+
+    @SuppressWarnings("unchecked")
+    public <W extends Window> W withWindowComponent(JInternalFrame internalFrame,
+                                                    Class<W> windowClass,
+                                                    Consumer<W> action) {
+        Window window = getWindowByComponent(internalFrame);
+
+        if (window == null) {
+            return null;
+        }
+
+        if (!windowClass.isAssignableFrom(window.getClass())) {
+            return null;
+        }
+
+        action.accept((W)window);
+
+        return (W)window;
+    }
+
+    public Window withWindowComponent(JInternalFrame internalFrame,
+                                      Consumer<Window> action) {
+        return withWindowComponent(internalFrame, w -> true, action);
+    }
+
+    @Override
+    public void internalFrameOpened(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameClosing(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameClosed(InternalFrameEvent e) {
+        withWindowComponent(e.getInternalFrame(), (window) -> {
+            openWindows.remove(window);
+            getWindowMenu().update();
+
+            if (window instanceof TableWindow) {
+                openedTables.remove(((TableWindow)window).getTable());
+            }
+        });
+    }
+
+    @Override
+    public void internalFrameIconified(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameDeiconified(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameActivated(InternalFrameEvent e) {
+        getWindowMenu().update();
+
+        withWindowComponent(e.getInternalFrame(), TableWindow.class, (window) -> {
+            tableFocused(window.getTable());
+        });
+    }
+
+    @Override
+    public void internalFrameDeactivated(InternalFrameEvent e) {
+        getWindowMenu().update();
+    }
+
+    public void exit() {
+        //TODO save before exit, etc.
+        dispose();
+    }
+
+    public void tableFocused(Table table) {
+        tablesTab.tableOpened(table);
     }
 }
