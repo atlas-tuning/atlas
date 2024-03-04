@@ -58,26 +58,7 @@ public class TableEditorFooter extends Footer<TableEditor> {
         Series x = table.getSeries(X);
         Series y = table.getSeries(Y);
 
-        if (!hasSelection) {
-            int numAxes = table.getAxes().size();
-            if (numAxes == 0) {
-                tableSizeString = "1x1";
-            } else if (numAxes == 1) {
-                tableSizeString = x.getLength() + "x1";
-            } else if (numAxes == 2) {
-                tableSizeString = x.getLength() + "x" + y.getLength();
-            } else {
-                tableSizeString = numAxes + "D";
-            }
-        } else {
-            tableSizeString = "SEL " + numColumns + "x" + numRows;
-        }
-
         left.add(Labels.text(CarbonIcons.RULER, editor.getSeriesHeaderString(table.getData())));
-
-        left.add(Separators.vertical());
-
-        left.add(Labels.text(CarbonIcons.MAXIMIZE, tableSizeString, Color.GRAY));
 
         left.add(Separators.vertical());
 
@@ -172,8 +153,29 @@ public class TableEditorFooter extends Footer<TableEditor> {
 
                 right.add(Labels.text(CarbonIcons.CENTER_SQUARE,
                         selectedColumn + "," + selectedRow, Color.GRAY));
+
+                right.add(Separators.vertical());
             }
         }
+
+        if (!hasSelection) {
+            int numAxes = table.getAxes().size();
+            if (numAxes == 0) {
+                tableSizeString = "1x1";
+            } else if (numAxes == 1) {
+                tableSizeString = x.getLength() + "x1";
+            } else if (numAxes == 2) {
+                tableSizeString = x.getLength() + "x" + y.getLength();
+            } else {
+                tableSizeString = numAxes + "D";
+            }
+        } else {
+            tableSizeString = "SEL " + numColumns + "x" + numRows;
+        }
+
+        right.add(Labels.text(
+                hasSelection ? CarbonIcons.SELECT_01 : CarbonIcons.MAXIMIZE,
+                tableSizeString, Color.GRAY));
 
         footerBar.revalidate();
         footerBar.repaint();

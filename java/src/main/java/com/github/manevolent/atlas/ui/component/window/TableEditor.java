@@ -98,10 +98,10 @@ public class TableEditor extends Window implements
         };
         tableComponent.setBackground(Color.GRAY.darker().darker());
         tableComponent.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
-        tableComponent.getColumnModel().setColumnSelectionAllowed(true);
         tableComponent.setBorder(BorderFactory.createEmptyBorder());
         tableComponent.getTableHeader().setReorderingAllowed(false);
         tableComponent.getTableHeader().setResizingAllowed(false);
+        tableComponent.setColumnSelectionAllowed(true);
         tableComponent.getTableHeader().setFont(valueFont);
 
         Series x = table.getSeries(X);
@@ -351,7 +351,7 @@ public class TableEditor extends Window implements
     public String getSeriesHeaderString(Series series) {
         if (series.getUnit() != null && series.getName() == null) {
             return series.getUnit().getText();
-        } else if (series.getUnit() != null && !series.getUnit().getText().equalsIgnoreCase(series.getName())) {
+        } else if (series.getUnit() != null && !series.getName().contains(series.getUnit().getText())) {
             return STR."\{series.getName()} (\{series.getUnit().getText()})";
         } else {
             return series.getName();
@@ -579,6 +579,11 @@ public class TableEditor extends Window implements
         } else {
             // Selection hasn't actually changed; don't spend time calculating
             return;
+        }
+
+        // Highlight columns
+        for (int i = 0; i < tableComponent.getColumnModel().getColumnCount(); i ++) {
+            var column = tableComponent.getColumnModel().getColumn(i);
         }
 
         updateSelectionMinMax();

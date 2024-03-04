@@ -56,6 +56,7 @@ public class SubaruWRX2022MT {
     public static final Scale.Builder percent_8bit = Scale.builder()
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.DIVIDE, 255.0f)
+            .withOperation(ArithmeticOperation.MULTIPLY, 100)
             .withUnit(PERCENT);
 
     public static final Scale.Builder directInjectionFuelPressureScale_16bit = Scale.builder()
@@ -585,7 +586,6 @@ public class SubaruWRX2022MT {
                                 .withName("Coolant Temperature")
                                 .withAddress(code, 0x000c82e8)
                                 .withLength(0x8)
-                                .withUnit(Unit.G_PER_REV)
                                 .withFormat(DataFormat.UBYTE)
                                 .withScale(coolantTemp8BitScale)))
                 .withTable(fuelPressureTargetMainTable_2D(code, "Main - Adder", 0x000c9320, 0x000c8880, 0x000c8494))
