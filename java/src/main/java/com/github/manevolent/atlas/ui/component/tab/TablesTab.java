@@ -46,7 +46,7 @@ public class TablesTab
 
         nodeMap.clear();
         DefaultMutableTreeNode treeRoot = new DefaultMutableTreeNode();
-        for (Table table : getEditor().getActiveRom().getTables()) {
+        for (Table table : getParent().getActiveRom().getTables()) {
             List<String> items = Arrays.stream(table.getName().split("\\-"))
                     .map(String::trim).toList();
             MutableTreeNode parent = treeRoot;
@@ -142,7 +142,7 @@ public class TablesTab
         Object last = selPath.getLastPathComponent();
 
         if (last instanceof TableNode) {
-            getEditor().openTable(((TableNode)last).table);
+            getParent().openTable(((TableNode)last).table);
         }
     }
 

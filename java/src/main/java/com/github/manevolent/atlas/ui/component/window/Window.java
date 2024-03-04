@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.ui.component.window;
 
+import com.github.manevolent.atlas.ui.component.AtlasComponent;
 import com.github.manevolent.atlas.ui.component.EditorComponent;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 
@@ -47,7 +48,7 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
     }
 
     public void focus() {
-        JDesktopPane desktop = getEditor().getDesktop();
+        JDesktopPane desktop = getParent().getDesktop();
         JInternalFrame component = getComponent();
 
         if (!component.getParent().equals(desktop)) {

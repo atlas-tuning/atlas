@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
+import com.github.manevolent.atlas.ui.component.AtlasComponent;
 import com.github.manevolent.atlas.ui.component.EditorComponent;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 

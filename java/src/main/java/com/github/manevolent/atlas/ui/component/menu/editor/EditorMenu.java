@@ -1,12 +1,13 @@
-package com.github.manevolent.atlas.ui.component.menu;
+package com.github.manevolent.atlas.ui.component.menu.editor;
 
+import com.github.manevolent.atlas.ui.component.AtlasComponent;
 import com.github.manevolent.atlas.ui.component.EditorComponent;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 
 import javax.swing.*;
 
-public abstract class Menu extends EditorComponent<JMenu> {
-    protected Menu(EditorForm editor) {
+public abstract class EditorMenu extends EditorComponent<JMenu> {
+    protected EditorMenu(EditorForm editor) {
         super(editor);
     }
 

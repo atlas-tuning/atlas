@@ -7,6 +7,8 @@ import com.github.manevolent.atlas.ui.component.GraphicsHelper;
 import com.github.manevolent.atlas.ui.component.JRotateLabel;
 import com.github.manevolent.atlas.ui.component.RowNumberTable;
 import com.github.manevolent.atlas.ui.Separators;
+import com.github.manevolent.atlas.ui.component.footer.table.TableEditorFooter;
+import com.github.manevolent.atlas.ui.component.menu.table.*;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -30,7 +32,7 @@ import java.util.stream.IntStream;
 import static com.github.manevolent.atlas.definition.Axis.X;
 import static com.github.manevolent.atlas.definition.Axis.Y;
 
-public class TableWindow extends Window implements
+public class TableEditor extends Window implements
         FocusListener,
         TableModelListener,
         ListSelectionListener {
@@ -42,12 +44,17 @@ public class TableWindow extends Window implements
     private ThreadLocal<Boolean> selfUpdate = new ThreadLocal<>();
     private RowNumberTable rowNumberTable;
     private JTable tableComponent;
-    private JPanel footerBar;
+    private TableEditorFooter footer;
     private int[] lastSelectionRows = new int[0], lastSelectionColumns = new int[0];
 
     private float min, selMin, max, selMax;
 
-    public TableWindow(EditorForm editor, Table table) {
+    private FileMenu fileMenu;
+    private EditMenu editMenu;
+    private ViewMenu viewMenu;
+    private HelpMenu helpMenu;
+
+    public TableEditor(EditorForm editor, Table table) {
         super(editor);
 
         this.selfUpdate.set(false);
@@ -148,6 +155,8 @@ public class TableWindow extends Window implements
             }
         });
 
+        window.add(initMenuBar(), BorderLayout.NORTH);
+
         JScrollPane scrollPane = new JScrollPane(tableComponent);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         if (table.getAxes().contains(Y)) {
@@ -161,7 +170,6 @@ public class TableWindow extends Window implements
         }
 
         JPanel panel = new JPanel(new BorderLayout());
-
 
         JRotateLabel y_label;
         if (y != null) {
@@ -201,14 +209,8 @@ public class TableWindow extends Window implements
 
         // Create the footer bar that displays some state data as well as
         // some quick calculations about the table and/or its selection.
-        footerBar = new JPanel();
-        footerBar.setLayout(new BorderLayout());
-        footerBar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0,
-                Color.GRAY.darker()));
-
-        updateFooter();
-
-        panel.add(footerBar, BorderLayout.SOUTH);
+        footer = new TableEditorFooter(this);
+        panel.add(footer.getComponent(), BorderLayout.SOUTH);
 
         window.add(panel);
 
@@ -221,143 +223,13 @@ public class TableWindow extends Window implements
         updateCellWidth();
     }
 
-    /**
-     * Updates the little footer on the bottom of table windows
-     */
-    private void updateFooter() {
-        footerBar.removeAll();
-
-        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        footerBar.add(left, BorderLayout.WEST);
-        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        footerBar.add(right, BorderLayout.EAST);
-
-        String tableSizeString;
-
-        int numColumns = tableComponent.getSelectedColumns().length;
-        int numRows = tableComponent.getSelectedRows().length;
-        boolean hasSelection = (numColumns + numRows) > 2;
-
-        Series x = table.getSeries(X);
-        Series y = table.getSeries(Y);
-
-        if (!hasSelection) {
-            int numAxes = table.getAxes().size();
-            if (numAxes == 0) {
-                tableSizeString = "1x1";
-            } else if (numAxes == 1) {
-                tableSizeString = x.getLength() + "x1";
-            } else if (numAxes == 2) {
-                tableSizeString = x.getLength() + "x" + y.getLength();
-            } else {
-                tableSizeString = numAxes + "D";
-            }
-        } else {
-            tableSizeString = "SEL " + numColumns + "x" + numRows;
-        }
-
-        left.add(Labels.text(CarbonIcons.RULER, getSeriesHeaderString(table.getData())));
-
-        left.add(Separators.vertical());
-
-        left.add(Labels.text(CarbonIcons.MAXIMIZE, tableSizeString, Color.GRAY));
-
-        left.add(Separators.vertical());
-
-        left.add(Labels.text(CarbonIcons.MATRIX,
-                table.getData().getFormat().name().toLowerCase(), Color.GRAY));
-
-        // Calculate value precision
-        if (table.getData().getFormat().getPrecision() == Precision.WHOLE_NUMBER) {
-            float precision = table.getData().getScale().getPrecision();
-            precision = Math.max(0.01f, precision);
-            left.add(Labels.text(CarbonIcons.CALIBRATE,
-                    String.format(valueFormat, precision),
-                    valueFont,
-                    Color.GRAY));
-        }
-
-        left.add(Separators.vertical());
-
-        float min, max;
-        if (hasSelection) {
-            min = this.selMin;
-            max = this.selMax;
-        } else {
-            min = this.min;
-            max = this.max;
-        }
-
-        if (this.min != this.max) {
-            left.add(Labels.text(
-                    CarbonIcons.ARROW_DOWN, Color.GRAY,
-                    valueFont,
-                    String.format(valueFormat, min), getColor(this.min, min, this.max))
-            );
-            left.add(Labels.text(
-                    CarbonIcons.ARROW_UP, Color.GRAY,
-                    valueFont,
-                    String.format(valueFormat, max), getColor(this.min, max, this.max))
-            );
-        }
-
-        if (!hasSelection) {
-            int selectedColumn = tableComponent.getSelectedColumn();
-            int selectedRow = tableComponent.getSelectedRow();
-
-            if (selectedColumn >= 0 && selectedRow >= 0) {
-                if (x != null) {
-                    float value;
-                    try {
-                        value = x.get(selectedColumn);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    Unit unit = x.getUnit();
-                    String unitString;
-                    if (unit != null) {
-                        unitString = " " + unit.getText();
-                    } else {
-                        unitString = "";
-                    }
-                    right.add(Labels.text(CarbonIcons.LETTER_XX,
-                            String.format(valueFormat, value) + unitString,
-                            valueFont,
-                            Color.GRAY));
-                }
-
-                if (y != null) {
-                    float value;
-                    try {
-                        value = y.get(selectedRow);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    Unit unit = y.getUnit();
-                    String unitString;
-                    if (unit != null) {
-                        unitString = " " + unit.getText();
-                    } else {
-                        unitString = "";
-                    }
-                    right.add(Labels.text(CarbonIcons.LETTER_YY,
-                            String.format(valueFormat, value) + unitString,
-                            valueFont,
-                            Color.GRAY));
-                }
-
-                right.add(Separators.vertical());
-
-                selectedColumn += 1;
-                selectedRow += 1;
-
-                right.add(Labels.text(CarbonIcons.CENTER_SQUARE,
-                                selectedColumn + "," + selectedRow, Color.GRAY));
-            }
-        }
-
-        footerBar.revalidate();
-        footerBar.repaint();
+    private JMenuBar initMenuBar() {
+        JMenuBar menuBar = new JMenuBar();
+        menuBar.add((fileMenu = new FileMenu(this)).getComponent());
+        menuBar.add((editMenu = new EditMenu(this)).getComponent());
+        menuBar.add((viewMenu = new ViewMenu(this)).getComponent());
+        menuBar.add((helpMenu = new HelpMenu(this)).getComponent());
+        return menuBar;
     }
 
     private void updateCellWidth() {
@@ -476,7 +348,7 @@ public class TableWindow extends Window implements
         updateCellWidth();
     }
 
-    private String getSeriesHeaderString(Series series) {
+    public String getSeriesHeaderString(Series series) {
         if (series.getUnit() != null && series.getName() == null) {
             return series.getUnit().getText();
         } else if (series.getUnit() != null && !series.getUnit().getText().equalsIgnoreCase(series.getName())) {
@@ -551,7 +423,45 @@ public class TableWindow extends Window implements
         }
     }
 
+    public float getMin() {
+        return min;
+    }
+
+    public float getMax() {
+        return max;
+    }
+
+    public float getSelectionMin() {
+        return selMin;
+    }
+
+    public float getSelectionMax() {
+        return selMax;
+    }
+
     private Color getColor(float min, float value, float max) {
+        if (min == max) {
+            return Color.WHITE;
+        } else if (table.getData().getLength() <= 1) {
+            return Color.WHITE;
+        }
+
+        float green = (value - min) / (max - min);
+        float red = 1f - green;
+
+        green = Math.max(0, Math.min(1, green));
+        red = Math.max(0, Math.min(1, red));
+
+        return new Color(
+                red,
+                green,
+                0
+        );
+    }
+
+    public Color scaleValueColor(float value) {
+        float min = this.min, max = this.max;
+
         if (min == max) {
             return Color.WHITE;
         } else if (table.getData().getLength() <= 1) {
@@ -578,7 +488,7 @@ public class TableWindow extends Window implements
 
     @Override
     public void focusGained(FocusEvent e) {
-        getEditor().tableFocused(table);
+        getParent().tableFocused(table);
     }
 
     @Override
@@ -617,7 +527,7 @@ public class TableWindow extends Window implements
         if ((newValue > max || newValue < min) ||
                 (oldValue <= min || oldValue >= max)) {
             updateMinMax();
-            updateFooter();
+            footer.reinitialize();
         }
 
         setValue(row, col, newValue);
@@ -672,8 +582,21 @@ public class TableWindow extends Window implements
         }
 
         updateSelectionMinMax();
-        updateFooter();
+        footer.reinitialize();
     }
+
+    public JTable getJTable() {
+        return tableComponent;
+    }
+
+    public Font getValueFont() {
+        return valueFont;
+    }
+
+    public String formatValue(float value) {
+        return String.format(valueFormat, value);
+    }
+
 
     public class TableCellRenderer extends DefaultTableCellRenderer {
         public TableCellRenderer() {

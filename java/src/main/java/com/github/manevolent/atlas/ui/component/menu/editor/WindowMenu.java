@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.component.menu;
+package com.github.manevolent.atlas.ui.component.menu.editor;
 
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.window.Window;
@@ -9,7 +9,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.Collection;
 
-public class WindowMenu extends Menu {
+public class WindowMenu extends EditorMenu {
     public WindowMenu(EditorForm editor) {
         super(editor);
     }
@@ -29,7 +29,7 @@ public class WindowMenu extends Menu {
         // Clear all menu items
         component.removeAll();
 
-        Collection<Window> openWindows = getEditor().getOpenWindows();
+        Collection<Window> openWindows = getParent().getOpenWindows();
 
         if (openWindows.size() <= 0) {
             JMenuItem menuItem = new JMenuItem("No active windows");

@@ -3,10 +3,10 @@ package com.github.manevolent.atlas.ui.window;
 import com.github.manevolent.atlas.definition.Rom;
 import com.github.manevolent.atlas.definition.Table;
 import com.github.manevolent.atlas.ui.Icons;
-import com.github.manevolent.atlas.ui.component.menu.FileMenu;
-import com.github.manevolent.atlas.ui.component.menu.WindowMenu;
+import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
+import com.github.manevolent.atlas.ui.component.menu.editor.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
-import com.github.manevolent.atlas.ui.component.window.TableWindow;
+import com.github.manevolent.atlas.ui.component.window.TableEditor;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -38,7 +38,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     // State variables (open windows, etc.)
     private Rom rom;
     private java.util.List<Window> openWindows = new ArrayList<>();
-    private Map<Table, TableWindow> openedTables = new LinkedHashMap<>();
+    private Map<Table, TableEditor> openedTables = new LinkedHashMap<>();
 
     public EditorForm(Rom rom) {
         // Just to make sure it shows up in the taskbar/dock/etc.
@@ -173,12 +173,12 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     public void openTable(Table table) {
-        TableWindow opened;
+        TableEditor opened;
 
         opened = openedTables.get(table);
 
         if (opened == null) {
-            opened = openWindow(new TableWindow(this, table));
+            opened = openWindow(new TableEditor(this, table));
         }
 
         opened.focus();
@@ -309,8 +309,8 @@ public class EditorForm extends JFrame implements InternalFrameListener {
             openWindows.remove(window);
             getWindowMenu().update();
 
-            if (window instanceof TableWindow) {
-                openedTables.remove(((TableWindow)window).getTable());
+            if (window instanceof TableEditor) {
+                openedTables.remove(((TableEditor)window).getTable());
             }
         });
     }
@@ -329,7 +329,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     public void internalFrameActivated(InternalFrameEvent e) {
         getWindowMenu().update();
 
-        withWindowComponent(e.getInternalFrame(), TableWindow.class, (window) -> {
+        withWindowComponent(e.getInternalFrame(), TableEditor.class, (window) -> {
             tableFocused(window.getTable());
         });
     }

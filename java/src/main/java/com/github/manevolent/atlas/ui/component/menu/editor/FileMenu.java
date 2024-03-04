@@ -1,11 +1,11 @@
-package com.github.manevolent.atlas.ui.component.menu;
+package com.github.manevolent.atlas.ui.component.menu.editor;
 
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import com.github.manevolent.atlas.ui.window.NewRomForm;
 
 import javax.swing.*;
 
-public class FileMenu extends Menu {
+public class FileMenu extends EditorMenu {
     public FileMenu(EditorForm editor) {
         super(editor);
     }
@@ -41,7 +41,7 @@ public class FileMenu extends Menu {
 
         fileMenu.addSeparator();
         JMenuItem exit = new JMenuItem("Exit");
-        exit.addActionListener((e) -> getEditor().exit());
+        exit.addActionListener((e) -> getParent().exit());
         fileMenu.add(exit);
     }
 }
