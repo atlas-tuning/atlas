@@ -1,18 +1,13 @@
 package com.github.manevolent.atlas;
 
 import com.github.manevolent.atlas.definition.*;
-import com.github.manevolent.atlas.definition.subaru.SubaruDITFlashEncryption;
-import com.github.manevolent.atlas.definition.zip.StreamedFlashSource;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
 import static com.github.manevolent.atlas.definition.Axis.*;
-import static com.github.manevolent.atlas.definition.Unit.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static com.github.manevolent.atlas.definition.builtin.SubaruWRX2022MT.*;
 
@@ -84,5 +79,34 @@ public class FlashTest {
             table.writeCsv(new FileOutputStream("tables/" + testRomName + "/" + table.getName() + ".csv"), 2);
         }
     }
+
+    @Test
+    public void test_Scaling() {
+        Scale scale = baseIgnitionTiming.build();
+
+        float example = 10;
+        assertEquals(example, scale.reverse(scale.forward(example)), 0.01f);
+    }
+
+    @Test
+    public void test_ReadWrite() throws IOException {
+        Table table = newRom().getTables().stream().findFirst().orElseThrow(
+                () -> new AssertionError("No tables")
+        );
+
+        float value_0 = table.getCell(0, 0);
+        float value_1 = table.getCell(1, 0);
+        float value_2 = table.getCell(2, 0);
+        float value_3 = table.getCell(3, 0);
+
+        float stored = table.setCell(value_3 + 1, 3, 0);
+
+        assertEquals(value_0, table.getCell(0, 0));
+        assertEquals(value_1, table.getCell(1, 0));
+        assertEquals(value_2, table.getCell(2, 0));
+        assertEquals(value_3 + 1, table.getCell(3, 0));
+
+    }
+
 
 }

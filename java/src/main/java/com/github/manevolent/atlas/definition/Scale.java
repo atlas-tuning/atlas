@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.definition;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ListIterator;
 
 public class Scale {
     public static Scale ONE = Scale.builder().build();
@@ -20,7 +21,11 @@ public class Scale {
     }
 
     public float reverse(float a) {
-        for (ScalingOperation operation : operations) {
+        ListIterator<ScalingOperation> listIterator =
+                operations.listIterator(operations.size());
+
+        while (listIterator.hasPrevious()) {
+            ScalingOperation operation = listIterator.previous();
             a = operation.getOperation().reverse(a, operation.getCoefficient());
         }
 

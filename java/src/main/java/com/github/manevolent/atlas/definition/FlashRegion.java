@@ -1,11 +1,13 @@
 package com.github.manevolent.atlas.definition;
 
 import java.io.IOException;
+import java.nio.ByteOrder;
 
 public class FlashRegion implements FlashSource {
     private FlashType type;
     private FlashSource source;
     private FlashEncryption encryption;
+    private ByteOrder byteOrder = ByteOrder.nativeOrder();
     private int baseAddress;
     private int dataLength;
 
@@ -50,16 +52,30 @@ public class FlashRegion implements FlashSource {
     }
 
     @Override
-    public int read(byte[] dst, int offs, int len) throws IOException {
-        int readAddress = offs - baseAddress;
+    public int read(byte[] dst, int flashOffs, int offs, int len) throws IOException {
+        int readAddress = flashOffs - baseAddress;
         if (readAddress < 0 || readAddress >= dataLength) {
             throw new ArrayIndexOutOfBoundsException(readAddress);
         }
 
         if (encryption != null) {
-            return encryption.read(getSource(), dst, offs, len);
+            return encryption.read(getSource(), flashOffs, dst, offs, len);
         } else {
-            return getSource().read(dst, offs - baseAddress, len);
+            return getSource().read(dst, flashOffs - baseAddress, offs, len);
+        }
+    }
+
+    @Override
+    public void write(byte[] src, int flashOffs, int offs, int len) throws IOException {
+        int writeAddress = flashOffs - baseAddress;
+        if (writeAddress < 0 || writeAddress >= dataLength) {
+            throw new ArrayIndexOutOfBoundsException(writeAddress);
+        }
+
+        if (encryption != null) {
+            encryption.write(getSource(), flashOffs, src, offs, len);
+        } else {
+            getSource().write(src, flashOffs - baseAddress, offs, len);
         }
     }
 
@@ -71,5 +87,13 @@ public class FlashRegion implements FlashSource {
         }
 
         return getSource().read(readAddress);
+    }
+
+    public ByteOrder getByteOrder() {
+        return byteOrder;
+    }
+
+    public void setByteOrder(ByteOrder byteOrder) {
+        this.byteOrder = byteOrder;
     }
 }

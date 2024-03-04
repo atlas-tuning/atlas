@@ -53,6 +53,35 @@ public class Table {
         return getCell(coordinatesMap);
     }
 
+    public float setCell(float value, Map<Axis, Integer> coordinates) throws IOException {
+        if (coordinates.isEmpty()) {
+            return data.get(0);
+        }
+
+        int index = coordinates.get(X);
+
+        if (coordinates.containsKey(Y)) {
+            index += coordinates.get(Y) * axes.get(X).getLength();
+        }
+
+        return data.set(index, value);
+    }
+
+    public float setCell(float value, Integer... coordinates) throws IOException {
+        Map<Axis, Integer> coordinatesMap = new HashMap<>();
+
+        for (int n = 0; n < coordinates.length; n ++) {
+            int finalN = n;
+            Axis axis = Arrays.stream(Axis.values())
+                    .filter(a -> a.getIndex() == finalN)
+                    .findFirst().orElseThrow();
+
+            coordinatesMap.put(axis, coordinates[n]);
+        }
+
+        return setCell(value, coordinatesMap);
+    }
+
     public String getName() {
         return name;
     }

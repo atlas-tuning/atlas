@@ -44,9 +44,7 @@ public class RowNumberTable extends JTable
     public void updateWidth() {
         int minimumWidth = rowNames.stream()
                 .mapToInt(text -> {
-                    Canvas c = new Canvas();
-                    FontMetrics fm = c.getFontMetrics(getTableHeader().getFont());
-                    return fm.stringWidth(text);
+                    return getFontMetrics(tableHeader.getFont()).stringWidth(text);
                 })
                 .max().orElse(50);
 

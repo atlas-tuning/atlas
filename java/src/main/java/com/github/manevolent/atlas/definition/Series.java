@@ -89,6 +89,12 @@ public class Series {
         return new Builder();
     }
 
+    public float set(int index, float value) throws IOException {
+        float data = scale.reverse(value);
+        address.write(index, data, format);
+        return get(index);
+    }
+
     public static class Builder {
         private final Series series = new Series();
 

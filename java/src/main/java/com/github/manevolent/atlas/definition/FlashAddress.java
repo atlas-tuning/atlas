@@ -24,12 +24,17 @@ public class FlashAddress {
 
     public float read(int index, DataFormat format) throws IOException {
         byte[] data = new byte[format.getSize()];
-        getRegion().read(data, offset + (index * format.getSize()), format.getSize());
-        return format.convertFromBytes(data);
+        getRegion().read(data, offset + (index * format.getSize()), 0, format.getSize());
+        return format.convertFromBytes(data, getRegion().getByteOrder());
     }
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public void write(int index, float data, DataFormat format) throws IOException {
+        byte[] bytes = format.convertToBytes(data, getRegion().getByteOrder());
+        getRegion().write(bytes, offset + (index * format.getSize()), 0);
     }
 
     public static class Builder {

@@ -17,6 +17,15 @@ public class IconHelper {
         icon.setIconSize(ICON_SIZE);
         return icon;
     }
+
+
+    public static FontIcon get(Ikon ikon) {
+        FontIcon icon = new FontIcon();
+        icon.setIkon(ikon);
+        icon.setIconSize(ICON_SIZE);
+        return icon;
+    }
+
     public static ImageIcon getImage(Ikon ikon, Color color) {
         FontIcon icon = get(ikon, color);
         icon.setIconSize(64);

@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.definition.zip;
+package com.github.manevolent.atlas.definition.source;
 
 import com.github.manevolent.atlas.definition.FlashSource;
 
@@ -15,14 +15,20 @@ public class FileFlashSource implements FlashSource {
     }
 
     @Override
-    public int read(byte[] dst, int offs, int len) throws IOException {
-        randomAccessFile.seek(offs);
-        return randomAccessFile.read(dst, 0, len);
+    public int read(byte[] dst, int flashOffs, int offs, int len) throws IOException {
+        randomAccessFile.seek(flashOffs);
+        return randomAccessFile.read(dst, offs, len);
     }
 
     @Override
     public int read(int offs) throws IOException {
         randomAccessFile.seek(offs);
         return randomAccessFile.read();
+    }
+
+    @Override
+    public void write(byte[] bytes, int flashOffs, int offs, int len) throws IOException {
+        randomAccessFile.seek(flashOffs);
+        randomAccessFile.write(bytes, offs, len);
     }
 }

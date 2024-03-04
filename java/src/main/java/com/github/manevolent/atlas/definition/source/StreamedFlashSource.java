@@ -1,9 +1,10 @@
-package com.github.manevolent.atlas.definition.zip;
+package com.github.manevolent.atlas.definition.source;
 
 import com.github.manevolent.atlas.definition.FlashSource;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.function.Supplier;
 
 public class StreamedFlashSource implements FlashSource {
@@ -18,9 +19,9 @@ public class StreamedFlashSource implements FlashSource {
     }
 
     @Override
-    public int read(byte[] dst, int offs, int len) throws IOException {
+    public int read(byte[] dst, int flashOffs, int offs, int len) throws IOException {
         try (InputStream inputStream = supplier.get()) {
-            inputStream.skipNBytes(offs);
+            inputStream.skipNBytes(flashOffs);
             return inputStream.read(dst, 0, len);
         }
     }
@@ -31,5 +32,10 @@ public class StreamedFlashSource implements FlashSource {
             assert inputStream.skip(offs) == offs;
             return inputStream.read();
         }
+    }
+
+    @Override
+    public void write(byte[] bytes, int flashOffs, int offs, int len) throws IOException {
+        throw new UnsupportedEncodingException();
     }
 }

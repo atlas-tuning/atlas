@@ -1,13 +1,16 @@
 package com.github.manevolent.atlas.definition;
 
+import java.nio.ByteOrder;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 
 public enum DataFormat {
-    SBYTE(1, (data) -> {
+    SBYTE(1, (data, byteOrder) -> {
         byte b = data[0];
         return (float) b;
-    }, (f) -> {
-        int i = Math.round(f);
+    }, (f, byteOrder) -> {
+        f = Math.min(Byte.MAX_VALUE, Math.max(Byte.MIN_VALUE, f));
+        int i = (int) Math.floor(f);
         if (i < Byte.MIN_VALUE) {
             i = Byte.MIN_VALUE;
         } else if (i > Byte.MAX_VALUE) {
@@ -16,12 +19,13 @@ public enum DataFormat {
         return new byte[] { (byte) i };
     }),
 
-    UBYTE(1, (data) -> {
+    UBYTE(1, (data, byteOrder) -> {
         byte b = data[0];
         int i = b & 0xFF;
         return (float) i;
-    }, (f) -> {
-        int i = Math.round(f);
+    }, (f, byteOrder) -> {
+        f = Math.min(255, Math.max(0, f));
+        int i = (int) Math.floor(f);
         if (i > 0xFF) {
             i = 0xFF;
         } else if (i < 0) {
@@ -30,25 +34,60 @@ public enum DataFormat {
         return new byte[] { (byte) i };
     }),
 
-    SSHORT(2, (data) -> {
-        int low = data[0] & 0xFF;
-        int high = data[1] & 0xFF;
+    SSHORT(2, (data, byteOrder) -> {
+        int low, high;
+        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+            low = data[0] & 0xFF;
+            high = data[1] & 0xFF;
+        } else {
+            high = data[0] & 0xFF;
+            low = data[1] & 0xFF;
+        }
         int combined = low | (high << 8);
         return (float) (short) (combined & 0xFFFF);
-    }, (f) -> {
-        throw new UnsupportedOperationException("TODO");
+    }, (f, byteOrder) -> {
+        f = Math.min(Short.MAX_VALUE, Math.max(Short.MIN_VALUE, f));
+        short s = (short)Math.floor(f);
+        byte[] data = new byte[2];
+        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+            data[0] = (byte) (s & 0xFF);
+            data[1] = (byte) (s >> 8 & 0xFF);
+        } else {
+            data[1] = (byte) (s & 0xFF);
+            data[0] = (byte) (s >> 8 & 0xFF);
+        }
+        return data;
     }),
 
-    USHORT(2, (data) -> {
-        int low = data[0] & 0xFF;
-        int high = data[1] & 0xFF;
+    USHORT(2, (data, byteOrder) -> {
+        int low;
+        int high;
+
+        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+            low = data[0] & 0xFF;
+            high = data[1] & 0xFF;
+        } else {
+            high = data[0] & 0xFF;
+            low = data[1] & 0xFF;
+        }
+
         int combined = low | (high << 8);
         return (float) (combined & 0xFFFF);
-    }, (f) -> {
-        throw new UnsupportedOperationException("TODO");
+    }, (f, byteOrder) -> {
+        f = Math.min(65535, Math.max(0, f));
+        int s = ((int)Math.floor(f)) & 0xFFFF;
+        byte[] data = new byte[2];
+        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+            data[0] = (byte) (s & 0xFF);
+            data[1] = (byte) (s >> 8 & 0xFF);
+        } else {
+            data[1] = (byte) (s & 0xFF);
+            data[0] = (byte) (s >> 8 & 0xFF);
+        }
+        return data;
     });
 
-    private static final byte[] expectLength(byte[] array, int length) {
+    private static byte[] expectLength(byte[] array, int length) {
         if (array.length != length) {
             throw new IllegalArgumentException("Invalid data array size: " +
                     array.length + " != " + length);
@@ -57,26 +96,25 @@ public enum DataFormat {
         return array;
     }
 
-    private final Function<byte[], Float> convertFromBytes;
-    private final Function<Float, byte[]> convertToBytes;
+    private final BiFunction<byte[], ByteOrder, Float> convertFromBytes;
+    private final BiFunction<Float, ByteOrder, byte[]> convertToBytes;
     private final int size;
 
     DataFormat(int size,
-               Function<byte[], Float> convertFromBytes,
-               Function<Float, byte[]> convertToBytes) {
+               BiFunction<byte[], ByteOrder, Float> convertFromBytes,
+               BiFunction<Float, ByteOrder, byte[]> convertToBytes) {
         this.size = size;
         this.convertFromBytes = convertFromBytes;
-
         this.convertToBytes = convertToBytes;
     }
 
-    public byte[] convertToBytes(float f) {
-        return convertToBytes.apply(f);
+    public byte[] convertToBytes(float f, ByteOrder byteOrder) {
+        return convertToBytes.apply(f, byteOrder);
     }
 
-    public float convertFromBytes(byte[] data) {
+    public float convertFromBytes(byte[] data, ByteOrder byteOrder) {
         expectLength(data, getSize());
-        return convertFromBytes.apply(data);
+        return convertFromBytes.apply(data, byteOrder);
     }
 
     public int getSize() {

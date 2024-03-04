@@ -1,8 +1,12 @@
 package com.github.manevolent.atlas.definition.builtin;
 
 import com.github.manevolent.atlas.definition.*;
+import com.github.manevolent.atlas.definition.source.MemoryFlashSource;
 import com.github.manevolent.atlas.definition.subaru.SubaruDITFlashEncryption;
-import com.github.manevolent.atlas.definition.zip.StreamedFlashSource;
+import com.github.manevolent.atlas.definition.source.StreamedFlashSource;
+
+import java.io.IOException;
+import java.nio.ByteOrder;
 
 import static com.github.manevolent.atlas.definition.Axis.X;
 import static com.github.manevolent.atlas.definition.Axis.Y;
@@ -128,6 +132,14 @@ public class SubaruWRX2022MT {
             .withOperation(ArithmeticOperation.SUBTRACT, 50)
             .withUnit(Unit.CELSIUS);
 
+    public static final Scale.Builder baseIgnitionTiming = Scale.builder()
+            .withOperations(
+                    ScalingOperation.from(ArithmeticOperation.SUBTRACT, 0x20),
+                    ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
+            )
+            .withFormat(DataFormat.UBYTE)
+            .withUnit(Unit.DEGREES);
+
     public static Table.Builder ignitionTimingBaseTable(FlashRegion code, String name, int timingDataAddress,
                                                          int rpmAddress, int loadAddress) {
         return Table.builder()
@@ -135,12 +147,7 @@ public class SubaruWRX2022MT {
                 .withData(Series.builder()
                         .withName("Timing")
                         .withAddress(code, timingDataAddress)
-                        .withFormat(DataFormat.UBYTE)
-                        .withUnit(Unit.DEGREES)
-                        .withScale(Scale.builder().withOperations(
-                                ScalingOperation.from(ArithmeticOperation.SUBTRACT, 0x20),
-                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
-                        )))
+                        .withScale(baseIgnitionTiming))
                 .withAxis(Y, Series.builder()
                         .withName("RPM")
                         .withAddress(code, rpmAddress)
@@ -463,12 +470,12 @@ public class SubaruWRX2022MT {
                 );
     }
 
-    public static Rom newRom() {
+    public static Rom newRom() throws IOException {
         FlashRegion code = new FlashRegion();
+        code.setByteOrder(ByteOrder.LITTLE_ENDIAN);
         code.setBaseAddress(0x0);
         code.setEncryption(SubaruDITFlashEncryption.WRX_MT_2022_USDM);
-        code.setSource(new StreamedFlashSource(() -> SubaruWRX2022MT
-                .class.getResourceAsStream(romResource)));
+        code.setSource(MemoryFlashSource.from(SubaruWRX2022MT.class.getResourceAsStream(romResource)));
         code.setDataLength(0x003F0000);
 
         return Rom.builder()
