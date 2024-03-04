@@ -1,16 +1,13 @@
 package com.github.manevolent.atlas.ui.component.menu;
 
-import com.github.manevolent.atlas.ui.IconHelper;
+import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 
 public class WindowMenu extends Menu {
     public WindowMenu(EditorForm editor) {
@@ -44,7 +41,7 @@ public class WindowMenu extends Menu {
             Icon icon;
 
             if (openWindow.getComponent().isSelected()) {
-                icon = IconHelper.get(CarbonIcons.CHECKMARK_OUTLINE, Color.WHITE);
+                icon = Icons.get(CarbonIcons.CHECKMARK_OUTLINE, Color.WHITE);
             } else {
                 icon = openWindow.getIcon();
             }

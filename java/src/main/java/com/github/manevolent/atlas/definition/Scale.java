@@ -48,6 +48,11 @@ public class Scale {
         return new Builder();
     }
 
+    public float getPrecision() {
+        float a = forward(0);
+        float b = forward(1);
+        return Math.abs(a - b);
+    }
 
 
     public static class Builder {

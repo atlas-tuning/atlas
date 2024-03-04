@@ -5,7 +5,7 @@ import org.kordamp.ikonli.Ikon;
 import javax.swing.*;
 import java.awt.*;
 
-public class LabelHelper {
+public class Labels {
 
     public static JLabel text(String text) {
         JLabel label = new JLabel(text);
@@ -20,28 +20,36 @@ public class LabelHelper {
 
     public static JLabel text(Ikon icon, String text, Color color) {
         JLabel label = new JLabel(text);
-        label.setIcon(IconHelper.get(icon, color));
+        label.setIcon(Icons.get(icon, color));
         label.setForeground(color);
         return label;
     }
 
 
+    public static JLabel text(Ikon icon, String text, Font font, Color color) {
+        JLabel label = new JLabel(text);
+        label.setFont(font);
+        label.setIcon(Icons.get(icon, color));
+        label.setForeground(color);
+        return label;
+    }
+
     public static JLabel text(Ikon icon, String text) {
         JLabel label = new JLabel(text);
-        label.setIcon(IconHelper.get(icon, label.getForeground()));
+        label.setIcon(Icons.get(icon, label.getForeground()));
         return label;
     }
 
     public static JLabel text(Ikon icon, Color iconColor, String text, Color color) {
         JLabel label = new JLabel(text);
-        label.setIcon(IconHelper.get(icon, iconColor));
+        label.setIcon(Icons.get(icon, iconColor));
         label.setForeground(color);
         return label;
     }
 
     public static JLabel text(Ikon icon, Color iconColor, Font font, String text, Color color) {
         JLabel label = new JLabel(text);
-        label.setIcon(IconHelper.get(icon, iconColor));
+        label.setIcon(Icons.get(icon, iconColor));
         label.setFont(font);
         label.setForeground(color);
         return label;

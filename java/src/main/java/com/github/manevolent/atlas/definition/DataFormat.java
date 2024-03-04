@@ -2,10 +2,9 @@ package com.github.manevolent.atlas.definition;
 
 import java.nio.ByteOrder;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 
 public enum DataFormat {
-    SBYTE(1, (data, byteOrder) -> {
+    SBYTE(1, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         byte b = data[0];
         return (float) b;
     }, (f, byteOrder) -> {
@@ -19,7 +18,7 @@ public enum DataFormat {
         return new byte[] { (byte) i };
     }),
 
-    UBYTE(1, (data, byteOrder) -> {
+    UBYTE(1, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         byte b = data[0];
         int i = b & 0xFF;
         return (float) i;
@@ -34,7 +33,7 @@ public enum DataFormat {
         return new byte[] { (byte) i };
     }),
 
-    SSHORT(2, (data, byteOrder) -> {
+    SSHORT(2, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         int low, high;
         if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
             low = data[0] & 0xFF;
@@ -59,7 +58,7 @@ public enum DataFormat {
         return data;
     }),
 
-    USHORT(2, (data, byteOrder) -> {
+    USHORT(2, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         int low;
         int high;
 
@@ -99,13 +98,16 @@ public enum DataFormat {
     private final BiFunction<byte[], ByteOrder, Float> convertFromBytes;
     private final BiFunction<Float, ByteOrder, byte[]> convertToBytes;
     private final int size;
+    private final Precision precision;
 
     DataFormat(int size,
+               Precision precision,
                BiFunction<byte[], ByteOrder, Float> convertFromBytes,
                BiFunction<Float, ByteOrder, byte[]> convertToBytes) {
         this.size = size;
         this.convertFromBytes = convertFromBytes;
         this.convertToBytes = convertToBytes;
+        this.precision = precision;
     }
 
     public byte[] convertToBytes(float f, ByteOrder byteOrder) {
@@ -119,5 +121,9 @@ public enum DataFormat {
 
     public int getSize() {
         return size;
+    }
+
+    public Precision getPrecision() {
+        return precision;
     }
 }

@@ -143,7 +143,7 @@ public class SubaruWRX2022MT {
     public static Table.Builder ignitionTimingBaseTable(FlashRegion code, String name, int timingDataAddress,
                                                          int rpmAddress, int loadAddress) {
         return Table.builder()
-                .withName("Base Ignition Timing - " + name)
+                .withName("Ignition Timing - Base - " + name)
                 .withData(Series.builder()
                         .withName("Timing")
                         .withAddress(code, timingDataAddress)
@@ -167,7 +167,7 @@ public class SubaruWRX2022MT {
     public static Table.Builder dynamicAdvanceIgnitionTimingTable(FlashRegion code, String name, int timingDataAddress,
                                                                    int rpmAddress, int rpmLength, int loadAddress, int loadLength) {
         return Table.builder()
-                .withName("Dynamic Advance Timing - " + name)
+                .withName("Ignition Timing - Dynamic Advance - " + name)
                 .withData(Series.builder()
                         .withName("Timing")
                         .withAddress(code, timingDataAddress)
@@ -288,7 +288,7 @@ public class SubaruWRX2022MT {
                                                              int loadAddress) {
 
         return Table.builder()
-                .withName("Ignition Timing Compensation - " + gear + " Gear")
+                .withName("Ignition Timing - Compensation - Gear - " + gear)
                 .withData(Series.builder()
                         .withName("Timing")
                         .withAddress(code, dataAddress)
@@ -323,7 +323,7 @@ public class SubaruWRX2022MT {
                                                                int activationCalcLoadAddress) {
         return new Table.Builder[] {
                 Table.builder()
-                        .withName("Ignition Timing Compensation - IAT " + name)
+                        .withName("Ignition Timing - Compensation - IAT - " + name)
                         .withData(Series.builder()
                                 .withName("Timing")
                                 .withAddress(code, dataAddress)
@@ -346,7 +346,7 @@ public class SubaruWRX2022MT {
                         )
                 ),
                 Table.builder()
-                        .withName("Ignition Timing Compensation - IAT " + name + " Activation")
+                        .withName("Ignition Timing - Compensation - IAT - " + name + " Activation")
                         .withData(Series.builder()
                                 .withName("Activation")
                                 .withAddress(code, activationDataAddress)
@@ -379,7 +379,7 @@ public class SubaruWRX2022MT {
                                                                 Scale.Builder dataScale,
                                                                 int coolantAddress) {
         return Table.builder()
-                .withName("Ignition Timing Compensation Coolant - " + name)
+                .withName("Ignition Timing - Compensation - Coolant - " + name)
                 .withData(Series.builder()
                         .withName("Timing")
                         .withAddress(code, dataAddress)
@@ -411,7 +411,7 @@ public class SubaruWRX2022MT {
                                                                       DataFormat calcLoadFormat,
                                                                       Scale.Builder calcLoadScale) {
         return Table.builder()
-                .withName("Ignition Timing Compensation Coolant Activation - " + name)
+                .withName("Ignition Timing - Compensation - Coolant - " + name + " Activation")
                 .withData(Series.builder()
                         .withName("Activation")
                         .withAddress(code, activationDataAddress)
@@ -538,10 +538,10 @@ public class SubaruWRX2022MT {
                         0x000acac4, 0x000a8914, 0x000a8980))
 
                 // Dynamic advance timing
-                .withTable(dynamicAdvanceIgnitionTimingTable(code, "TGVs Closed - Base", 0x000b5fc0, 0x000b54e4, 0x16, 0x000b5510, 0x1E))
-                .withTable(dynamicAdvanceIgnitionTimingTable(code, "TGVs Open - Base ", 0x000b6254, 0x000b54e4, 0x16, 0x000b5510, 0x1E))
-                .withTable(dynamicAdvanceIgnitionTimingTable(code, "TGVs Closed - Adder", 0x000b64e8, 0x000b5624, 0x15, 0x000b5578, 0x1E))
-                .withTable(dynamicAdvanceIgnitionTimingTable(code, "TGVs Open - Adders", 0x000b6760, 0x000b5650, 0x15, 0x000b55b4, 0x1E))
+                .withTable(dynamicAdvanceIgnitionTimingTable(code, "TGVs Closed (Base)", 0x000b5fc0, 0x000b54e4, 0x16, 0x000b5510, 0x1E))
+                .withTable(dynamicAdvanceIgnitionTimingTable(code, "TGVs Closed (Adder)", 0x000b64e8, 0x000b5624, 0x15, 0x000b5578, 0x1E))
+                .withTable(dynamicAdvanceIgnitionTimingTable(code, "TGVs Open (Base) ", 0x000b6254, 0x000b54e4, 0x16, 0x000b5510, 0x1E))
+                .withTable(dynamicAdvanceIgnitionTimingTable(code, "TGVs Open (Adder)", 0x000b6760, 0x000b5650, 0x15, 0x000b55b4, 0x1E))
 
                 //Ignition timing compensation by coolant temperature
                 .withTables(ignitionTimingCoolantCompTables(code, "TGVs Closed", 0x000a7e9c, 0x00030a68, 0x000abde0, 0x000a8b34, 0x000a8b6c))
@@ -592,16 +592,16 @@ public class SubaruWRX2022MT {
                 .withTable(fuelPressureTargetMainTable_2D(code, "Main - TGVs Closed", 0x000cb2f0, 0x000c8880, 0x000c83a4))
                 .withTable(fuelPressureTargetMainTable_2D(code, "Main - TGVs Open", 0x000cb4d0, 0x000c8880, 0x000c83a4))
                 .withTable(fuelPressureTargetMainTable_2D(code, "Main - Idle", 0x000c9140, 0x000c8880, 0x000c83a4))
-                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3A #1", 0x000c85c4, 0x000c84e4))
-                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3A #2", 0x000c85a4, 0x000c84e4))
-                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1A", 0x000c85e4, 0x000c84e4))
-                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1A", 0x000c85e4, 0x000c84e4))
-                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1B #1", 0x000c8564, 0x000c84e4))
-                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 1B #2", 0x000c8504, 0x000c84e4))
-                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3B #1", 0x000c8544, 0x000c84e4))
-                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup Mode 3B #2", 0x000c8524, 0x000c84e4))
-                .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup Mode 4", 0x000c8654, true, 0x000c83e4, 0x000c82f8))
-                .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup Default", 0x000c83c4, false, 0x000c83b4, 0x000c82f8))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup - Mode 3A #1", 0x000c85c4, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup - Mode 3A #2", 0x000c85a4, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup - Mode 1A", 0x000c85e4, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup - Mode 1A", 0x000c85e4, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup - Mode 1B #1", 0x000c8564, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup - Mode 1B #2", 0x000c8504, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup - Mode 3B #1", 0x000c8544, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_1D(code, "Warmup - Mode 3B #2", 0x000c8524, 0x000c84e4))
+                .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup - Mode 4", 0x000c8654, true, 0x000c83e4, 0x000c82f8))
+                .withTable(fuelPressureTargetWarmupTable_2D(code, "Warmup - Default", 0x000c83c4, false, 0x000c83b4, 0x000c82f8))
                 .withTable(Table.builder()
                         .withName("Boost Target - Main")
                         .withData(Series.builder()
@@ -626,7 +626,7 @@ public class SubaruWRX2022MT {
                                 .withFormat(DataFormat.USHORT)
                                 .withScale(req_torque_16bit)))
                 .withTable(Table.builder()
-                        .withName("Boost Target - IAT Compensation")
+                        .withName("Boost Target - Compensation - IAT")
                         .withData(Series.builder()
                                 .withName("Percent")
                                 .withAddress(code, 0x0002a318)
@@ -641,7 +641,7 @@ public class SubaruWRX2022MT {
 
                 )
                 .withTable(Table.builder()
-                        .withName("Boost Target - Barometric Compensation")
+                        .withName("Boost Target - Compensation - IAT")
                         .withData(Series.builder()
                                 .withName("Percent")
                                 .withAddress(code, 0x0002c594)
@@ -665,15 +665,15 @@ public class SubaruWRX2022MT {
                                 .withUnit(PSI)
                         )
                 )
-                .withTable(singleValueTable(code, "Boost Target - Maximum Limit",
+                .withTable(singleValueTable(code, "Boost Target - Limits - Maximum Limit",
                         0x00028bf0,
                         boostTargetPressureScale_RelSL_16bit
                 ))
-                .withTable(singleValueTable(code, "Boost Target - IAT Compensation - DTC",
+                .withTable(singleValueTable(code, "Boost Target - Compensation - IAT DTC",
                         0x00028fe6,
                         boostTargetCompensation_8bit
                 ))
-                .withTable(singleValueTable(code, "Boost Target - Barometric Compensation - DTC",
+                .withTable(singleValueTable(code, "Boost Target - Compensation - Barometric DTC",
                         0x00028fe7,
                         boostTargetCompensation_8bit
                 ))
@@ -696,7 +696,7 @@ public class SubaruWRX2022MT {
                                 .withScale(boostTargetPressureScale_RelSL_16bit)
                         )
                 ).withTable(Table.builder()
-                        .withName("Wastegate Position - IAT Compensation")
+                        .withName("Wastegate Position - Compensation - IAT")
                         .withData(Series.builder()
                                 .withName("Percent")
                                 .withAddress(code, 0x0002c610)
@@ -714,7 +714,7 @@ public class SubaruWRX2022MT {
                                 .withScale(intakeAirTemperature8bitScale)
                         )
                 ).withTable(Table.builder()
-                        .withName("Wastegate Position - Barometric Compensation")
+                        .withName("Wastegate Position - Compensation - Barometric")
                         .withData(Series.builder()
                                 .withName("Percent")
                                 .withAddress(code, 0x0002c730)
@@ -731,11 +731,11 @@ public class SubaruWRX2022MT {
                                 .withLength(0x10)
                                 .withScale(barometricPressure_16bit)
                         )
-                ).withTable(singleValueTable(code, "Wastegate Position - Boost Error Compensation - Transient Boost Threshold",
+                ).withTable(singleValueTable(code, "Wastegate Position - Compensation - Transient Boost Threshold",
                         0x00028c1e,
                         boostErrorPressure_16bit
                 )).withTable(Table.builder()
-                        .withName("Wastegate Position - Boost Error Compensation - Continuous")
+                        .withName("Wastegate Position - Boost Error Compensation - Torque Exceeded")
                         .withData(Series.builder()
                                 .withName("Position")
                                 .withAddress(code, 0x0002d348)
@@ -780,7 +780,7 @@ public class SubaruWRX2022MT {
                 .withTable(singleValueTable(code, "Wastegate Position - Minimum Limit",
                         0x00028bfe, wastegatePosition16bitScale))
                 .withTable(Table.builder()
-                        .withName("Turbo Limits - Coolant")
+                        .withName("Turbo Limits - Minimum RPM")
                         .withData(Series.builder()
                                 .withName("Minimum RPM")
                                 .withAddress(code, 0x0002a378)
@@ -792,7 +792,7 @@ public class SubaruWRX2022MT {
                                 .withLength(0x10)
                                 .withScale(coolantTemp16BitScale)))
                 .withTable(Table.builder()
-                        .withName("Turbo Limits - Requested Torque")
+                        .withName("Turbo Limits - Maximum Torque - Main")
                         .withData(Series.builder()
                                 .withName("Requested Torque")
                                 .withAddress(code, 0x0002aee0)
@@ -804,7 +804,7 @@ public class SubaruWRX2022MT {
                                 .withLength(0x12)
                                 .withScale(rpm_16bit)))
                 .withTable(Table.builder()
-                        .withName("Turbo Limits - Requested Torque - Barometric Compensation")
+                        .withName("Turbo Limits - Maximum Torque - Barometric Compensation")
                         .withData(Series.builder()
                                 .withName("Percent")
                                 .withAddress(code, 0x0002e3e0)
@@ -822,7 +822,7 @@ public class SubaruWRX2022MT {
                                 .withScale(barometricPressure_16bit)
                         )
                 ).withTable(Table.builder()
-                        .withName("Turbo Limits - Requested Torque - IAT Compensation")
+                        .withName("Turbo Limits - Maximum Torque - IAT Compensation")
                         .withData(Series.builder()
                                 .withName("Percent")
                                 .withAddress(code, 0x0002ec5c)

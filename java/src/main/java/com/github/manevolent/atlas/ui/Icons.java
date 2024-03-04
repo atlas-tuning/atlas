@@ -1,13 +1,12 @@
 package com.github.manevolent.atlas.ui;
 
 import org.kordamp.ikonli.Ikon;
-import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
 import java.awt.*;
 
-public class IconHelper {
+public class Icons {
     private static final int ICON_SIZE = 14;
 
     public static FontIcon get(Ikon ikon, Color color) {

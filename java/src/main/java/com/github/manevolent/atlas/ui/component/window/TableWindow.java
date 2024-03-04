@@ -1,13 +1,12 @@
 package com.github.manevolent.atlas.ui.component.window;
 
-import com.github.manevolent.atlas.definition.Axis;
-import com.github.manevolent.atlas.definition.Series;
-import com.github.manevolent.atlas.definition.Table;
-import com.github.manevolent.atlas.ui.IconHelper;
-import com.github.manevolent.atlas.ui.LabelHelper;
+import com.github.manevolent.atlas.definition.*;
+import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.Labels;
 import com.github.manevolent.atlas.ui.component.GraphicsHelper;
 import com.github.manevolent.atlas.ui.component.JRotateLabel;
 import com.github.manevolent.atlas.ui.component.RowNumberTable;
+import com.github.manevolent.atlas.ui.Separators;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -20,6 +19,7 @@ import javax.swing.table.TableCellEditor;
 
 import java.awt.*;
 import java.awt.event.*;
+import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EventObject;
@@ -34,8 +34,9 @@ public class TableWindow extends Window implements
         FocusListener,
         TableModelListener,
         ListSelectionListener {
-    private static final String valueFormat = "%.2f";
-    private static final Font font = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+    private static final int precisionPoints = 2;
+    private static final String valueFormat = "%." + precisionPoints + "f";
+    private static final Font valueFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
     private final Table table;
 
     private ThreadLocal<Boolean> selfUpdate = new ThreadLocal<>();
@@ -64,6 +65,13 @@ public class TableWindow extends Window implements
 
         component.setPreferredSize(tableComponent.getPreferredSize());
         component.setSize(tableComponent.getPreferredSize());
+
+        //TODO this most likely will annoy people, make a setting for it
+        try {
+            component.setMaximum(true);
+        } catch (PropertyVetoException e) {
+            // Ignore
+        }
     }
 
     @Override
@@ -87,13 +95,13 @@ public class TableWindow extends Window implements
         tableComponent.setBorder(BorderFactory.createEmptyBorder());
         tableComponent.getTableHeader().setReorderingAllowed(false);
         tableComponent.getTableHeader().setResizingAllowed(false);
-        tableComponent.getTableHeader().setFont(font);
+        tableComponent.getTableHeader().setFont(valueFont);
 
-        // Possibly add X series headers
-        Object[] columns;
         Series x = table.getSeries(X);
         Series y = table.getSeries(Y);
 
+        // Possibly add X series headers
+        Object[] columns;
         if (x != null) {
             columns = new Object[x.getLength()];
             for (int i = 0; i < x.getLength(); i ++) {
@@ -122,7 +130,13 @@ public class TableWindow extends Window implements
         tableComponent.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                super.mouseDragged(e);
+                updateSelection();
+            }
+        });
+
+        tableComponent.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
                 updateSelection();
             }
         });
@@ -130,7 +144,6 @@ public class TableWindow extends Window implements
         tableComponent.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                super.keyPressed(e);
                 updateSelection();
             }
         });
@@ -140,7 +153,7 @@ public class TableWindow extends Window implements
         if (table.getAxes().contains(Y)) {
             java.util.List<String> rowHeaders = generateRowHeaders();
             rowNumberTable = new RowNumberTable(tableComponent, rowHeaders);
-            rowNumberTable.getTableHeader().setFont(font);
+            rowNumberTable.getTableHeader().setFont(valueFont);
             rowNumberTable.updateWidth();
 
             scrollPane.setRowHeader(new JViewport());
@@ -189,7 +202,7 @@ public class TableWindow extends Window implements
         // Create the footer bar that displays some state data as well as
         // some quick calculations about the table and/or its selection.
         footerBar = new JPanel();
-        footerBar.setLayout(new FlowLayout(FlowLayout.LEFT));
+        footerBar.setLayout(new BorderLayout());
         footerBar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0,
                 Color.GRAY.darker()));
 
@@ -208,8 +221,16 @@ public class TableWindow extends Window implements
         updateCellWidth();
     }
 
+    /**
+     * Updates the little footer on the bottom of table windows
+     */
     private void updateFooter() {
         footerBar.removeAll();
+
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        footerBar.add(left, BorderLayout.WEST);
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        footerBar.add(right, BorderLayout.EAST);
 
         String tableSizeString;
 
@@ -217,10 +238,11 @@ public class TableWindow extends Window implements
         int numRows = tableComponent.getSelectedRows().length;
         boolean hasSelection = (numColumns + numRows) > 2;
 
+        Series x = table.getSeries(X);
+        Series y = table.getSeries(Y);
+
         if (!hasSelection) {
             int numAxes = table.getAxes().size();
-            Series x = table.getSeries(X);
-            Series y = table.getSeries(Y);
             if (numAxes == 0) {
                 tableSizeString = "1x1";
             } else if (numAxes == 1) {
@@ -234,14 +256,28 @@ public class TableWindow extends Window implements
             tableSizeString = "SEL " + numColumns + "x" + numRows;
         }
 
-        footerBar.add(LabelHelper.text(CarbonIcons.RULER, getSeriesHeaderString(table.getData())));
-        footerBar.add(new JSeparator(JSeparator.VERTICAL));
-        footerBar.add(LabelHelper.text(CarbonIcons.MATRIX,
-                table.getData().getFormat().name().toLowerCase(), Color.GRAY));
-        footerBar.add(new JSeparator(JSeparator.VERTICAL));
-        footerBar.add(LabelHelper.text(CarbonIcons.MAXIMIZE, tableSizeString, Color.GRAY));
-        footerBar.add(new JSeparator(JSeparator.VERTICAL));
+        left.add(Labels.text(CarbonIcons.RULER, getSeriesHeaderString(table.getData())));
 
+        left.add(Separators.vertical());
+
+        left.add(Labels.text(CarbonIcons.MAXIMIZE, tableSizeString, Color.GRAY));
+
+        left.add(Separators.vertical());
+
+        left.add(Labels.text(CarbonIcons.MATRIX,
+                table.getData().getFormat().name().toLowerCase(), Color.GRAY));
+
+        // Calculate value precision
+        if (table.getData().getFormat().getPrecision() == Precision.WHOLE_NUMBER) {
+            float precision = table.getData().getScale().getPrecision();
+            precision = Math.max(0.01f, precision);
+            left.add(Labels.text(CarbonIcons.CALIBRATE,
+                    String.format(valueFormat, precision),
+                    valueFont,
+                    Color.GRAY));
+        }
+
+        left.add(Separators.vertical());
 
         float min, max;
         if (hasSelection) {
@@ -253,14 +289,71 @@ public class TableWindow extends Window implements
         }
 
         if (this.min != this.max) {
-            footerBar.add(LabelHelper.text(
+            left.add(Labels.text(
                     CarbonIcons.ARROW_DOWN, Color.GRAY,
-                    font,
-                    String.format(valueFormat, min), getColor(this.min, min, this.max)));
-            footerBar.add(LabelHelper.text(
+                    valueFont,
+                    String.format(valueFormat, min), getColor(this.min, min, this.max))
+            );
+            left.add(Labels.text(
                     CarbonIcons.ARROW_UP, Color.GRAY,
-                    font,
-                    String.format(valueFormat, max), getColor(this.min, max, this.max)));
+                    valueFont,
+                    String.format(valueFormat, max), getColor(this.min, max, this.max))
+            );
+        }
+
+        if (!hasSelection) {
+            int selectedColumn = tableComponent.getSelectedColumn();
+            int selectedRow = tableComponent.getSelectedRow();
+
+            if (selectedColumn >= 0 && selectedRow >= 0) {
+                if (x != null) {
+                    float value;
+                    try {
+                        value = x.get(selectedColumn);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Unit unit = x.getUnit();
+                    String unitString;
+                    if (unit != null) {
+                        unitString = " " + unit.getText();
+                    } else {
+                        unitString = "";
+                    }
+                    right.add(Labels.text(CarbonIcons.LETTER_XX,
+                            String.format(valueFormat, value) + unitString,
+                            valueFont,
+                            Color.GRAY));
+                }
+
+                if (y != null) {
+                    float value;
+                    try {
+                        value = y.get(selectedRow);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                    Unit unit = y.getUnit();
+                    String unitString;
+                    if (unit != null) {
+                        unitString = " " + unit.getText();
+                    } else {
+                        unitString = "";
+                    }
+                    right.add(Labels.text(CarbonIcons.LETTER_YY,
+                            String.format(valueFormat, value) + unitString,
+                            valueFont,
+                            Color.GRAY));
+                }
+
+                right.add(Separators.vertical());
+
+                selectedColumn += 1;
+                selectedRow += 1;
+
+                right.add(Labels.text(CarbonIcons.CENTER_SQUARE,
+                                selectedColumn + "," + selectedRow, Color.GRAY));
+            }
         }
 
         footerBar.revalidate();
@@ -268,41 +361,68 @@ public class TableWindow extends Window implements
     }
 
     private void updateCellWidth() {
+        // Default to a minimum spacing of 6 characters
         String longestString = "000.00";
 
-        for (int i = 0; i < table.getData().getLength(); i ++) {
-            try {
-                float data = table.getData().get(i);
+        // Find the longest string in the columns (X axis)
+        Series x = table.getSeries(X);
+        if (x != null) {
+            for (int i = 0; i < x.getLength(); i ++) {
+                float data;
+                try {
+                    data = x.get(i);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
                 String formattedString = String.format(" " + valueFormat + " ", data);
                 if (formattedString.length() > longestString.length()) {
                     longestString = formattedString;
                 }
-            } catch (IOException e) {
-                throw new RuntimeException(e);
             }
         }
 
+        // Find the longest string in the cells (table data)
+        for (int i = 0; i < table.getData().getLength(); i ++) {
+            float data;
+            try {
+                data = table.getData().get(i);
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            String formattedString = String.format(" " + valueFormat + " ", data);
+            if (formattedString.length() > longestString.length()) {
+                longestString = formattedString;
+            }
+        }
+
+        // Get the ideal string width
         int stringWidth = GraphicsHelper.getFontMetrics(tableComponent.getFont())
                 .stringWidth(longestString);
+
+        // Grab the margin
         int margin = tableComponent.getColumnModel().getColumnMargin() * 2;
 
+        // Grab the cell components we'll generate and check the border insets
         Component cellComponent = tableComponent.getCellRenderer(0, 0)
                 .getTableCellRendererComponent(tableComponent, 0.00f, false, true, 0, 0);
-
         if (cellComponent instanceof JComponent) {
             Border border = ((JComponent) cellComponent).getBorder();
             Insets insets = border.getBorderInsets(cellComponent);
             margin += insets.left + insets.right;
         }
 
+        // Some extra spacing for comfort
         margin += 5;
 
+        // Set all the calculated spacing across the table's columns
+        int spacing = stringWidth + margin;
         for (int i = 0; i < tableComponent.getColumnModel().getColumnCount(); i ++) {
             var column = tableComponent.getColumnModel().getColumn(i);
-
-            column.setMinWidth(stringWidth + margin);
-            column.setPreferredWidth(stringWidth + margin);
-            column.setWidth(stringWidth + margin);
+            column.setMinWidth(spacing);
+            column.setPreferredWidth(spacing);
+            column.setWidth(spacing);
         }
     }
 
@@ -380,7 +500,7 @@ public class TableWindow extends Window implements
     }
 
     private void updateSelectionMinMax() {
-        selMax = Float.MIN_VALUE;
+        selMax = -Float.MAX_VALUE;
         selMin = Float.MAX_VALUE;
 
         int[] selectedRow = tableComponent.getSelectedRows();
@@ -388,8 +508,12 @@ public class TableWindow extends Window implements
 
         for (int i = 0; i < selectedRow.length; i++) {
             for (int j = 0; j < selectedColumns.length; j++) {
-                float data = (Float) tableComponent.getValueAt(
-                        selectedRow[i], selectedColumns[j]);
+                float data;
+                try {
+                    data = table.getCell(selectedColumns[j], selectedRow[i]);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
                 selMax = Math.max(data, selMax);
                 selMin = Math.min(data, selMin);
             }
@@ -405,7 +529,7 @@ public class TableWindow extends Window implements
     }
 
     private void updateMinMax() {
-        max = Float.MIN_VALUE;
+        max = -Float.MAX_VALUE;
         min = Float.MAX_VALUE;
 
         for (int i = 0; i < table.getData().getLength(); i ++) {
@@ -449,7 +573,7 @@ public class TableWindow extends Window implements
 
     @Override
     public Icon getIcon() {
-       return IconHelper.get(CarbonIcons.DATA_TABLE, Color.WHITE);
+       return Icons.get(CarbonIcons.DATA_TABLE, Color.WHITE);
     }
 
     @Override
@@ -506,10 +630,6 @@ public class TableWindow extends Window implements
 
     @Override
     public void valueChanged(ListSelectionEvent e) {
-        if (e.getValueIsAdjusting()) {
-            return;
-        }
-
         updateSelection();
     }
 
@@ -535,6 +655,9 @@ public class TableWindow extends Window implements
         }
     }
 
+    /**
+     * Recalculates and updates the current selection
+     */
     private void updateSelection() {
         int[] selectedRows = tableComponent.getSelectedRows();
         int[] selectedColumns = tableComponent.getSelectedColumns();
@@ -544,6 +667,7 @@ public class TableWindow extends Window implements
             lastSelectionColumns = selectedColumns;
             lastSelectionRows = selectedRows;
         } else {
+            // Selection hasn't actually changed; don't spend time calculating
             return;
         }
 
@@ -561,7 +685,7 @@ public class TableWindow extends Window implements
                                                        boolean isSelected, boolean hasFocus,
                                                        int row, int col) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-            c.setFont(font);
+            c.setFont(valueFont);
             if (value != null) {
                 float v;
 

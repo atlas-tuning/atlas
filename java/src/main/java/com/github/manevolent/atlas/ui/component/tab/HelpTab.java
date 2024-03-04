@@ -1,6 +1,6 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
-import com.github.manevolent.atlas.ui.IconHelper;
+import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -19,7 +19,7 @@ public class HelpTab extends Tab {
 
     @Override
     public Icon getIcon() {
-        return IconHelper.get(CarbonIcons.HELP, Color.WHITE);
+        return Icons.get(CarbonIcons.HELP, Color.WHITE);
     }
 
     @Override

@@ -2,7 +2,7 @@ package com.github.manevolent.atlas.ui.window;
 
 import com.github.manevolent.atlas.definition.Rom;
 import com.github.manevolent.atlas.definition.Table;
-import com.github.manevolent.atlas.ui.IconHelper;
+import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.menu.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
@@ -77,7 +77,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     private void initComponents() {
-        setIconImage(IconHelper.getImage(CarbonIcons.METER_ALT, Color.WHITE).getImage());
+        setIconImage(Icons.getImage(CarbonIcons.METER_ALT, Color.WHITE).getImage());
         setJMenuBar(initMenu());
 
         this.desktop = initDesktop();
