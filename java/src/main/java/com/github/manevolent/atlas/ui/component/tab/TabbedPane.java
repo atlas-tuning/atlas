@@ -5,6 +5,8 @@ import com.github.manevolent.atlas.ui.component.EditorComponent;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 
 import javax.swing.*;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class TabbedPane extends EditorComponent<JTabbedPane> {
     public TabbedPane(EditorForm editor, Tab... tabs) {
@@ -18,7 +20,7 @@ public class TabbedPane extends EditorComponent<JTabbedPane> {
 
     @Override
     protected void initComponent(JTabbedPane component) {
-
+        component.addChangeListener(e -> component.grabFocus());
     }
 
     public void addTab(Tab tab) {

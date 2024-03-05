@@ -19,6 +19,8 @@ import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileWriter;
@@ -64,6 +66,13 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
         Log.get().addHandler(new LogHandler());
 
         console.addFocusListener(this);
+        console.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mousePressed(MouseEvent e) {
+                console.setFocusable(true);
+                console.grabFocus();
+            }
+        });
 
         // Handle uncaught exceptions
         Thread.setDefaultUncaughtExceptionHandler(this);
@@ -184,6 +193,7 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
 
     @Override
     public void focusGained(FocusEvent e) {
+        console.grabFocus();
         console.getCaret().setVisible(true);
         console.getCaret().setSelectionVisible(true);
     }

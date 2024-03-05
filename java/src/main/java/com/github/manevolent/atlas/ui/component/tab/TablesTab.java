@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.definition.Table;
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
@@ -10,16 +11,22 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.*;
 import java.util.List;
+import java.util.logging.Level;
 
 public class TablesTab
         extends Tab
         implements TreeSelectionListener, MouseListener {
     private JTree tree;
+    private JTextField searchField;
     private Map<Table, TableNode> nodeMap = new HashMap<>();
+    private Collection<TreePath> lastExpansions = new ArrayList<>();
+    private DefaultTreeModel defaultModel;
 
     public TablesTab(EditorForm form) {
         super(form);
@@ -35,18 +42,20 @@ public class TablesTab
         return Icons.get(CarbonIcons.DATA_TABLE, Color.WHITE);
     }
 
-    protected void initComponent(JPanel panel) {
-        tree = new JTree();
+    private TreePath getPath(Table table) {
+        TableNode node = nodeMap.get(table);
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        TreeNode[] nodes = model.getPathToRoot(node);
+        return new TreePath(nodes);
+    }
 
-        tree.addTreeSelectionListener(this);
-        tree.addMouseListener(this);
-
-        // You can only be focused on one table at a time
-        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
-
-        nodeMap.clear();
+    private DefaultMutableTreeNode buildModel(String search) {
         DefaultMutableTreeNode treeRoot = new DefaultMutableTreeNode();
         for (Table table : getParent().getActiveRom().getTables()) {
+            if (search != null && !table.getName().toLowerCase().contains(search.toLowerCase())) {
+                continue;
+            }
+
             List<String> items = Arrays.stream(table.getName().split("\\-"))
                     .map(String::trim).toList();
             MutableTreeNode parent = treeRoot;
@@ -83,7 +92,84 @@ public class TablesTab
             }
         }
 
-        tree.setModel(new DefaultTreeModel(treeRoot));
+        if (treeRoot.getChildCount() <= 0 && search != null) {
+            DefaultMutableTreeNode noResults = new DefaultMutableTreeNode("No results");
+            treeRoot.add(noResults);
+        }
+
+        return treeRoot;
+    }
+
+    private void search(String searchText) {
+        tree.setModel(new DefaultTreeModel(buildModel(searchText)));
+
+        if (!searchText.isEmpty()) {
+            expandAll();
+        } else {
+            reexpand();
+        }
+
+        tree.revalidate();
+        getComponent().repaint();
+    }
+
+    private void expandAll() {
+        for (Table table : nodeMap.keySet()) {
+            tree.makeVisible(getPath(table));
+        }
+    }
+
+    private void reexpand() {
+        Log.ui().log(Level.FINER, "Re-expanding tables (" + lastExpansions.size() + " expansions)");
+        tree.setModel(defaultModel);
+
+        for (TreePath path : lastExpansions) {
+            Log.ui().log(Level.FINER, "Re-expanding " + Arrays.toString(path.getPath()));
+            tree.expandPath(path);
+            tree.makeVisible(path);
+        }
+    }
+
+    private void updateExpansions() {
+        if (!searchField.getText().isEmpty()) {
+            return;
+        }
+
+        lastExpansions = Collections.list(tree.getExpandedDescendants(
+                new TreePath(tree.getModel().getRoot())));
+    }
+
+    protected void initComponent(JPanel panel) {
+        panel.setLayout(new BorderLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+
+        // Search
+        searchField = new JTextField();
+        searchField.setToolTipText("Search tables");
+        searchField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                updateExpansions();
+            }
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                search(searchField.getText());
+            }
+        });
+        panel.add(searchField, BorderLayout.SOUTH);
+
+        // Tree
+        tree = new JTree();
+        tree.addTreeSelectionListener(this);
+        tree.addMouseListener(this);
+
+        // You can only be focused on one table at a time
+        tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
+
+        nodeMap.clear();
+
+        tree.setModel(defaultModel = new DefaultTreeModel(buildModel(null)));
         tree.setBackground(new Color(0, 0, 0, 0));
         tree.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
 
@@ -106,9 +192,7 @@ public class TablesTab
         scrollPane.setViewportBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
         scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
-        panel.setLayout(new BorderLayout());
         panel.add(scrollPane, BorderLayout.CENTER);
-        panel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
     }
 
     public void tableOpened(Table table) {
@@ -117,13 +201,12 @@ public class TablesTab
             return;
         }
 
-        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
-        TreeNode[] nodes = model.getPathToRoot(node);
-        TreePath path = new TreePath(nodes);
-
+        TreePath path = getPath(table);
         tree.getSelectionModel().setSelectionPath(path);
         tree.makeVisible(path);
         tree.scrollPathToVisible(path);
+
+        updateExpansions();
 
         // Bugfix for UI elements that seemingly repaint in a strange way
         this.getComponent().repaint();
@@ -131,12 +214,11 @@ public class TablesTab
 
     @Override
     public void valueChanged(TreeSelectionEvent e) {
-
+        updateExpansions();
     }
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        int selRow = tree.getRowForLocation(e.getX(), e.getY());
         TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
 
         if (e.getClickCount() != 2) {
