@@ -95,6 +95,17 @@ public class Series {
         return get(index);
     }
 
+    public Series copy() {
+        Series copy = new Series();
+        copy.scale = scale;
+        copy.name = name;
+        copy.length = length;
+        copy.format = format;
+        copy.unit = unit;
+        copy.address = address;
+        return copy;
+    }
+
     public static class Builder {
         private final Series series = new Series();
 

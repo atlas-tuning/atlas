@@ -32,7 +32,9 @@ public class TableEditorToolbar extends Toolbar<TableEditor> {
 
         // Right side
         toolbar.add(Separators.vertical());
-        toolbar.add(makeButton(CarbonIcons.CHART_CUSTOM, "define", "Edit table definition"));
+        toolbar.add(makeButton(CarbonIcons.CHART_CUSTOM, "define", "Edit table definition", (e) -> {
+            getParent().getParent().openTableDefinition(getParent().getTable());
+        }));
 
     }
 }

@@ -33,7 +33,13 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
 
     @Override
     protected JInternalFrame newComponent() {
-        JInternalFrame internalFrame = new JInternalFrame();
+        JInternalFrame internalFrame = new JInternalFrame() {
+            @Override
+            public void setTitle(String title) {
+                super.setTitle(title);
+                Window.this.getParent().getWindowMenu().update();
+            }
+        };
 
         internalFrame.setMinimumSize(new Dimension(300, 200));
         internalFrame.setPreferredSize(new Dimension(300, 200));
@@ -73,8 +79,8 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
         }
 
         component.setVisible(true);
-        component.grabFocus();
         desktop.moveToFront(component);
+        component.grabFocus();
 
         try {
             component.setSelected(true);

@@ -5,6 +5,23 @@ import java.awt.*;
 
 public class Layout {
 
+
+    public static GridBagConstraints gridBagConstraints(int anchor, int fill,
+                                                        int gridX, int gridY,
+                                                        int sizeX, int sizey,
+                                                        double weightX, double weightY) {
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.anchor = anchor;
+        gridBagConstraints.fill = fill;
+        gridBagConstraints.gridx = gridX;
+        gridBagConstraints.gridy = gridY;
+        gridBagConstraints.gridwidth = sizeX;
+        gridBagConstraints.gridheight = sizey;
+        gridBagConstraints.weightx = weightX;
+        gridBagConstraints.weighty = weightY;
+        return gridBagConstraints;
+    }
+
     public static GridBagConstraints gridBagConstraints(int anchor, int fill,
                                              int gridX, int gridY,
                                              double weightX, double weightY) {

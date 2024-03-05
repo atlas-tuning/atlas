@@ -17,12 +17,6 @@ import static java.awt.event.ItemEvent.SELECTED;
 
 public class Inputs {
 
-    public static JButton button(Ikon icon, Runnable clicked) {
-        JButton button = new JButton(Icons.get(icon));
-        button.addActionListener(e -> clicked.run());
-        return button;
-    }
-
     public static JButton button(Ikon icon, Color color, Runnable clicked) {
         JButton button = new JButton(Icons.get(icon, color));
         button.addActionListener(e -> clicked.run());
@@ -31,6 +25,21 @@ public class Inputs {
 
     public static JButton button(String title, Runnable clicked) {
         JButton button = new JButton(title);
+        button.addActionListener(e -> clicked.run());
+        return button;
+    }
+
+    public static JButton button(Ikon icon, String title, Runnable clicked) {
+        JButton button = new JButton(title, Icons.get(icon, new JLabel().getForeground()));
+        button.addActionListener(e -> clicked.run());
+        return button;
+    }
+
+    public static JButton button(Ikon icon, String title, String toolTipText, Runnable clicked) {
+        JButton button = new JButton(title, Icons.get(icon, new JLabel().getForeground()));
+        if (toolTipText != null) {
+            button.setToolTipText(toolTipText);
+        }
         button.addActionListener(e -> clicked.run());
         return button;
     }
@@ -111,5 +120,10 @@ public class Inputs {
             valueChanged.accept((Scale)e.getItem());
         });
         return comboBox;
+    }
+
+    public static <T extends JComponent> T noFocus(T component) {
+        component.setFocusable(false);
+        return component;
     }
 }

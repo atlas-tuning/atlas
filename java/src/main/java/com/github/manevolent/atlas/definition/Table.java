@@ -203,6 +203,34 @@ public class Table {
         return axes.remove(axis);
     }
 
+    /**
+     * Used when editing tables
+     * @return
+     */
+    public Table copy() {
+        Table copy = new Table();
+
+        copy.axes = new HashMap<>();
+        for (Axis axis : axes.keySet()) {
+            copy.axes.put(axis, axes.get(axis).copy());
+        }
+
+        copy.name = name;
+        copy.data = data.copy();
+
+        return copy;
+    }
+
+    public void apply(Table changed) {
+        this.axes.clear();
+        for (Axis axis : changed.axes.keySet()) {
+            this.axes.put(axis, changed.axes.get(axis).copy());
+        }
+
+        this.data = changed.data.copy();
+        this.name = changed.name;
+    }
+
     public static class Builder {
         private final Table table = new Table();
 

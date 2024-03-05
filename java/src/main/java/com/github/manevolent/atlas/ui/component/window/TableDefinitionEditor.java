@@ -11,7 +11,10 @@ import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
+import javax.swing.event.InternalFrameEvent;
+import javax.swing.event.InternalFrameListener;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -21,18 +24,23 @@ import static com.github.manevolent.atlas.definition.Axis.X;
 import static com.github.manevolent.atlas.definition.Axis.Y;
 import static com.github.manevolent.atlas.ui.Fonts.bold;
 
-public class TableDefinitionEditor extends Window {
-    private final Table table;
+public class TableDefinitionEditor extends Window implements InternalFrameListener {
+    private final Table realTable;
+    private final Table workingTable;
+    private final Map<Axis, JCheckBox> axisCheckboxes = new HashMap<>();
+
+    private JPanel rootPanel;
     private TableEditor preview;
-    private Map<Axis, JCheckBox> axisCheckboxes = new HashMap<>();
+    private boolean dirty = false;
 
     public TableDefinitionEditor(EditorForm editor, Table table) {
         super(editor);
-        this.table = table;
+        this.realTable = table;
+        this.workingTable = table.copy();
     }
 
     public Table getTable() {
-        return table;
+        return realTable;
     }
 
     private JPanel createEntryPanel() {
@@ -62,9 +70,9 @@ public class TableDefinitionEditor extends Window {
         Insets insets = new JTextField().getInsets();
         labelField.setBorder(BorderFactory.createEmptyBorder(
                 insets.top,
-                insets.left,
+                0,
                 insets.bottom,
-                insets.right
+                0
         ));
         labelField.setMaximumSize(new Dimension(
                 Integer.MAX_VALUE,
@@ -85,13 +93,72 @@ public class TableDefinitionEditor extends Window {
         return entryPanel;
     }
 
-    private JComponent createEmptyRow(JPanel entryPanel, int row) {
-        JLabel empty = new JLabel();
-        empty.setText("Help");
-        entryPanel.add(empty, Layout.gridBagConstraints(
-                GridBagConstraints.WEST, GridBagConstraints.NONE, 0, row, 1, 1
-        ));
-        return empty;
+    private void createSaveRow(JPanel entryPanel, int row) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
+        panel.add(Inputs.noFocus(Inputs.button(CarbonIcons.RESET, "Reset", "Reset entered values", () -> {
+            if (JOptionPane.showConfirmDialog(getComponent(),
+                    "Are you sure you want to reset " +
+                    workingTable.getName() + "?",
+                    "Reset",
+                    JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            workingTable.apply(realTable);
+            dirty = false;
+            Log.ui().log(Level.INFO, "Reset table definition back to project copy.");
+            reinitialize();
+            updateTitle();
+        })));
+
+        panel.add(Inputs.noFocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", () -> {
+            save();
+        })));
+
+        JButton copy = Inputs.noFocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this definition into a new table", () -> {
+            String newTableName = workingTable.getName();
+            if (newTableName.contains("-")) {
+                newTableName = newTableName.substring(0, newTableName.lastIndexOf("-")) + "- Copy";
+            } else {
+                newTableName = "Copy";
+            }
+            Table newTable = workingTable.copy();
+            newTable.setName(newTableName);
+            getParent().openTableDefinition(newTable);
+        }));
+        panel.add(copy);
+
+        JButton open = Inputs.noFocus(Inputs.button(CarbonIcons.OPEN_PANEL_TOP, "Open", "Open table and edit cells",
+                () -> {
+                    getParent().openTable(realTable);
+                }));
+        panel.add(open);
+
+        boolean isProjectTable = getParent().getActiveRom().getTables().contains(realTable);
+        if (!isProjectTable) {
+            dirty = true;
+            updateTitle();
+        }
+        copy.setEnabled(isProjectTable);
+        open.setEnabled(isProjectTable);
+
+        entryPanel.add(panel,
+                Layout.gridBagConstraints(
+                        GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE,
+                        1, row, // pos
+                        2, 1, // size
+                        1, 1 // weight
+                ));
+    }
+
+    private void save() {
+        realTable.apply(workingTable);
+        dirty = false;
+        updateTitle();
+        Log.ui().log(Level.INFO, "Saved working table definition of \"" + workingTable.getName()
+                + "\" to project.");
     }
 
     private JPanel createTablePanel() {
@@ -102,13 +169,15 @@ public class TableDefinitionEditor extends Window {
         createEntryRow(
                 panel, 1,
                 "Name", "The name of this table",
-                Inputs.textField(table.getName(), (newName) -> {
-                    if (!table.getName().equals(newName)) {
-                        table.setName(newName);
+                Inputs.textField(workingTable.getName(), (newName) -> {
+                    if (!workingTable.getName().equals(newName)) {
+                        workingTable.setName(newName);
                         definitionUpdated();
                     }
                 })
         );
+
+        createSaveRow(panel, 2);
 
         return panel;
     }
@@ -116,17 +185,17 @@ public class TableDefinitionEditor extends Window {
     private JPanel createSeriesPanel(Axis axis) {
         Series series;
         if (axis != null) {
-            series = table.getSeries(axis);
+            series = workingTable.getSeries(axis);
         } else {
-            series = table.getData();
+            series = workingTable.getData();
         }
 
         JPanel panel = createEntryPanel();
 
         JFlashRegionField flashRegionField = Inputs.flashRegionField(
                 getParent().getActiveRom(),
-                table, axis, (newRegion, newLength) -> {
-            Series s = axis != null ? table.getSeries(axis) : table.getData();
+                workingTable, axis, (newRegion, newLength) -> {
+            Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
             s.setAddress(newRegion);
             s.setLength(newLength);
             definitionUpdated();
@@ -134,10 +203,10 @@ public class TableDefinitionEditor extends Window {
 
         JComboBox<Scale> scaleField = Inputs.scaleField(
                 getParent().getActiveRom(),
-                table, axis,
+                workingTable, axis,
                 "The data scale and format for this series",
                 (newScale) -> {
-                    Series s = axis != null ? table.getSeries(axis) : table.getData();
+                    Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
                     s.setScale(newScale);
                     if (newScale.getUnit() != null) {
                         s.setUnit(newScale.getUnit());
@@ -150,7 +219,7 @@ public class TableDefinitionEditor extends Window {
         );
 
         JTextField nameField = Inputs.textField(series != null ? series.getName() : null, (newName) -> {
-            Series s = axis != null ? table.getSeries(axis) : table.getData();
+            Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
             if (s.getName() == null || !s.getName().equals(newName)) {
                 s.setName(newName);
                 definitionUpdated();
@@ -161,9 +230,9 @@ public class TableDefinitionEditor extends Window {
 
         if (axis != null) {
             JCheckBox checkBox = Inputs.checkbox(axis.name() + " axis",
-                    table.hasAxis(axis),
+                    workingTable.hasAxis(axis),
                     checked -> {
-                        if (checked && !table.hasAxis(axis)) {
+                        if (checked && !workingTable.hasAxis(axis)) {
                             // Try to automatically pick a scale if one isn't picked
                             Scale scale = (Scale) scaleField.getSelectedItem();
                             if (scale == null) {
@@ -177,10 +246,10 @@ public class TableDefinitionEditor extends Window {
                                     .withLength(flashRegionField.getDataLength())
                                     .build();
 
-                            table.setAxis(axis, newSeries);
+                            workingTable.setAxis(axis, newSeries);
                             scaleField.setSelectedItem(scale);
                         } else {
-                            table.removeAxis(axis);
+                            workingTable.removeAxis(axis);
                         }
 
                         if (axis == Y) {
@@ -197,9 +266,9 @@ public class TableDefinitionEditor extends Window {
                     });
 
             if (axis == X) {
-                checkBox.setEnabled(!table.hasAxis(Y));
+                checkBox.setEnabled(!workingTable.hasAxis(Y));
             } else if (axis == Y) {
-                checkBox.setEnabled(table.hasAxis(X));
+                checkBox.setEnabled(workingTable.hasAxis(X));
             }
 
             checkBox.setFocusable(false);
@@ -243,16 +312,33 @@ public class TableDefinitionEditor extends Window {
         preview.reload();
     }
 
-    private void definitionUpdated() {
+    private void updateTitle() {
         getComponent().setTitle(getTitle());
+    }
+
+    private void definitionUpdated() {
+        dirty = true;
+        updateTitle();
         updatePreview();
     }
 
     @Override
+    protected void preInitComponent(JInternalFrame window) {
+        window.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
+        window.addInternalFrameListener(this);
+    }
+
+    @Override
     protected void initComponent(JInternalFrame window) {
+        updateTitle();
+
+        if (rootPanel != null) {
+            window.remove(rootPanel);
+        }
+
         Color borderColor = Color.GRAY.darker();
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, borderColor));
+        rootPanel = new JPanel(new GridBagLayout());
+        rootPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, borderColor));
 
         JPanel seriesPanel = new JPanel();
         seriesPanel.setLayout(new BoxLayout(seriesPanel, BoxLayout.X_AXIS));
@@ -268,15 +354,15 @@ public class TableDefinitionEditor extends Window {
         seriesPanel.add(Separators.vertical());
         seriesPanel.add(createSeriesPanel(Y));
 
-        panel.add(seriesPanel, Layout.gridBagConstraints(
+        rootPanel.add(seriesPanel, Layout.gridBagConstraints(
             GridBagConstraints.NORTHWEST,
             GridBagConstraints.HORIZONTAL,
             0, 0,
             1, 0
         ));
 
-        preview = new TableEditor(getParent(), table, true);
-        panel.add(preview.getComponent().getContentPane(),
+        preview = new TableEditor(getParent(), workingTable, true);
+        rootPanel.add(preview.getComponent().getContentPane(),
                 Layout.gridBagConstraints(
                         GridBagConstraints.CENTER,
                         GridBagConstraints.BOTH,
@@ -284,7 +370,7 @@ public class TableDefinitionEditor extends Window {
                         1, 1
                 ));
 
-        window.add(panel);
+        window.add(rootPanel);
     }
 
     private Component createTableDataPanel() {
@@ -298,10 +384,60 @@ public class TableDefinitionEditor extends Window {
 
     @Override
     public String getTitle() {
-        if (table.getName() == null) {
-            return "Define New Table";
+        return "Define Table - " + workingTable.getName() + (dirty ? "*" : "");
+    }
+
+    @Override
+    public void internalFrameOpened(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameClosing(InternalFrameEvent e) {
+        if (dirty) {
+            int answer = JOptionPane.showConfirmDialog(getComponent(),
+                    "You have unsaved changes to " +
+                    workingTable.getName() + " that will be lost. Save before closing?",
+                    "Unsaved changes",
+                    JOptionPane.YES_NO_CANCEL_OPTION
+            );
+
+            switch (answer) {
+                case JOptionPane.YES_OPTION:
+                    save();
+                case JOptionPane.NO_OPTION:
+                    getComponent().dispose();
+                    break;
+                case JOptionPane.CANCEL_OPTION:
+                    return;
+            }
         } else {
-            return "Define Table - " + table.getName();
+            getComponent().dispose();
         }
+    }
+
+    @Override
+    public void internalFrameClosed(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameIconified(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameDeiconified(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameActivated(InternalFrameEvent e) {
+
+    }
+
+    @Override
+    public void internalFrameDeactivated(InternalFrameEvent e) {
+
     }
 }
