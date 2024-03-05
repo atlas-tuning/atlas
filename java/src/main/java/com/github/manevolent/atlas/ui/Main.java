@@ -3,12 +3,17 @@ package com.github.manevolent.atlas.ui;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.github.manevolent.atlas.definition.Rom;
 import com.github.manevolent.atlas.definition.builtin.SubaruWRX2022MT;
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import com.github.manevolent.atlas.ui.window.SplashForm;
+
+import java.util.logging.Level;
 
 public class Main {
 
     public static void main(String[] args) throws Exception {
+        System.setProperty("sun.awt.exception.handler", AwtExceptionHandler.class.getName());
+
         SplashForm splashForm = new SplashForm();
         java.awt.EventQueue.invokeLater(() -> {
             splashForm.setVisible(true);
@@ -36,6 +41,7 @@ public class Main {
 
         java.awt.EventQueue.invokeLater(() -> {
             editorForm.setVisible(true);
+            Log.get().log(Level.FINE, "Application started.");
         });
     }
 

@@ -4,6 +4,7 @@ import java.util.logging.Logger;
 
 public class Log {
     private static Logger logger;
+    private static Logger uiLogger;
 
     public static Logger get() {
         if (logger == null) {
@@ -11,6 +12,15 @@ public class Log {
         }
 
         return logger;
+    }
+
+    public static Logger ui() {
+        if (uiLogger == null) {
+            uiLogger = Logger.getLogger("ui");
+            uiLogger.setParent(get());
+
+        }
+        return uiLogger;
     }
 
 }

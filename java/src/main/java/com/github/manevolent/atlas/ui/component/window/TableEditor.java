@@ -63,23 +63,8 @@ public class TableEditor extends Window implements
     }
 
     @Override
-    protected void preInitComponent(JInternalFrame component) {
-        component.setTitle(table.getName());
-    }
-
-    @Override
-    protected void postInitComponent(JInternalFrame component) {
-        super.postInitComponent(component);
-
-        component.setPreferredSize(tableComponent.getPreferredSize());
-        component.setSize(tableComponent.getPreferredSize());
-
-        //TODO this most likely will annoy people, make a setting for it
-        try {
-            component.setMaximum(true);
-        } catch (PropertyVetoException e) {
-            // Ignore
-        }
+    public String getTitle() {
+        return table.getName();
     }
 
     @Override
@@ -240,6 +225,21 @@ public class TableEditor extends Window implements
         tableComponent.putClientProperty("terminateEditOnFocusLost", true);
 
         updateCellWidth();
+    }
+
+    @Override
+    protected void postInitComponent(JInternalFrame component) {
+        super.postInitComponent(component);
+
+        component.setPreferredSize(tableComponent.getPreferredSize());
+        component.setSize(tableComponent.getPreferredSize());
+
+        //TODO this most likely will annoy people, make a setting for it
+        try {
+            component.setMaximum(true);
+        } catch (PropertyVetoException e) {
+            // Ignore
+        }
     }
 
     private JToolBar initToolbar() {

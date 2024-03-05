@@ -18,6 +18,7 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
         component.pack();
     }
 
+    public abstract String getTitle();
     public abstract Icon getIcon();
 
     @Override
@@ -45,6 +46,12 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
         }
 
         return internalFrame;
+    }
+
+    @Override
+    protected void preInitComponent(JInternalFrame component) {
+        super.preInitComponent(component);
+        component.setTitle(getTitle());
     }
 
     public void focus() {

@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.ui.window;
 
 import com.github.manevolent.atlas.definition.Rom;
 import com.github.manevolent.atlas.definition.Table;
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.editor.WindowMenu;
@@ -17,6 +18,7 @@ import java.awt.*;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.logging.Level;
 
 public class EditorForm extends JFrame implements InternalFrameListener {
     private static final Color splitPaneBorderColor = Color.GRAY.darker();
@@ -160,6 +162,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
      * @return opened Window.
      */
     public <T extends Window> T openWindow(T window) {
+        Log.ui().log(Level.FINER, "Opening window \"" + window.getTitle() + "\" [" + window.getClass() + "]...");
         window.getComponent().addInternalFrameListener(this);
         window.getComponent().setFocusable(true);
         window.getComponent().setVisible(true);
@@ -169,6 +172,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         desktop.add(window.getComponent());
         windowMenu.update();
 
+        Log.ui().log(Level.FINER, "Opened window \"" + window.getTitle() + "\" [" + window.getClass() + "].");
         return window;
     }
 

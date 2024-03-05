@@ -56,9 +56,10 @@ public class SplashForm extends JFrame {
                 g.setColor(Color.WHITE);
                 g.drawString(applicationName, 20, 50);
 
-                Font serif = new Font(SANS_SERIF, Font.BOLD, 14);
+                Font serif = new Font(SANS_SERIF, Font.PLAIN, 14);
+                Font serifBold = new Font(SANS_SERIF, Font.BOLD, 14);
                 g.setColor(Color.WHITE.darker());
-                g.setFont(serif);
+                g.setFont(serifBold);
                 g.drawString(applicationVersion, 20 +
                         g.getFontMetrics(headerFont).stringWidth(applicationName) +
                         10,
@@ -79,6 +80,7 @@ public class SplashForm extends JFrame {
                 int x = (getWidth() / 2) - (metrics.stringWidth(progressString) / 2);
 
                 if (progress > 0f) {
+                    g.setFont(serif);
                     g.drawString(progressString, x, getHeight() - progressHeight - 16);
                 }
 

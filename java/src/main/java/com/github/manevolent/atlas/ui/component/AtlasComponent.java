@@ -1,8 +1,10 @@
 package com.github.manevolent.atlas.ui.component;
 
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 
 import java.awt.*;
+import java.util.logging.Level;
 
 public abstract class AtlasComponent<T extends Component, E> {
     private final E parent;
@@ -22,11 +24,13 @@ public abstract class AtlasComponent<T extends Component, E> {
 
     public T getComponent() {
         if (!initialized && !initializing.get()) {
+            Log.ui().log(Level.FINER, "Initializing component " + getClass().getName() + "...");
             try {
                 initializing.set(true);
                 preInitComponent(getComponent());
                 initComponent(getComponent());
                 postInitComponent(getComponent());
+                Log.ui().log(Level.FINER, "Initialized component " + getClass().getName() + ".");
             } finally {
                 initializing.set(false);
             }
