@@ -16,4 +16,11 @@ public class Separators {
         return separator;
     }
 
+    public static JSeparator horizontal() {
+        Color color = getColor();
+        JSeparator separator = new JSeparator(JSeparator.HORIZONTAL);
+        separator.setBackground(color);
+        return separator;
+    }
+
 }

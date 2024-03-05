@@ -1,5 +1,7 @@
 package com.github.manevolent.atlas.ui.window;
 
+import com.github.manevolent.atlas.ApplicationMetadata;
+
 import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
@@ -35,6 +37,9 @@ public class SplashForm extends JFrame {
 
         this.headerFont = font.deriveFont(Font.BOLD, 30);
 
+        String applicationName = ApplicationMetadata.getName();
+        String applicationVersion = ApplicationMetadata.getVersion();
+
         JPanel backgroundImage = new JPanel() {
             @Override
             public void paintComponent(Graphics g) {
@@ -46,15 +51,19 @@ public class SplashForm extends JFrame {
                 }
 
                 // Draw the background image.
-                g.drawImage(splashImage, 0, 0,
-                        getWidth(), getHeight(), this);
+                g.drawImage(splashImage, 0, 0, getWidth(), getHeight(), this);
                 g.setFont(headerFont);
                 g.setColor(Color.WHITE);
-                g.drawString("Atlas", 20, 50);
+                g.drawString(applicationName, 20, 50);
 
-                Font serif = new Font(SANS_SERIF, Font.PLAIN, 14);
+                Font serif = new Font(SANS_SERIF, Font.BOLD, 14);
+                g.setColor(Color.WHITE.darker());
                 g.setFont(serif);
-                g.drawString("V 1.0.0.0", 20, 80);
+                g.drawString(applicationVersion, 20 +
+                        g.getFontMetrics(headerFont).stringWidth(applicationName) +
+                        10,
+                        50
+                );
 
                 int progressHeight = 5;
                 g.setColor(Color.GRAY);

@@ -24,6 +24,8 @@ public class ConsoleTab extends Tab {
 
     @Override
     protected void initComponent(JPanel panel) {
+        JTextArea textArea = new JTextArea();
 
+        panel.add(textArea);
     }
 }

@@ -1,9 +1,12 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
 import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.Separators;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeBrands;
+import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
 import java.awt.*;
@@ -15,13 +18,23 @@ public class TableEditorToolbar extends Toolbar<TableEditor> {
 
     @Override
     protected void initComponent(JToolBar toolbar) {
-        toolbar.add(makeButton(CarbonIcons.ADD, "add", "Add value to selected cells"));
-        toolbar.add(makeButton(CarbonIcons.SUBTRACT, "subtract", "Subtract value from selected cells"));
-        toolbar.add(makeButton(CarbonIcons.X, "multiply", "Multiply value at selected cells"));
+        toolbar.add(makeButton(FontAwesomeSolid.CALCULATOR, "calc", "Run custom function"));
+        toolbar.addSeparator();
+        toolbar.add(makeButton(FontAwesomeSolid.TIMES, "multiply", "Multiply value at selected cells"));
+        toolbar.add(makeButton(FontAwesomeSolid.DIVIDE, "divide", "Divide value at selected cells"));
+        toolbar.add(makeButton(FontAwesomeSolid.PLUS, "add", "Add value to selected cells"));
+        toolbar.addSeparator();
+        toolbar.add(makeButton(FontAwesomeSolid.PERCENTAGE, "percent", "Scale values with a percentage"));
+        toolbar.add(makeButton(FontAwesomeSolid.EQUALS, "average", "Average values in selection"));
+        toolbar.addSeparator();
+        toolbar.add(makeButton(FontAwesomeSolid.GRIP_HORIZONTAL, "interpolate-horizontal", "Interpolate horizontally"));
+        toolbar.add(makeButton(FontAwesomeSolid.GRIP_VERTICAL, "interpolate-vertical", "Interpolate vertically"));
+        toolbar.addSeparator();
+
     }
 
     private JButton makeButton(Ikon ikon, String actionCommand, String toolTipText) {
-        JButton add = new JButton(Icons.get(ikon, Color.WHITE, 20));
+        JButton add = new JButton(Icons.get(ikon, Color.WHITE.darker(), 18));
         add.setActionCommand(actionCommand);
         add.setToolTipText(toolTipText);
         return add;
