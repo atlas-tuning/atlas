@@ -83,9 +83,12 @@ public class FlashTest {
     @Test
     public void test_Scaling() {
         Scale scale = baseIgnitionTiming.build();
-
         float example = 10;
         assertEquals(example, scale.reverse(scale.forward(example)), 0.01f);
+
+        Scale otherScale = boostTargetPressureScale_RelSL_16bit.build();
+        float forward = otherScale.reverse(example);
+        assertEquals(example, otherScale.forward(forward), 0.01f);
     }
 
     @Test

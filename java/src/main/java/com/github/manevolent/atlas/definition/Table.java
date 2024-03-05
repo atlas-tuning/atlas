@@ -25,17 +25,7 @@ public class Table {
     }
 
     public float getCell(Map<Axis, Integer> coordinates) throws IOException {
-        if (coordinates.isEmpty()) {
-            return data.get(0);
-        }
-
-        int index = coordinates.get(X);
-
-        if (coordinates.containsKey(Y)) {
-            index += coordinates.get(Y) * axes.get(X).getLength();
-        }
-
-        return data.get(index);
+        return data.get(getDataIndex(coordinates));
     }
 
     public float getCell(Integer... coordinates) throws IOException {
@@ -54,17 +44,7 @@ public class Table {
     }
 
     public float setCell(float value, Map<Axis, Integer> coordinates) throws IOException {
-        if (coordinates.isEmpty()) {
-            return data.get(0);
-        }
-
-        int index = coordinates.get(X);
-
-        if (coordinates.containsKey(Y)) {
-            index += coordinates.get(Y) * axes.get(X).getLength();
-        }
-
-        return data.set(index, value);
+        return data.set(getDataIndex(coordinates), value);
     }
 
     public float setCell(float value, Integer... coordinates) throws IOException {
@@ -80,6 +60,23 @@ public class Table {
         }
 
         return setCell(value, coordinatesMap);
+    }
+
+    public int getDataIndex(Map<Axis, Integer> coordinates) {
+        if (coordinates.isEmpty()) {
+            return 0;
+        }
+
+        int index = coordinates.get(X);
+
+        if (coordinates.containsKey(Y)) {
+            int y_index = coordinates.get(Y);
+            if (y_index > 0) {
+                index += y_index * axes.get(X).getLength();
+            }
+        }
+
+        return index;
     }
 
     public String getName() {

@@ -15,6 +15,8 @@ import javax.swing.*;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import java.awt.*;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -81,6 +83,14 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     private void initComponents() {
         setIconImage(Icons.getImage(CarbonIcons.METER_ALT, Color.WHITE).getImage());
         setJMenuBar(initMenu());
+
+        setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosed(WindowEvent e) {
+                System.exit(0);
+            }
+        });
 
         this.desktop = initDesktop();
 

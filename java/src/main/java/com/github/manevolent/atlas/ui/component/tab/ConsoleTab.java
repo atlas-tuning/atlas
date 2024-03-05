@@ -1,19 +1,28 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.ui.Fonts;
 import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.component.toolbar.ConsoleTabToolbar;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.SimpleAttributeSet;
 import javax.swing.text.StyleConstants;
 import javax.swing.text.StyleContext;
 import java.awt.*;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.FocusEvent;
 import java.awt.event.FocusListener;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -22,9 +31,15 @@ import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
 public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExceptionHandler {
+    private static final String eol = "\r\n";
     private static final DateFormat dateFormatter = new SimpleDateFormat("HH:mm:ss.SSS");;
-    private static final String logFormat = "[%s] [%s] [%s] %s\n";
+    private static final String logFormat = "[%s] [%s] [%s] %s" + eol;
     private JTextPane console;
+
+
+    private static final int MAXIMUM_LINES = 1000;
+    private int lines = 0;
+    private ConsoleTabToolbar toolbar;
 
     public ConsoleTab(EditorForm editor) {
         super(editor);
@@ -66,12 +81,47 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
         console.setBackground(panel.getBackground());
         console.setText("");
 
-        JScrollPane scrollPane = new JScrollPane(console);
+        JPanel noWrapPanel = new JPanel( new BorderLayout() );
+        noWrapPanel.add(console);
+
+        JScrollPane scrollPane = new JScrollPane(noWrapPanel);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         panel.add(scrollPane, BorderLayout.CENTER);
 
+        toolbar = new ConsoleTabToolbar(this);
+        panel.add(toolbar.getComponent(), BorderLayout.WEST);
+
         Log.get().log(Level.FINE, "Log started.");
+    }
+
+    private void edit(Runnable action) {
+        try {
+            console.setEditable(true);
+            action.run();
+        } finally {
+            console.setEditable(false);
+            console.getCaret().setVisible(true);
+            console.getCaret().setSelectionVisible(true);
+        }
+    }
+
+    private void cullConsole() {
+        while (lines > MAXIMUM_LINES) {
+            // Cull one line
+            int eol = console.getText().indexOf(ConsoleTab.eol);
+            if (eol <= 0)
+                break;
+
+            eol += ConsoleTab.eol.length();
+
+            console.select(0, eol);
+
+            edit(() -> {
+                console.replaceSelection("");
+                lines--;
+            });
+        }
     }
 
     private void appendToPane(String msg, Color c)
@@ -79,21 +129,44 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
         StyleContext sc = StyleContext.getDefaultStyleContext();
         AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY, StyleConstants.Foreground, c);
 
-        aset = sc.addAttribute(aset, StyleConstants.FontFamily, "Lucida Console");
+        aset = sc.addAttribute(aset, StyleConstants.FontFamily, Fonts.getConsoleFontFamilyName());
         aset = sc.addAttribute(aset, StyleConstants.Alignment, StyleConstants.ALIGN_LEFT);
+
+        int numLines = (int) msg.lines().count();
+
+        if (numLines > MAXIMUM_LINES && numLines > 1) {
+            // Ignore this message, it's huge
+            Log.ui().log(Level.WARNING, "Muted a log message with " + numLines + " lines; can't fit in console" +
+                    " with a maximum of " + MAXIMUM_LINES + " lines.");
+            return;
+        }
 
         int len = console.getDocument().getLength();
         console.setCaretPosition(len);
         console.setCharacterAttributes(aset, false);
 
-        console.setEditable(true);
-        console.replaceSelection(msg);
-        console.setEditable(false);
-        console.getCaret().setVisible(true);
-        console.getCaret().setSelectionVisible(true);
+        edit(() -> {
+            console.replaceSelection(msg);
+            lines += numLines;
+        });
+
+        cullConsole();
 
         console.revalidate();
         console.repaint();
+    }
+
+    public void clearConsole() {
+        edit(() -> {
+            console.setText("");
+            lines = 0;
+        });
+    }
+
+    public void copyConsole() {
+        Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+        StringSelection selection = new StringSelection(console.getText());
+        clipboard.setContents(selection, selection);
     }
 
     private Color getConsoleColor(Level level) {
@@ -125,6 +198,24 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
         Log.get().log(Level.WARNING, "Uncaught exception on thread " + t.getName(), e);
     }
 
+    public void saveConsole() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter def = new FileNameExtensionFilter("Text files", "txt");
+        fileChooser.addChoosableFileFilter(def);
+        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Log files", "log"));
+        fileChooser.setFileFilter(def);
+        fileChooser.setDialogTitle("Save Console Output");
+        if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try (FileWriter writer = new FileWriter(file)) {
+                writer.write(console.getText());
+                Log.ui().log(Level.INFO, "Console log saved to " + file.getPath());
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+
     private class LogHandler extends Handler {
         @Override
         public void publish(LogRecord record) {
@@ -134,6 +225,9 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
             } else {
                 message = record.getMessage();
             }
+
+            message = message.replace("\t", "    ");
+
             String logMessage = String.format(logFormat,
                     dateFormatter.format(Date.from(record.getInstant())),
                     record.getLevel().getName(),

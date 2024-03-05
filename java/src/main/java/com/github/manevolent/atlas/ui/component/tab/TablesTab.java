@@ -85,10 +85,18 @@ public class TablesTab
 
         tree.setModel(new DefaultTreeModel(treeRoot));
         tree.setBackground(new Color(0, 0, 0, 0));
-        tree.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
+        tree.setBorder(BorderFactory.createEmptyBorder(0, 5, 0, 0));
 
         JPanel treePanel = new JPanel();
-        treePanel.add(tree);
+
+        treePanel.setLayout(new GridBagLayout());
+        GridBagConstraints c = new GridBagConstraints();
+        c.anchor = GridBagConstraints.NORTHWEST;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1;
+        c.weighty = 1;
+        treePanel.add(tree, c);
 
         JScrollPane scrollPane = new JScrollPane(
                 treePanel,

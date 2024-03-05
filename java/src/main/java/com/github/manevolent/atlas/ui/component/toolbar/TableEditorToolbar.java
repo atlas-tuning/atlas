@@ -32,11 +32,4 @@ public class TableEditorToolbar extends Toolbar<TableEditor> {
         toolbar.addSeparator();
 
     }
-
-    private JButton makeButton(Ikon ikon, String actionCommand, String toolTipText) {
-        JButton add = new JButton(Icons.get(ikon, Color.WHITE.darker(), 18));
-        add.setActionCommand(actionCommand);
-        add.setToolTipText(toolTipText);
-        return add;
-    }
 }

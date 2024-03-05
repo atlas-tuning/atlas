@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.ui.component.window;
 
 import com.github.manevolent.atlas.definition.*;
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.Fonts;
 import com.github.manevolent.atlas.ui.component.JRotateLabel;
@@ -26,6 +27,7 @@ import java.util.Arrays;
 import java.util.EventObject;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.stream.IntStream;
 
 import static com.github.manevolent.atlas.definition.Axis.X;
@@ -189,14 +191,20 @@ public class TableEditor extends Window implements
             JLabel x_label = new JLabel(getSeriesHeaderString(x));
             x_label.setHorizontalAlignment(JLabel.LEFT);
             x_label.setForeground(Color.GRAY);
+            int leftOffset;
             if (y_label != null) {
-                x_label.setBorder(BorderFactory.createEmptyBorder(
-                        2,
-                        (int) (y_label.getPreferredSize().width + rowNumberTable.getPreferredSize().getWidth()),
-                        2,
-                        0
-                ));
+                leftOffset = (int) (y_label.getPreferredSize().width +
+                        rowNumberTable.getPreferredSize().getWidth());
+            } else {
+                leftOffset = 5;
             }
+
+            x_label.setBorder(BorderFactory.createEmptyBorder(
+                    2,
+                    leftOffset,
+                    2,
+                    0
+            ));
             panel.add(x_label, BorderLayout.NORTH);
         }
 
@@ -536,14 +544,38 @@ public class TableEditor extends Window implements
                 e.getColumn()
         );
 
+        if (value == -0) {
+            value = 0;
+        }
+
         float newValue;
         float oldValue;
 
+        String valueString;
+
         try {
             oldValue = table.getCell(col, row);
-            newValue = table.setCell(value, col, row);
+            String oldString = String.format(valueFormat, oldValue);
+            valueString = String.format(valueFormat, value);
+
+            if (!valueString.equals(oldString)) {
+                newValue = table.setCell(value, col, row);
+            } else {
+                newValue = value;
+            }
         } catch (IOException ex) {
             throw new RuntimeException(ex);
+        }
+
+        // If we're about to reposition the value due to the Table API precision,
+        // we should let the user know that the scaling was adjusted.
+        String newString = String.format(valueFormat, newValue);
+        if (!valueString.equals(newString)) {
+            Log.ui().log(Level.WARNING,
+                    "Entered value adjusted to " +
+                    newString + " (entered as " + valueString + ") " +
+                            "at cell [" + (col+1) + "," + (row+1) + "] " +
+                            "due to precision of table \"" + table.getName() + "\".");
         }
 
         if ((newValue > max || newValue < min) ||
@@ -677,7 +709,7 @@ public class TableEditor extends Window implements
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
             this.textField.setFont(table.getFont());
-            this.textField.setText(value.toString());
+            this.textField.setText(String.format(valueFormat, value));
             return textField;
         }
 
