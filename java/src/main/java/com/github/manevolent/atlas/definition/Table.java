@@ -195,6 +195,14 @@ public class Table {
         return axes.keySet();
     }
 
+    public boolean hasAxis(Axis axis) {
+        return axes.containsKey(axis);
+    }
+
+    public Series removeAxis(Axis axis) {
+        return axes.remove(axis);
+    }
+
     public static class Builder {
         private final Table table = new Table();
 

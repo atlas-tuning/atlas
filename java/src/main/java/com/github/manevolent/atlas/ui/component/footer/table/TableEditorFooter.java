@@ -53,7 +53,7 @@ public class TableEditorFooter extends Footer<TableEditor> {
 
         int numColumns = tableComponent.getSelectedColumns().length;
         int numRows = tableComponent.getSelectedRows().length;
-        boolean hasSelection = (numColumns + numRows) > 2;
+        boolean hasSelection = !getParent().isReadOnly() && (numColumns + numRows) > 2;
 
         Series x = table.getSeries(X);
         Series y = table.getSeries(Y);
@@ -112,7 +112,7 @@ public class TableEditorFooter extends Footer<TableEditor> {
             ));
         }
 
-        if (!hasSelection) {
+        if (!hasSelection && !getParent().isReadOnly()) {
             int selectedColumn = tableComponent.getSelectedColumn();
             int selectedRow = tableComponent.getSelectedRow();
 

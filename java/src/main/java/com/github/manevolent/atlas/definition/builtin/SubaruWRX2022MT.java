@@ -3,7 +3,6 @@ package com.github.manevolent.atlas.definition.builtin;
 import com.github.manevolent.atlas.definition.*;
 import com.github.manevolent.atlas.definition.source.MemoryFlashSource;
 import com.github.manevolent.atlas.definition.subaru.SubaruDITFlashEncryption;
-import com.github.manevolent.atlas.definition.source.StreamedFlashSource;
 
 import java.io.IOException;
 import java.nio.ByteOrder;
@@ -70,6 +69,7 @@ public class SubaruWRX2022MT {
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x96)
             .withOperations(directInjectionFuelPressureScale_16bit);
+
     public static final Scale.Builder boostTargetPressureScale_16bit = Scale.builder()
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.ADD, 0x6A6)
@@ -123,6 +123,7 @@ public class SubaruWRX2022MT {
             .withOperation(ArithmeticOperation.SUBTRACT, 0x4000)
             .withOperation(ArithmeticOperation.DIVIDE, 0x666)
             .withUnit(Unit.MILLIMETER);
+
     public static final Scale.Builder wastegatePositionErrorCorr16bitScale = Scale.builder()
             .withFormat(DataFormat.SSHORT)
             .withOperation(ArithmeticOperation.DIVIDE, 0x666)
@@ -141,6 +142,45 @@ public class SubaruWRX2022MT {
             .withFormat(DataFormat.UBYTE)
             .withUnit(Unit.DEGREES);
 
+    private static final Scale.Builder sensorVoltageScale = Scale.builder()
+            .withFormat(DataFormat.USHORT)
+            .withOperation(ArithmeticOperation.DIVIDE, 13106.25f)
+            .withUnit(Unit.VOLTS);
+
+    private static final Scale.Builder sensorTemperatureScale = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
+            .withOperation(ArithmeticOperation.SUBTRACT, 50)
+            .withUnit(CELSIUS);
+
+    public static final Scale.Builder ignitionTimingCompensationScale = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
+            .withOperation(ArithmeticOperation.DIVIDE, 2)
+            .withUnit(Unit.DEGREES);
+
+    public static final Scale.Builder ignitionTimingDynamicAdvanceScale = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
+            .withOperation(ArithmeticOperation.DIVIDE, 2)
+            .withUnit(Unit.DEGREES);
+
+    private static final Scale.Builder ignitionTimingIatCompensationScale = Scale.builder()
+            .withFormat(DataFormat.USHORT)
+            .withOperation(ArithmeticOperation.MULTIPLY, 5f)
+            .withOperation(ArithmeticOperation.ADD, 20480f)
+            .withOperation(ArithmeticOperation.DIVIDE, 2048f)
+            .withUnit(Unit.CELSIUS);
+
+    public static final Scale.Builder ignitionTimingCoolantCompensationScale = Scale.builder()
+            .withFormat(DataFormat.USHORT)
+            .withOperation(ArithmeticOperation.DIVIDE, 10)
+            .withUnit(DEGREES);
+
+    private static Scale.Builder percent_8bit_negative = Scale.builder()
+            .withFormat(DataFormat.UBYTE)
+            .withOperation(ArithmeticOperation.SUBTRACT, 0x80)
+            .withOperation(ArithmeticOperation.DIVIDE, 0xFF)
+            .withOperation(ArithmeticOperation.MULTIPLY, 100)
+            .withUnit(PERCENT);
+
     public static Table.Builder ignitionTimingBaseTable(FlashRegion code, String name, int timingDataAddress,
                                                          int rpmAddress, int loadAddress) {
         return Table.builder()
@@ -153,9 +193,7 @@ public class SubaruWRX2022MT {
                         .withName("RPM")
                         .withAddress(code, rpmAddress)
                         .withLength(0x16)
-                        .withFormat(DataFormat.USHORT)
-                        .withUnit(Unit.RPM)
-                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)))
+                        .withScale(rpm_16bit))
                 .withAxis(X, Series.builder()
                         .withName("Load")
                         .withAddress(code, loadAddress)
@@ -172,24 +210,16 @@ public class SubaruWRX2022MT {
                 .withData(Series.builder()
                         .withName("Timing")
                         .withAddress(code, timingDataAddress)
-                        .withFormat(DataFormat.UBYTE)
-                        .withUnit(Unit.DEGREES)
-                        .withScale(Scale.builder().withOperations(
-                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
-                        )))
+                        .withScale(ignitionTimingDynamicAdvanceScale))
                 .withAxis(Y, Series.builder()
                         .withName("RPM")
                         .withAddress(code, rpmAddress)
                         .withLength(rpmLength)
-                        .withFormat(DataFormat.USHORT)
-                        .withUnit(Unit.RPM)
-                        .withScale(Scale.builder().withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)))
+                        .withScale(rpm_16bit))
                 .withAxis(X, Series.builder()
                         .withName("Load")
                         .withAddress(code, loadAddress)
                         .withLength(loadLength)
-                        .withUnit(Unit.G_PER_REV)
-                        .withFormat(DataFormat.USHORT)
                         .withScale(calculated_load_16bit));
     }
 
@@ -293,25 +323,17 @@ public class SubaruWRX2022MT {
                 .withData(Series.builder()
                         .withName("Timing")
                         .withAddress(code, dataAddress)
-                        .withFormat(DataFormat.UBYTE)
-                        .withUnit(Unit.DEGREES)
-                        .withScale(Scale.builder().withOperations(
-                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
-                        ))
+                        .withScale(ignitionTimingCompensationScale)
                 )
                 .withAxis(Y, Series.builder()
                         .withName("RPM")
                         .withAddress(code, rpmAddress)
                         .withLength(0x03)
-                        .withFormat(DataFormat.USHORT)
-                        .withScale(rpm_16bit)
-                        .withUnit(Unit.RPM))
+                        .withScale(rpm_16bit))
                 .withAxis(X, Series.builder()
                         .withName("Load")
                         .withAddress(code, loadAddress)
                         .withLength(0x03)
-                        .withUnit(Unit.G_PER_REV)
-                        .withFormat(DataFormat.USHORT)
                         .withScale(calculated_load_16bit));
     }
 
@@ -328,32 +350,20 @@ public class SubaruWRX2022MT {
                         .withData(Series.builder()
                                 .withName("Timing")
                                 .withAddress(code, dataAddress)
-                                .withFormat(DataFormat.UBYTE)
-                                .withUnit(Unit.DEGREES)
-                                .withScale(Scale.builder().withOperations(
-                                        ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
-                                ))
+                                .withScale(ignitionTimingCompensationScale)
                         )
                         .withAxis(X, Series.builder()
                         .withName("Air Temperature")
-                        .withUnit(Unit.CELSIUS)
                         .withAddress(code, iatAddress)
                         .withLength(0x10)
-                        .withFormat(DataFormat.USHORT)
-                        .withScale(Scale.builder()
-                                .withOperation(ArithmeticOperation.MULTIPLY, 5f)
-                                .withOperation(ArithmeticOperation.ADD, 20480f)
-                                .withOperation(ArithmeticOperation.DIVIDE, 2048f)
-                        )
+                        .withScale(ignitionTimingIatCompensationScale)
                 ),
                 Table.builder()
                         .withName("Ignition Timing - Compensation - IAT - " + name + " Activation")
                         .withData(Series.builder()
                                 .withName("Activation")
                                 .withAddress(code, activationDataAddress)
-                                .withFormat(DataFormat.UBYTE)
-                                .withUnit(Unit.PERCENT)
-                                .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 255f))
+                                .withScale(percent_8bit)
                         )
                         .withAxis(Y, Series.builder()
                                 .withName("RPM")
@@ -446,14 +456,12 @@ public class SubaruWRX2022MT {
                                                                    int activationCalcLoadAddress) {
         return new Table.Builder[] {
                 ignitionTimingCoolantCompTable(code, name,
-                        dataAddress, DataFormat.USHORT, Scale.builder().withOperations(
-                                ScalingOperation.from(ArithmeticOperation.DIVIDE, 10)
-                        ),
+                        dataAddress, DataFormat.USHORT, ignitionTimingCoolantCompensationScale,
                         coolantAddress),
                 ignitionTimingCoolantActivationTable(code, name,
                         activationDataAddress,
                         DataFormat.USHORT,
-                        Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 100f),
+                        percent_8bit, //TODO this was /100, not /255
                         activationRpmAddress, 0x16, DataFormat.UBYTE, rpm_8bit_2,
                         activationCalcLoadAddress, 0x1E, DataFormat.UBYTE, calculated_load_8bit
                 )
@@ -488,35 +496,58 @@ public class SubaruWRX2022MT {
                         .withTrim("Premium")
                         .withTransmission("MT"))
                 .withRegion(code)
+                .withScales(
+                        rpm_16bit,
+                        rpm_8bit,
+                        rpm_8bit_2,
+                        req_torque_16bit,
+                        calculated_load_16bit,
+                        calculated_load_8bit,
+                        percent_8bit,
+                        percent_8bit_negative,
+                        directInjectionFuelPressureScale_16bit,
+                        directInjectionFuelPressureScale_8bit,
+                        boostTargetPressureScale_16bit,
+                        barometricPressure_16bit,
+                        manifoldPressure_16bit,
+                        boostErrorPressure_16bit,
+                        boostTargetPressureScale_RelSL_16bit,
+                        boostTargetCompensation_8bit,
+                        coolantTemp16BitScale,
+                        coolantTemp8BitScale,
+                        wastegatePosition16bitScale,
+                        wastegatePositionErrorCorr16bitScale,
+                        intakeAirTemperature8bitScale,
+                        baseIgnitionTiming,
+                        sensorTemperatureScale,
+                        sensorVoltageScale,
+                        ignitionTimingCompensationScale,
+                        ignitionTimingIatCompensationScale,
+                        ignitionTimingDynamicAdvanceScale,
+                        ignitionTimingCoolantCompensationScale
+                )
                 .withTable(
                         Table.builder()
                                 .withName("Sensor Calibration - Intake Air Temperature")
                                 .withData(Series.builder()
                                         .withAddress(code, 0x00029780)
-                                        .withFormat(DataFormat.UBYTE)
-                                        .withScale(Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 50))
+                                        .withScale(sensorTemperatureScale)
                                         .withUnit(Unit.CELSIUS))
                                 .withAxis(X, Series.builder()
                                         .withName("Sensor Voltage")
                                         .withAddress(code, 0x000297c0)
-                                        .withFormat(DataFormat.USHORT)
-                                        .withUnit(Unit.VOLTS)
-                                        .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 13106.25f))
+                                        .withScale(sensorVoltageScale)
                                         .withLength(32))
                 ).withTable(
                         Table.builder()
                                 .withName("Sensor Calibration - Manifold Air Temperature")
                                 .withData(Series.builder()
                                         .withAddress(code, 0x000297a0)
-                                        .withFormat(DataFormat.UBYTE)
-                                        .withScale(Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 50))
-                                        .withUnit(Unit.CELSIUS))
+                                        .withScale(sensorTemperatureScale))
                                 .withAxis(X, Series.builder()
                                         .withName("Sensor Voltage")
                                         .withAddress(code, 0x000297c0)
-                                        .withFormat(DataFormat.USHORT)
-                                        .withUnit(Unit.VOLTS)
-                                        .withScale(Scale.builder().withOperation(ArithmeticOperation.DIVIDE, 13106.25f))
+                                        .withScale(sensorVoltageScale)
                                         .withLength(32))
                 )
                 // Ignition timing base tables
@@ -550,19 +581,19 @@ public class SubaruWRX2022MT {
                 .withTable(ignitionTimingCoolantActivationTable(code, "Cold Start (TGVs Closed)",
                         0x000a9490,
                         DataFormat.UBYTE,
-                        Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x80).withOperation(ArithmeticOperation.DIVIDE, 0xFF).withOperation(ArithmeticOperation.MULTIPLY, 100),
+                        percent_8bit_negative,
                         0x000a8888, 0x16, DataFormat.USHORT, rpm_16bit,
                         0x000a797c, 0x10, DataFormat.USHORT, calculated_load_16bit))
                 .withTable(ignitionTimingCoolantActivationTable(code, "Cold Start (TGVs Open)",
                         0x000a95f0,
                         DataFormat.UBYTE,
-                        Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x80).withOperation(ArithmeticOperation.DIVIDE, 0xFF).withOperation(ArithmeticOperation.MULTIPLY, 100),
+                        percent_8bit_negative,
                         0x000a8888, 0x16, DataFormat.USHORT, rpm_16bit,
                         0x000a797c, 0x10, DataFormat.USHORT, calculated_load_16bit))
                 .withTable(ignitionTimingCoolantCompTable(code, "Cold Start",
                         0x000a7b2c,
                         DataFormat.UBYTE,
-                        Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 0x80).withOperation(ArithmeticOperation.DIVIDE, 2),
+                        percent_8bit_negative,
                         0x000a7b0c))
 
                 // Fuel pressure
@@ -579,9 +610,7 @@ public class SubaruWRX2022MT {
                                 .withName("Intake Air Temperature")
                                 .withAddress(code, 0x000c82f0)
                                 .withLength(0x8)
-                                .withFormat(DataFormat.UBYTE)
-                                .withScale(Scale.builder().withOperation(ArithmeticOperation.SUBTRACT, 50))
-                                .withUnit(Unit.CELSIUS))
+                                .withScale(sensorTemperatureScale))
                         .withAxis(X, Series.builder()
                                 .withName("Coolant Temperature")
                                 .withAddress(code, 0x000c82e8)

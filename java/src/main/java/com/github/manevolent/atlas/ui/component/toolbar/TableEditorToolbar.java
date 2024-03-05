@@ -29,7 +29,10 @@ public class TableEditorToolbar extends Toolbar<TableEditor> {
         toolbar.addSeparator();
         toolbar.add(makeButton(FontAwesomeSolid.GRIP_HORIZONTAL, "interpolate-horizontal", "Interpolate horizontally"));
         toolbar.add(makeButton(FontAwesomeSolid.GRIP_VERTICAL, "interpolate-vertical", "Interpolate vertically"));
-        toolbar.addSeparator();
+
+        // Right side
+        toolbar.add(Separators.vertical());
+        toolbar.add(makeButton(CarbonIcons.CHART_CUSTOM, "define", "Edit table definition"));
 
     }
 }

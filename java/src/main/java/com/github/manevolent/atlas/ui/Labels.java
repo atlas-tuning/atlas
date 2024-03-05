@@ -12,6 +12,16 @@ public class Labels {
         return label;
     }
 
+    public static JLabel boldText(String text) {
+        return Fonts.bold(text(text));
+    }
+
+    public static JLabel darkerText(String text) {
+        JLabel label = new JLabel(text);
+        label.setForeground(label.getForeground().darker());
+        return label;
+    }
+
     public static JLabel text(String text, Color color) {
         JLabel label = new JLabel(text);
         label.setForeground(color);

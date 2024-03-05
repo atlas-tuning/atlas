@@ -16,6 +16,16 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
     @Override
     protected void postInitComponent(JInternalFrame component) {
         component.pack();
+
+        component.setPreferredSize(component.getPreferredSize());
+        component.setSize(component.getPreferredSize());
+
+        //TODO this most likely will annoy people, make a setting for it
+        try {
+            component.setMaximum(true);
+        } catch (PropertyVetoException e) {
+            // Ignore
+        }
     }
 
     public abstract String getTitle();

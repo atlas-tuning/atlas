@@ -1,17 +1,21 @@
 package com.github.manevolent.atlas.definition;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Rom {
     private Vehicle vehicle;
     private List<FlashRegion> regions;
     private FlashMethod flashMethod;
     private List<Table> tables;
+    private Set<Scale> scales;
 
     public Rom() {
 
+    }
+
+    private void setScales(LinkedHashSet<Scale> scales) {
+        this.scales = scales;
     }
 
     public Vehicle getVehicle() {
@@ -57,16 +61,31 @@ public class Rom {
         return new Builder();
     }
 
+    public Set<Scale> getScales() {
+        return scales;
+    }
+
     public static class Builder {
         private final Rom rom = new Rom();
 
         public Builder() {
             rom.setTables(new ArrayList<>());
             rom.setRegions(new ArrayList<>());
+            rom.setScales(new LinkedHashSet<>());
+        }
+
+        public Builder withScales(Scale.Builder... scales) {
+            rom.scales.addAll(Arrays.stream(scales).map(Scale.Builder::build).toList());
+            return this;
+        }
+
+        public Builder withScales(Scale... scales) {
+            rom.scales.addAll(Arrays.asList(scales));
+            return this;
         }
 
         public Builder withTables(Table... tables) {
-            rom.getTables().addAll(Arrays.asList(tables));
+            Arrays.stream(tables).forEach(this::withTable);
             return this;
         }
 
@@ -81,6 +100,26 @@ public class Rom {
         }
 
         public Builder withTable(Table table) {
+            // Verify scales are registered
+            Set<Scale> unknownScales = new HashSet<>();
+            unknownScales.addAll(table.getAxes().stream()
+                    .map(table::getSeries)
+                    .map(Series::getScale)
+                    .filter(scale -> !this.rom.scales.contains(scale))
+                    .toList());
+
+            if (!this.rom.scales.contains(table.getData().getScale())) {
+                unknownScales.add(table.getData().getScale());
+            }
+
+            if (!unknownScales.isEmpty()) {
+                throw new IllegalArgumentException("Unknown scale(s) for table "
+                        + table.getName() + ": " +
+                        unknownScales.stream().map(Scale::toString)
+                                .collect(Collectors.joining(", "))
+                );
+            }
+
             rom.getTables().add(table);
             return this;
         }

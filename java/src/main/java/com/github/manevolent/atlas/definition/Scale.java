@@ -11,6 +11,11 @@ public class Scale {
     private List<ScalingOperation> operations;
     private Unit unit;
     private DataFormat format;
+    private String name;
+
+    public String getName() {
+        return name;
+    }
 
     public float forward(float a) {
         for (ScalingOperation operation : operations) {
@@ -54,12 +59,26 @@ public class Scale {
         return Math.abs(a - b);
     }
 
+    @Override
+    public String toString() {
+        String formatString = getFormat().name().toLowerCase() + ", " + getUnit().getText();
+        if (name == null) {
+            return formatString;
+        } else {
+            return name + " (" + formatString + ")";
+        }
+    }
 
     public static class Builder {
         private final Scale scale = new Scale();
 
         public Builder() {
             this.scale.setOperations(new ArrayList<>());
+        }
+
+        public Builder withName(String name) {
+            scale.name = name;
+            return this;
         }
 
         public Builder withOperation(ScalingOperation operation) {

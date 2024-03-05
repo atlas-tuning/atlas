@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.ui.component.tab;
 import com.github.manevolent.atlas.definition.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.Menus;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -40,6 +41,14 @@ public class TablesTab
     @Override
     public Icon getIcon() {
         return Icons.get(CarbonIcons.DATA_TABLE, Color.WHITE);
+    }
+
+    private TreePath getPath(TreeNode node) {
+        if (node instanceof TableNode) {
+            return getPath(((TableNode) node).table);
+        }
+
+        return null;
     }
 
     private TreePath getPath(Table table) {
@@ -164,6 +173,17 @@ public class TablesTab
         tree.addTreeSelectionListener(this);
         tree.addMouseListener(this);
 
+        JPopupMenu popupMenu = new JPopupMenu();
+        popupMenu.add(Menus.item(CarbonIcons.LAUNCH, "Open", e -> {
+            TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
+            open(getPath(lastSelected));
+        }));
+        popupMenu.add(Menus.item(CarbonIcons.CHART_CUSTOM, "Define", e -> {
+            TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
+            define(getPath(lastSelected));
+        }));
+        tree.setComponentPopupMenu(popupMenu);
+
         // You can only be focused on one table at a time
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
 
@@ -217,14 +237,7 @@ public class TablesTab
         updateExpansions();
     }
 
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
-
-        if (e.getClickCount() != 2) {
-            return;
-        }
-
+    private void open(TreePath selPath) {
         if (selPath == null) {
             return;
         }
@@ -233,6 +246,32 @@ public class TablesTab
 
         if (last instanceof TableNode) {
             getParent().openTable(((TableNode)last).table);
+        }
+    }
+
+    private void define(TreePath selPath) {
+        if (selPath == null) {
+            return;
+        }
+
+        Object last = selPath.getLastPathComponent();
+
+        if (last instanceof TableNode) {
+            getParent().openTableDefinition(((TableNode)last).table);
+        }
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
+        tree.setSelectionPath(selPath);
+
+        if (e.getClickCount() != 2) {
+            return;
+        }
+
+        if (e.getButton() == MouseEvent.BUTTON1) {
+            open(selPath);
         }
     }
 

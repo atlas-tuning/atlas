@@ -59,6 +59,12 @@ public class RowNumberTable extends JTable
         setPreferredScrollableViewportSize(getPreferredSize());
     }
 
+    public void updateRowNames(java.util.List<String> rowNames) {
+        this.rowNames = rowNames;
+        updateWidth();
+        revalidate();
+    }
+
     @Override
     public void addNotify() {
         super.addNotify();

@@ -176,6 +176,8 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
         Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
         StringSelection selection = new StringSelection(console.getText());
         clipboard.setContents(selection, selection);
+
+        Log.ui().log(Level.INFO, "Copied console contents to clipboard.");
     }
 
     private Color getConsoleColor(Level level) {

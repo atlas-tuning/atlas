@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.definition;
 
 import java.io.IOException;
+import java.util.HexFormat;
 
 public class FlashAddress {
     private FlashRegion region;
@@ -20,6 +21,11 @@ public class FlashAddress {
 
     public void setOffset(int offset) {
         this.offset = offset;
+    }
+
+    @Override
+    public String toString() {
+        return "0x" + HexFormat.of().toHexDigits(offset).toUpperCase();
     }
 
     public float read(int index, DataFormat format) throws IOException {

@@ -23,4 +23,9 @@ public class Fonts {
     public static String getConsoleFontFamilyName() {
         return defaultConsoleFont;
     }
+
+    public static <T extends Component> T bold(T component) {
+        component.setFont(component.getFont().deriveFont(Font.BOLD));
+        return component;
+    }
 }

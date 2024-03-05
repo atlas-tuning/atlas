@@ -18,10 +18,10 @@ import javax.swing.event.*;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableModel;
 
 import java.awt.*;
 import java.awt.event.*;
-import java.beans.PropertyVetoException;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EventObject;
@@ -44,8 +44,12 @@ public class TableEditor extends Window implements
 
     private ThreadLocal<Boolean> selfUpdate = new ThreadLocal<>();
     private RowNumberTable rowNumberTable;
+    private JPanel rootPanel;
     private JTable tableComponent;
     private TableEditorFooter footer;
+    private JLabel x_label;
+    private JRotateLabel y_label;
+    private JScrollPane scrollPane;
     private int[] lastSelectionRows = new int[0], lastSelectionColumns = new int[0];
 
     private float min, selMin, max, selMax;
@@ -57,9 +61,20 @@ public class TableEditor extends Window implements
 
     private TableEditorToolbar toolbar;
 
+    private final boolean readOnly;
+
+    public TableEditor(EditorForm editor, Table table, boolean readOnly) {
+        super(editor);
+
+        this.readOnly = readOnly;
+        this.selfUpdate.set(false);
+        this.table = table;
+    }
+
     public TableEditor(EditorForm editor, Table table) {
         super(editor);
 
+        this.readOnly = false;
         this.selfUpdate.set(false);
         this.table = table;
     }
@@ -70,11 +85,12 @@ public class TableEditor extends Window implements
     }
 
     @Override
-    protected void initComponent(JInternalFrame window) {
-        int x_size = table.getSeries(X) == null ? 1 : table.getSeries(X).getLength();
-        int y_size = table.getSeries(Y) == null ? 1 : table.getSeries(Y).getLength();
-        Object[][] data = new Float[y_size][x_size];
+    public Icon getIcon() {
+        return Icons.get(CarbonIcons.DATA_TABLE, Color.WHITE);
+    }
 
+    @Override
+    protected void initComponent(JInternalFrame window) {
         window.addFocusListener(this);
 
         tableComponent = new JTable() {
@@ -93,25 +109,8 @@ public class TableEditor extends Window implements
         tableComponent.setRowSelectionAllowed(true);
         tableComponent.getTableHeader().setFont(valueFont);
 
-        Series x = table.getSeries(X);
-        Series y = table.getSeries(Y);
-
         // Possibly add X series headers
-        Object[] columns;
-        if (x != null) {
-            columns = new Object[x.getLength()];
-            for (int i = 0; i < x.getLength(); i ++) {
-                try {
-                    columns[i] = String.format(valueFormat, x.get(i));
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        } else {
-            columns = new Object[1];
-        }
-
-        tableComponent.setModel(new DefaultTableModel(data, columns));
+        tableComponent.setModel(generateTableModel());
         updateData();
         updateMinMax();
 
@@ -156,75 +155,30 @@ public class TableEditor extends Window implements
             }
         });
 
-        JPanel north = new JPanel();
-        north.setLayout(new GridLayout(2, 1));
+        if (!readOnly) {
+            JPanel north = new JPanel();
+            north.setLayout(new GridLayout(2, 1));
 
-        north.add(initMenuBar());
-        north.add(initToolbar());
+            north.add(initMenuBar());
+            north.add(initToolbar());
 
-        window.add(north, BorderLayout.NORTH);
+            window.add(north, BorderLayout.NORTH);
+        }
 
-        JScrollPane scrollPane = new JScrollPane(tableComponent);
+        scrollPane = new JScrollPane(tableComponent);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        if (table.getAxes().contains(Y)) {
-            java.util.List<String> rowHeaders = generateRowHeaders();
-            rowNumberTable = new RowNumberTable(tableComponent, rowHeaders);
-            rowNumberTable.getTableHeader().setFont(valueFont);
-            rowNumberTable.updateWidth();
+        updateRowHeaders();
 
-            scrollPane.setRowHeader(new JViewport());
-            scrollPane.getRowHeader().add(rowNumberTable);
-        }
-
-        JPanel panel = new JPanel(new BorderLayout());
-
-        JRotateLabel y_label;
-        if (y != null) {
-            y_label = new JRotateLabel(getSeriesHeaderString(y));
-            y_label.setForeground(Color.GRAY);
-            panel.add(y_label, BorderLayout.WEST);
-        } else {
-            y_label = null;
-        }
-
-        if (x != null) {
-            JLabel x_label = new JLabel(getSeriesHeaderString(x));
-            x_label.setHorizontalAlignment(JLabel.LEFT);
-            x_label.setForeground(Color.GRAY);
-            int leftOffset;
-            if (y_label != null) {
-                leftOffset = (int) (y_label.getPreferredSize().width +
-                        rowNumberTable.getPreferredSize().getWidth());
-            } else {
-                leftOffset = 5;
-            }
-
-            x_label.setBorder(BorderFactory.createEmptyBorder(
-                    2,
-                    leftOffset,
-                    2,
-                    0
-            ));
-            panel.add(x_label, BorderLayout.NORTH);
-        }
-
-        if (y != null) {
-            y_label.setBorder(BorderFactory.createEmptyBorder(
-                    (int) (tableComponent.getTableHeader().getPreferredSize().getHeight()),
-                    0,
-                    0,
-                    0
-            ));
-        }
-
-        panel.add(scrollPane, BorderLayout.CENTER);
+        rootPanel = new JPanel(new BorderLayout());
+        updateAxisNames();
+        rootPanel.add(scrollPane, BorderLayout.CENTER);
 
         // Create the footer bar that displays some state data as well as
         // some quick calculations about the table and/or its selection.
         footer = new TableEditorFooter(this);
-        panel.add(footer.getComponent(), BorderLayout.SOUTH);
+        rootPanel.add(footer.getComponent(), BorderLayout.SOUTH);
 
-        window.add(panel);
+        window.add(rootPanel);
 
         tableComponent.getModel().addTableModelListener(this);
         tableComponent.setColumnSelectionInterval(0, 0);
@@ -232,22 +186,36 @@ public class TableEditor extends Window implements
         tableComponent.getSelectionModel().addListSelectionListener(this);
         tableComponent.putClientProperty("terminateEditOnFocusLost", true);
 
+        if (readOnly) {
+            tableComponent.setEnabled(false);
+        } else {
+            tableComponent.setEnabled(true);
+        }
+
         updateCellWidth();
     }
 
-    @Override
-    protected void postInitComponent(JInternalFrame component) {
-        super.postInitComponent(component);
+    private TableModel generateTableModel() {
+        int x_size = table.getSeries(X) == null ? 1 : table.getSeries(X).getLength();
+        int y_size = table.getSeries(Y) == null ? 1 : table.getSeries(Y).getLength();
+        Object[][] data = new Float[y_size][x_size];
 
-        component.setPreferredSize(tableComponent.getPreferredSize());
-        component.setSize(tableComponent.getPreferredSize());
+        Series x = table.getSeries(X);
 
-        //TODO this most likely will annoy people, make a setting for it
-        try {
-            component.setMaximum(true);
-        } catch (PropertyVetoException e) {
-            // Ignore
+        Object[] columns;
+        if (x != null) {
+            columns = new Object[x.getLength()];
+            for (int i = 0; i < x.getLength(); i ++) {
+                try {
+                    columns[i] = String.format(valueFormat, x.get(i));
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        } else {
+            columns = new Object[1];
         }
+        return new DefaultTableModel(data, columns);
     }
 
     private JToolBar initToolbar() {
@@ -328,6 +296,27 @@ public class TableEditor extends Window implements
         }
     }
 
+    private void updateRowHeaders() {
+        if (table.getAxes().contains(Y)) {
+            if (rowNumberTable == null) {
+                java.util.List<String> rowHeaders = generateRowHeaders();
+                rowNumberTable = new RowNumberTable(tableComponent, rowHeaders);
+                rowNumberTable.getTableHeader().setFont(valueFont);
+                rowNumberTable.updateWidth();
+
+                scrollPane.setRowHeader(new JViewport());
+                scrollPane.getRowHeader().add(rowNumberTable);
+            }
+
+            // Update row headers
+            rowNumberTable.updateRowNames(generateRowHeaders());
+        } else if (rowNumberTable != null) {
+            scrollPane.setRowHeader(new JViewport());
+            rowNumberTable.setVisible(false);
+            rowNumberTable = null;
+        }
+    }
+
     private void updateData() {
         Map<Axis, Integer> coordinates = new HashMap<>();
         int size = 1;
@@ -379,9 +368,10 @@ public class TableEditor extends Window implements
     }
 
     public String getSeriesHeaderString(Series series) {
-        if (series.getUnit() != null && series.getName() == null) {
+        if (series.getUnit() != null && (series.getName() == null || series.getName().isBlank())) {
             return series.getUnit().getText();
-        } else if (series.getUnit() != null && !series.getName().contains(series.getUnit().getText())) {
+        } else if (series.getUnit() != null &&
+                !series.getName().contains(series.getUnit().getText())) {
             return STR."\{series.getName()} (\{series.getUnit().getText()})";
         } else {
             return series.getName();
@@ -511,9 +501,70 @@ public class TableEditor extends Window implements
         );
     }
 
-    @Override
-    public Icon getIcon() {
-       return Icons.get(CarbonIcons.DATA_TABLE, Color.WHITE);
+    private void updateAxisNames() {
+        if (x_label != null) {
+            rootPanel.remove(x_label);
+        }
+        if (y_label != null) {
+            rootPanel.remove(y_label);
+        }
+
+        Series x = table.getSeries(X);
+        Series y = table.getSeries(Y);
+
+        if (y != null) {
+            y_label = new JRotateLabel(getSeriesHeaderString(y));
+            y_label.setForeground(Color.GRAY);
+            rootPanel.add(y_label, BorderLayout.WEST);
+        } else {
+            y_label = null;
+        }
+
+        if (x != null) {
+            x_label = new JLabel(getSeriesHeaderString(x));
+            x_label.setHorizontalAlignment(JLabel.LEFT);
+            x_label.setForeground(Color.GRAY);
+            int leftOffset;
+            if (y_label != null) {
+                leftOffset = (int) (y_label.getPreferredSize().width +
+                        rowNumberTable.getPreferredSize().getWidth());
+            } else {
+                leftOffset = 5;
+            }
+
+            x_label.setBorder(BorderFactory.createEmptyBorder(
+                    2,
+                    leftOffset,
+                    2,
+                    0
+            ));
+
+            rootPanel.add(x_label, BorderLayout.NORTH);
+        }
+
+        if (y != null) {
+            y_label.setBorder(BorderFactory.createEmptyBorder(
+                    (int) (tableComponent.getTableHeader().getPreferredSize().getHeight()),
+                    0,
+                    0,
+                    0
+            ));
+        }
+    }
+
+    /**
+     * Used by the table definition editor when you change values in it
+     */
+    public void reload() {
+        updateRowHeaders();
+        updateMinMax();
+        tableComponent.setModel(generateTableModel());
+        updateData();
+        footer.reinitialize();
+        updateAxisNames();
+
+        getComponent().getContentPane().revalidate();
+        getComponent().getContentPane().repaint();
     }
 
     @Override
@@ -656,6 +707,9 @@ public class TableEditor extends Window implements
         return String.format(valueFormat, value);
     }
 
+    public boolean isReadOnly() {
+        return readOnly;
+    }
 
     public class TableCellRenderer extends DefaultTableCellRenderer {
         public TableCellRenderer() {

@@ -7,6 +7,7 @@ import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.editor.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
+import com.github.manevolent.atlas.ui.component.window.TableDefinitionEditor;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
@@ -43,6 +44,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     private Rom rom;
     private java.util.List<Window> openWindows = new ArrayList<>();
     private Map<Table, TableEditor> openedTables = new LinkedHashMap<>();
+    private Map<Table, TableDefinitionEditor> openedTableDefs = new LinkedHashMap<>();
 
     public EditorForm(Rom rom) {
         // Just to make sure it shows up in the taskbar/dock/etc.
@@ -200,6 +202,20 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         openedTables.put(table, opened);
     }
 
+    public void openTableDefinition(Table table) {
+        TableDefinitionEditor opened;
+
+        opened = openedTableDefs.get(table);
+
+        if (opened == null) {
+            opened = openWindow(new TableDefinitionEditor(this, table));
+        }
+
+        opened.focus();
+
+        openedTableDefs.put(table, opened);
+    }
+
     private JDesktopPane initDesktop() {
         JDesktopPane desktop = new JDesktopPane();
         desktop.setMinimumSize(new Dimension(500, 500));
@@ -325,6 +341,8 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
             if (window instanceof TableEditor) {
                 openedTables.remove(((TableEditor)window).getTable());
+            } else if (window instanceof TableDefinitionEditor) {
+                openedTableDefs.remove(((TableDefinitionEditor)window).getTable());
             }
         });
     }
