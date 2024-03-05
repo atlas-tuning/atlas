@@ -61,7 +61,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     public void openRom(Rom rom) {
         this.rom = rom;
-        setTitle("Atlas Tuning - " + rom.getVehicle().toString());
+        setTitle("Atlas - " + rom.getVehicle().toString());
     }
 
     public JDesktopPane getDesktop() {

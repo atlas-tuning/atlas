@@ -50,7 +50,7 @@ public class SplashForm extends JFrame {
                         getWidth(), getHeight(), this);
                 g.setFont(headerFont);
                 g.setColor(Color.WHITE);
-                g.drawString("Atlas Tuning", 20, 50);
+                g.drawString("Atlas", 20, 50);
 
                 Font serif = new Font(SANS_SERIF, Font.PLAIN, 14);
                 g.setFont(serif);

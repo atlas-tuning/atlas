@@ -58,21 +58,34 @@ public class TableEditorFooter extends Footer<TableEditor> {
         Series x = table.getSeries(X);
         Series y = table.getSeries(Y);
 
-        left.add(Labels.text(CarbonIcons.RULER, editor.getSeriesHeaderString(table.getData())));
+        left.add(Labels.text(
+                CarbonIcons.RULER,
+                editor.getSeriesHeaderString(table.getData()),
+                "Cell data series"
+        ));
 
         left.add(Separators.vertical());
 
-        left.add(Labels.text(CarbonIcons.MATRIX,
-                table.getData().getFormat().name().toLowerCase(), Color.GRAY));
+        left.add(Labels.text(
+                CarbonIcons.MATRIX,
+                table.getData().getFormat().name().toLowerCase(),
+                Color.GRAY,
+                "Data format of cells in ROM"
+        ));
+
+        left.add(Separators.vertical());
 
         // Calculate value precision
         if (table.getData().getFormat().getPrecision() == Precision.WHOLE_NUMBER) {
             float precision = table.getData().getScale().getPrecision();
             precision = Math.max(0.01f, precision);
-            left.add(Labels.text(CarbonIcons.CALIBRATE,
-                    editor.formatValue(precision),
+            left.add(Labels.text(
+                    CarbonIcons.CALIBRATE,
+                    editor.formatValue(precision) + table.getData().getUnit().getText(),
                     editor.getValueFont(),
-                    Color.GRAY));
+                    Color.GRAY,
+                    "Precision of cell data"
+            ));
         }
 
         left.add(Separators.vertical());
@@ -89,16 +102,14 @@ public class TableEditorFooter extends Footer<TableEditor> {
         if (editor.getMin() != editor.getMax()) {
             left.add(Labels.text(
                     CarbonIcons.ARROW_DOWN, Color.GRAY,
-                    editor.getValueFont(),
-                    editor.formatValue(min),
-                    editor.scaleValueColor(min))
-            );
+                    editor.getValueFont(), editor.formatValue(min), editor.scaleValueColor(min),
+                    hasSelection ? "Minimum value in selection" : "Minimum value in table"
+            ));
             left.add(Labels.text(
                     CarbonIcons.ARROW_UP, Color.GRAY,
-                    editor.getValueFont(),
-                    editor.formatValue(max),
-                    editor.scaleValueColor(max))
-            );
+                    editor.getValueFont(), editor.formatValue(max), editor.scaleValueColor(max),
+                    hasSelection ? "Maximum value in selection" : "Maximum value in table"
+            ));
         }
 
         if (!hasSelection) {
@@ -123,7 +134,9 @@ public class TableEditorFooter extends Footer<TableEditor> {
                     right.add(Labels.text(CarbonIcons.LETTER_XX,
                             editor.formatValue(value) + unitString,
                             editor.getValueFont(),
-                            Color.GRAY));
+                            Color.GRAY,
+                            "X axis value at position"
+                    ));
                 }
 
                 if (y != null) {
@@ -140,10 +153,13 @@ public class TableEditorFooter extends Footer<TableEditor> {
                     } else {
                         unitString = "";
                     }
-                    right.add(Labels.text(CarbonIcons.LETTER_YY,
+                    right.add(Labels.text(
+                            CarbonIcons.LETTER_YY,
                             editor.formatValue(value) + unitString,
                             editor.getValueFont(),
-                            Color.GRAY));
+                            Color.GRAY,
+                            "Y axis value at position"
+                    ));
                 }
 
                 right.add(Separators.vertical());
@@ -151,8 +167,12 @@ public class TableEditorFooter extends Footer<TableEditor> {
                 selectedColumn += 1;
                 selectedRow += 1;
 
-                right.add(Labels.text(CarbonIcons.CENTER_SQUARE,
-                        selectedColumn + "," + selectedRow, Color.GRAY));
+                right.add(Labels.text(
+                        CarbonIcons.CENTER_SQUARE,
+                        selectedColumn + "," + selectedRow,
+                        Color.GRAY,
+                        "Selected position in table"
+                ));
 
                 right.add(Separators.vertical());
             }
@@ -175,7 +195,9 @@ public class TableEditorFooter extends Footer<TableEditor> {
 
         right.add(Labels.text(
                 hasSelection ? CarbonIcons.SELECT_01 : CarbonIcons.MAXIMIZE,
-                tableSizeString, Color.GRAY));
+                tableSizeString, Color.GRAY,
+                hasSelection ? "Selection size" : "Table size"
+        ));
 
         footerBar.revalidate();
         footerBar.repaint();

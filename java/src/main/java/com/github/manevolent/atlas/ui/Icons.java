@@ -3,32 +3,48 @@ package com.github.manevolent.atlas.ui;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.swing.FontIcon;
 
+import javax.print.DocFlavor;
 import javax.swing.*;
 import java.awt.*;
 
 public class Icons {
-    private static final int ICON_SIZE = 14;
+    private static final int DEFAULT_IMAGE_SIZE = 64;
+    private static final int DEFAULT_ICON_SIZE = 14;
 
-    public static FontIcon get(Ikon ikon, Color color) {
+
+    public static FontIcon get(Ikon ikon, Color color, int size) {
         FontIcon icon = new FontIcon();
         icon.setIkon(ikon);
         icon.setIconColor(color);
-        icon.setIconSize(ICON_SIZE);
+        icon.setIconSize(size);
         return icon;
+    }
+
+
+    public static FontIcon get(Ikon ikon, int size) {
+        FontIcon icon = new FontIcon();
+        icon.setIkon(ikon);
+        icon.setIconSize(size);
+        return icon;
+    }
+
+    public static ImageIcon getImage(Ikon ikon, Color color, int size) {
+        FontIcon icon = get(ikon, color);
+        icon.setIconSize(size);
+        return icon.toImageIcon();
+    }
+
+    public static FontIcon get(Ikon ikon, Color color) {
+        return get(ikon, color, DEFAULT_ICON_SIZE);
     }
 
 
     public static FontIcon get(Ikon ikon) {
-        FontIcon icon = new FontIcon();
-        icon.setIkon(ikon);
-        icon.setIconSize(ICON_SIZE);
-        return icon;
+        return get(ikon, DEFAULT_ICON_SIZE);
     }
 
     public static ImageIcon getImage(Ikon ikon, Color color) {
-        FontIcon icon = get(ikon, color);
-        icon.setIconSize(64);
-        return icon.toImageIcon();
+        return getImage(ikon, color, DEFAULT_IMAGE_SIZE);
     }
 
 }

@@ -1,8 +1,8 @@
-package com.github.manevolent.atlas.ui.component;
+package com.github.manevolent.atlas.ui;
 
 import java.awt.*;
 
-public class GraphicsHelper {
+public class Fonts {
     public static FontMetrics getFontMetrics(Font font) {
         Canvas c = new Canvas();
         return c.getFontMetrics(font);

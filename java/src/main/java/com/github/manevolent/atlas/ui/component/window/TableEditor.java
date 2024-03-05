@@ -2,13 +2,12 @@ package com.github.manevolent.atlas.ui.component.window;
 
 import com.github.manevolent.atlas.definition.*;
 import com.github.manevolent.atlas.ui.Icons;
-import com.github.manevolent.atlas.ui.Labels;
-import com.github.manevolent.atlas.ui.component.GraphicsHelper;
+import com.github.manevolent.atlas.ui.Fonts;
 import com.github.manevolent.atlas.ui.component.JRotateLabel;
 import com.github.manevolent.atlas.ui.component.RowNumberTable;
-import com.github.manevolent.atlas.ui.Separators;
 import com.github.manevolent.atlas.ui.component.footer.table.TableEditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.table.*;
+import com.github.manevolent.atlas.ui.component.toolbar.TableEditorToolbar;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -53,6 +52,8 @@ public class TableEditor extends Window implements
     private EditMenu editMenu;
     private ViewMenu viewMenu;
     private HelpMenu helpMenu;
+
+    private TableEditorToolbar toolbar;
 
     public TableEditor(EditorForm editor, Table table) {
         super(editor);
@@ -102,6 +103,7 @@ public class TableEditor extends Window implements
         tableComponent.getTableHeader().setReorderingAllowed(false);
         tableComponent.getTableHeader().setResizingAllowed(false);
         tableComponent.setColumnSelectionAllowed(true);
+        tableComponent.setRowSelectionAllowed(true);
         tableComponent.getTableHeader().setFont(valueFont);
 
         Series x = table.getSeries(X);
@@ -130,6 +132,8 @@ public class TableEditor extends Window implements
         tableComponent.setDefaultRenderer(Object.class, new TableCellRenderer());
         tableComponent.setDefaultRenderer(String.class, new TableCellRenderer());
         tableComponent.setDefaultRenderer(Float.class, new TableCellRenderer());
+
+        // Set a default editor, so we can control cell edit functions
         tableComponent.setDefaultEditor(Object.class, new CellEditor());
         tableComponent.setDefaultEditor(String.class, new CellEditor());
         tableComponent.setDefaultEditor(Float.class, new CellEditor());
@@ -153,9 +157,25 @@ public class TableEditor extends Window implements
             public void keyPressed(KeyEvent e) {
                 updateSelection();
             }
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                updateSelection();
+            }
+
+            @Override
+            public void keyReleased(KeyEvent e) {
+                updateSelection();
+            }
         });
 
-        window.add(initMenuBar(), BorderLayout.NORTH);
+        JPanel north = new JPanel();
+        north.setLayout(new GridLayout(2, 1));
+
+        north.add(initMenuBar());
+        north.add(initToolbar());
+
+        window.add(north, BorderLayout.NORTH);
 
         JScrollPane scrollPane = new JScrollPane(tableComponent);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
@@ -206,7 +226,6 @@ public class TableEditor extends Window implements
 
         panel.add(scrollPane, BorderLayout.CENTER);
 
-
         // Create the footer bar that displays some state data as well as
         // some quick calculations about the table and/or its selection.
         footer = new TableEditorFooter(this);
@@ -223,6 +242,10 @@ public class TableEditor extends Window implements
         updateCellWidth();
     }
 
+    private JToolBar initToolbar() {
+        return (toolbar = new TableEditorToolbar(this)).getComponent();
+    }
+
     private JMenuBar initMenuBar() {
         JMenuBar menuBar = new JMenuBar();
         menuBar.add((fileMenu = new FileMenu(this)).getComponent());
@@ -234,7 +257,9 @@ public class TableEditor extends Window implements
 
     private void updateCellWidth() {
         // Default to a minimum spacing of 6 characters
-        String longestString = "000.00";
+        int longestString = 0;
+
+        FontMetrics metrics = Fonts.getFontMetrics(valueFont);
 
         // Find the longest string in the columns (X axis)
         Series x = table.getSeries(X);
@@ -247,10 +272,9 @@ public class TableEditor extends Window implements
                     throw new RuntimeException(e);
                 }
 
-                String formattedString = String.format(" " + valueFormat + " ", data);
-                if (formattedString.length() > longestString.length()) {
-                    longestString = formattedString;
-                }
+                String formattedString = String.format(valueFormat, data);
+                int width = metrics.stringWidth(formattedString);
+                longestString = Math.max(longestString, width);
             }
         }
 
@@ -263,15 +287,13 @@ public class TableEditor extends Window implements
                 throw new RuntimeException(e);
             }
 
-            String formattedString = String.format(" " + valueFormat + " ", data);
-            if (formattedString.length() > longestString.length()) {
-                longestString = formattedString;
-            }
+            String formattedString = String.format(valueFormat, data);
+            int width = metrics.stringWidth(formattedString);
+            longestString = Math.max(longestString, width);
         }
 
         // Get the ideal string width
-        int stringWidth = GraphicsHelper.getFontMetrics(tableComponent.getFont())
-                .stringWidth(longestString);
+        int stringWidth = longestString + metrics.stringWidth("  ");
 
         // Grab the margin
         int margin = tableComponent.getColumnModel().getColumnMargin() * 2;
@@ -614,6 +636,7 @@ public class TableEditor extends Window implements
                                                        int row, int col) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
             c.setFont(valueFont);
+
             if (value != null) {
                 float v;
 
