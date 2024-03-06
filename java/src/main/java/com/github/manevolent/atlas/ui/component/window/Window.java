@@ -5,12 +5,33 @@ import com.github.manevolent.atlas.ui.component.EditorComponent;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 
 import javax.swing.*;
+import javax.swing.event.InternalFrameAdapter;
+import javax.swing.event.InternalFrameEvent;
 import java.awt.*;
 import java.beans.PropertyVetoException;
 
 public abstract class Window extends EditorComponent<JInternalFrame> {
+    private boolean iconified = false;
+
     protected Window(EditorForm editor) {
         super(editor);
+    }
+
+    @Override
+    protected void preInitComponent(JInternalFrame component) {
+        super.preInitComponent(component);
+        component.setTitle(getTitle());
+        component.addInternalFrameListener(new InternalFrameAdapter() {
+            @Override
+            public void internalFrameDeiconified(InternalFrameEvent e) {
+                iconified = false;
+            }
+
+            @Override
+            public void internalFrameIconified(InternalFrameEvent e) {
+                iconified = true;
+            }
+        });
     }
 
     @Override
@@ -31,6 +52,10 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
     public abstract String getTitle();
     public abstract Icon getIcon();
 
+    public void updateTitle() {
+        getComponent().setTitle(getTitle());
+    }
+
     @Override
     protected JInternalFrame newComponent() {
         JInternalFrame internalFrame = new JInternalFrame() {
@@ -46,7 +71,7 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
 
         internalFrame.setClosable(true);
         internalFrame.setMaximizable(true);
-        internalFrame.setIconifiable(false);
+        internalFrame.setIconifiable(true);
         internalFrame.setResizable(true);
 
         Icon icon = getIcon();
@@ -64,18 +89,22 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
         return internalFrame;
     }
 
-    @Override
-    protected void preInitComponent(JInternalFrame component) {
-        super.preInitComponent(component);
-        component.setTitle(getTitle());
+    public boolean isMinimized() {
+        return iconified;
     }
 
     public void focus() {
         JDesktopPane desktop = getParent().getDesktop();
         JInternalFrame component = getComponent();
 
-        if (!component.getParent().equals(desktop)) {
+        if (component.getParent() != null && !component.getParent().equals(desktop)) {
             return;
+        }
+
+        try {
+            component.setIcon(false);
+        } catch (PropertyVetoException e) {
+            throw new RuntimeException(e);
         }
 
         component.setVisible(true);

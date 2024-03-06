@@ -82,6 +82,12 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         return windowMenu;
     }
 
+    public void updateWindowTitles() {
+        for (Window window : openWindows) {
+            window.updateTitle();
+        }
+    }
+
     private void initComponents() {
         setIconImage(Icons.getImage(CarbonIcons.METER_ALT, Color.WHITE).getImage());
         setJMenuBar(initMenu());
@@ -378,5 +384,9 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     public void tableFocused(Table table) {
         tablesTab.tableOpened(table);
+    }
+
+    public TableEditor getActiveTableEditor(Table realTable) {
+        return openedTables.get(realTable);
     }
 }

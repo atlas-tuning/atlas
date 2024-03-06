@@ -65,6 +65,18 @@ public class Rom {
         return scales;
     }
 
+    public boolean hasTable(Table table) {
+        return tables.contains(table);
+    }
+
+    public void addTable(Table table) {
+        tables.add(table);
+    }
+
+    public void removeTable(Table toDelete) {
+        tables.remove(toDelete);
+    }
+
     public static class Builder {
         private final Rom rom = new Rom();
 

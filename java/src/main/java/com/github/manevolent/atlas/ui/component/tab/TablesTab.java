@@ -43,6 +43,14 @@ public class TablesTab
         return Icons.get(CarbonIcons.DATA_TABLE, Color.WHITE);
     }
 
+    private Table getTable(TreeNode node) {
+        if (node instanceof TableNode) {
+            return ((TableNode) node).table;
+        }
+
+        return null;
+    }
+
     private TreePath getPath(TreeNode node) {
         if (node instanceof TableNode) {
             return getPath(((TableNode) node).table);
@@ -174,13 +182,36 @@ public class TablesTab
         tree.addMouseListener(this);
 
         JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.add(Menus.item(CarbonIcons.LAUNCH, "Open", e -> {
+        popupMenu.add(Menus.item(CarbonIcons.LAUNCH, "Open Table", e -> {
             TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
             open(getPath(lastSelected));
         }));
-        popupMenu.add(Menus.item(CarbonIcons.CHART_CUSTOM, "Define", e -> {
+        popupMenu.addSeparator();
+        popupMenu.add(Menus.item(CarbonIcons.CHART_CUSTOM, "Edit Definition", e -> {
             TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
             define(getPath(lastSelected));
+        }));
+        popupMenu.add(Menus.item(CarbonIcons.COPY, "Copy Definition", e -> {
+            TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
+            defineCopy(getPath(lastSelected));
+        }));
+        popupMenu.addSeparator();
+        popupMenu.add(Menus.item(CarbonIcons.DELETE, "Delete Table", e -> {
+            Table toDelete = getTable((TreeNode) tree.getLastSelectedPathComponent());
+            if (toDelete == null) {
+                return;
+            }
+
+            if (JOptionPane.showConfirmDialog(getParent(),
+                    "Are you sure you want to delete " + toDelete.getName() + "?",
+                    "Delete Table",
+                    JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            getParent().getActiveRom().removeTable(toDelete);
+
+            update();
         }));
         tree.setComponentPopupMenu(popupMenu);
 
@@ -237,6 +268,14 @@ public class TablesTab
         updateExpansions();
     }
 
+    public void update() {
+        tree.setModel(defaultModel = new DefaultTreeModel(buildModel(null)));
+
+        getComponent().revalidate();
+        getComponent().repaint();
+    }
+
+
     private void open(TreePath selPath) {
         if (selPath == null) {
             return;
@@ -258,6 +297,21 @@ public class TablesTab
 
         if (last instanceof TableNode) {
             getParent().openTableDefinition(((TableNode)last).table);
+        }
+    }
+
+    private void defineCopy(TreePath selPath) {
+        if (selPath == null) {
+            return;
+        }
+
+        Object last = selPath.getLastPathComponent();
+
+        if (last instanceof TableNode) {
+            Table table = ((TableNode)last).table;
+            table = table.copy();
+            table.setName(table.getName() + " (Copy)");
+            getParent().openTableDefinition(table);
         }
     }
 
@@ -375,6 +429,24 @@ public class TablesTab
         @Override
         public void setParent(MutableTreeNode newParent) {
             this.parent = newParent;
+        }
+
+        @Override
+        public int hashCode() {
+            return table.hashCode();
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (obj instanceof TableNode) {
+                return equals((TableNode)obj);
+            } else {
+                return super.equals(obj);
+            }
+        }
+
+        public boolean equals(TableNode obj) {
+            return obj.table.equals(table);
         }
     }
 

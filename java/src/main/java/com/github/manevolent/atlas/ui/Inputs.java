@@ -126,4 +126,10 @@ public class Inputs {
         component.setFocusable(false);
         return component;
     }
+
+    public static <T extends JComponent> T bg(Color color, T component) {
+        component.setOpaque(true);
+        component.setBackground(color);
+        return component;
+    }
 }

@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.ui;
 
 import javax.swing.*;
+import javax.swing.border.Border;
 import java.awt.*;
 
 public class Layout {
@@ -46,6 +47,18 @@ public class Layout {
         return gridBagConstraints;
     }
 
+    public static GridBagConstraints gridBagTop(int width) {
+        GridBagConstraints gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
+        gridBagConstraints.fill = GridBagConstraints.HORIZONTAL;
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.weightx = 1;
+        gridBagConstraints.weighty = 0;
+        gridBagConstraints.gridwidth = width;
+        return gridBagConstraints;
+    }
+
     public static <T extends JComponent> T alignTop(T component) {
         component.setAlignmentY(Component.TOP_ALIGNMENT);
         return component;
@@ -80,6 +93,27 @@ public class Layout {
         }
         b.add(Box.createHorizontalGlue());
         return b;
+    }
+
+    public static <T extends JComponent> T border(Border border, T component) {
+        // See: https://stackoverflow.com/questions/4335131/adding-border-to-jcheckbox
+        if (component instanceof AbstractButton) {
+            ((AbstractButton) component).setBorderPainted(true);
+        }
+
+        component.setBorder(border);
+        return component;
+    }
+
+    public static <T extends JComponent> T matteBorder(int top, int left, int bottom, int right,
+                                                       Color color,
+                                                       T component) {
+        return border(BorderFactory.createMatteBorder(top, left, bottom, right, color), component);
+    }
+
+    public static <T extends JComponent> T emptyBorder(int top, int left, int bottom, int right,
+                                                       T component) {
+        return border(BorderFactory.createEmptyBorder(top, left, bottom, right), component);
     }
 
 }

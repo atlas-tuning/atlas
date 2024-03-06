@@ -14,9 +14,7 @@ import javax.swing.*;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
@@ -72,7 +70,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                 insets.top,
                 0,
                 insets.bottom,
-                0
+                insets.right
         ));
         labelField.setMaximumSize(new Dimension(
                 Integer.MAX_VALUE,
@@ -113,9 +111,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
             updateTitle();
         })));
 
-        panel.add(Inputs.noFocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", () -> {
-            save();
-        })));
+        panel.add(Inputs.noFocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save)));
 
         JButton copy = Inputs.noFocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this definition into a new table", () -> {
             String newTableName = workingTable.getName();
@@ -155,16 +151,35 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
     private void save() {
         realTable.apply(workingTable);
+
+        // Make sure the table is a part of the project
+        if (!getParent().getActiveRom().hasTable(realTable)) {
+            getParent().getActiveRom().addTable(realTable);
+            Log.ui().log(Level.INFO, "Added new table definition of \"" + workingTable.getName()
+                    + "\" to project.");
+        }
+
         dirty = false;
         updateTitle();
         Log.ui().log(Level.INFO, "Saved working table definition of \"" + workingTable.getName()
                 + "\" to project.");
+
+        // Reload any active editor
+        TableEditor editor = getParent().getActiveTableEditor(realTable);
+        editor.reload();
+
+        // Reload various menus across the editor
+        getParent().updateWindowTitles();
+        getParent().getTablesTab().update();
+        getParent().getTablesTab().tableOpened(realTable);
     }
 
     private JPanel createTablePanel() {
         JPanel panel = createEntryPanel();
 
-        panel.add(Labels.boldText("Table"), Layout.gridBagTop());
+        panel.add(Layout.emptyBorder(0, 0, 5, 0,
+                        Labels.boldText("Table")),
+                Layout.gridBagTop(2));
 
         createEntryRow(
                 panel, 1,
@@ -273,14 +288,15 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
             checkBox.setFocusable(false);
             axisCheckboxes.put(axis, checkBox);
-            panel.add(bold(checkBox),
-                    Layout.gridBagTop()
+            panel.add(Layout.emptyBorder(0, 0, 1, 0, bold(checkBox)),
+                    Layout.gridBagTop(2)
             );
 
             enabled = checkBox.isSelected();
         } else {
             enabled = true;
-            panel.add(Labels.boldText("Data series"), Layout.gridBagTop());
+            panel.add(Layout.emptyBorder(0, 0, 1, 0,
+                            Labels.boldText("Data series")), Layout.gridBagTop(2));
         }
 
         nameField.setEnabled(enabled);
@@ -312,10 +328,6 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         preview.reload();
     }
 
-    private void updateTitle() {
-        getComponent().setTitle(getTitle());
-    }
-
     private void definitionUpdated() {
         dirty = true;
         updateTitle();
@@ -337,14 +349,10 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         }
 
         Color borderColor = Color.GRAY.darker();
-        rootPanel = new JPanel(new GridBagLayout());
-        rootPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, borderColor));
+        rootPanel = Layout.matteBorder(1, 0, 0, 0, borderColor, new JPanel(new GridBagLayout()));
 
-        JPanel seriesPanel = new JPanel();
+        JPanel seriesPanel = Layout.matteBorder(0, 0, 1, 0, borderColor, new JPanel());
         seriesPanel.setLayout(new BoxLayout(seriesPanel, BoxLayout.X_AXIS));
-
-        seriesPanel.setBorder(BorderFactory.createMatteBorder(
-                0, 0, 1, 0, borderColor));
 
         seriesPanel.add(createTablePanel());
         seriesPanel.add(Separators.vertical());
