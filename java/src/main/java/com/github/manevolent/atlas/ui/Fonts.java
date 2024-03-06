@@ -1,10 +1,15 @@
 package com.github.manevolent.atlas.ui;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 
 public class Fonts {
     private static final String defaultConsoleFont = "Courier New";
+
+    public static Color getTextColor() {
+        return new JLabel().getForeground();
+    }
 
     public static FontMetrics getFontMetrics(Font font) {
         Canvas c = new Canvas();

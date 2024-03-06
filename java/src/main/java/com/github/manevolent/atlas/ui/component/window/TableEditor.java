@@ -32,6 +32,7 @@ import java.util.stream.IntStream;
 
 import static com.github.manevolent.atlas.definition.Axis.X;
 import static com.github.manevolent.atlas.definition.Axis.Y;
+import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
 public class TableEditor extends Window implements
         FocusListener,
@@ -86,7 +87,7 @@ public class TableEditor extends Window implements
 
     @Override
     public Icon getIcon() {
-        return Icons.get(CarbonIcons.DATA_TABLE, Color.WHITE);
+        return Icons.get(CarbonIcons.DATA_TABLE, getTextColor());
     }
 
     @Override

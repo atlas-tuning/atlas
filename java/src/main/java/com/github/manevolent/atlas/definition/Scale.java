@@ -17,6 +17,10 @@ public class Scale {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public float forward(float a) {
         for (ScalingOperation operation : operations) {
             a = operation.getOperation().forward(a, operation.getCoefficient());
@@ -45,6 +49,10 @@ public class Scale {
         return unit;
     }
 
+    public void setUnit(Unit unit) {
+        this.unit = unit;
+    }
+
     public DataFormat getFormat() {
         return format;
     }
@@ -59,6 +67,14 @@ public class Scale {
         return Math.abs(a - b);
     }
 
+    public float getMinimum() {
+        return forward(format.getMin());
+    }
+
+    public float getMaximum() {
+        return forward(format.getMax());
+    }
+
     @Override
     public String toString() {
         String formatString = getFormat().name().toLowerCase() + ", " + getUnit().getText();
@@ -67,6 +83,10 @@ public class Scale {
         } else {
             return name + " (" + formatString + ")";
         }
+    }
+
+    public void setFormat(DataFormat format) {
+        this.format = format;
     }
 
     public static class Builder {

@@ -39,6 +39,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     private ConsoleTab consoleTab;
     private DataLoggingTab dataLoggingTab;
     private HelpTab helpTab;
+    private FormatsTab formatsTab;
 
     // State variables (open windows, etc.)
     private Rom rom;
@@ -76,6 +77,10 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     public TablesTab getTablesTab() {
         return tablesTab;
+    }
+
+    public FormatsTab getFormatsTab() {
+        return formatsTab;
     }
 
     public WindowMenu getWindowMenu() {
@@ -258,8 +263,9 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         bottomPane.setLayout(new BoxLayout(bottomPane, BoxLayout.Y_AXIS));
 
         TabbedPane tabbedPane = new TabbedPane(this);
-        tabbedPane.addTab(initConsoleTab());
         tabbedPane.addTab(initLoggingTab());
+        tabbedPane.addTab(initFormatsTab());
+        tabbedPane.addTab(initConsoleTab());
         tabbedPane.addTab(initHelpTab());
         bottomPane.add(tabbedPane.getComponent());
 
@@ -272,6 +278,10 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     private Tab initLoggingTab() {
         return (dataLoggingTab = new DataLoggingTab(this));
+    }
+
+    private Tab initFormatsTab() {
+        return (formatsTab = new FormatsTab(this));
     }
 
     private Tab initHelpTab() {

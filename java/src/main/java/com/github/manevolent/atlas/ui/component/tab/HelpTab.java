@@ -7,6 +7,8 @@ import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import javax.swing.*;
 import java.awt.*;
 
+import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+
 public class HelpTab extends Tab {
     public HelpTab(EditorForm editor) {
         super(editor);
@@ -19,7 +21,7 @@ public class HelpTab extends Tab {
 
     @Override
     public Icon getIcon() {
-        return Icons.get(CarbonIcons.HELP, Color.WHITE);
+        return Icons.get(CarbonIcons.HELP, getTextColor());
     }
 
     @Override

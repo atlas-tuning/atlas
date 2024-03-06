@@ -116,4 +116,66 @@ public class Layout {
         return border(BorderFactory.createEmptyBorder(top, left, bottom, right), component);
     }
 
+    public static <T extends JComponent> T emptyBorder(T component) {
+        return emptyBorder(0, 0, 0, 0, component);
+    }
+
+    public static <T extends JComponent> T topBorder(int top, T component) {
+        return emptyBorder(top, 0, 0, 0, component);
+    }
+
+    public static <T extends JComponent> JScrollPane scroll(int vsbpolicy, int hsbpolicy, T component) {
+        JScrollPane scrollPane = new JScrollPane(component, vsbpolicy, hsbpolicy);
+
+        return scrollPane;
+    }
+
+    public static <T extends JComponent> JScrollPane scrollAsNeeded(T component) {
+        return scroll(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED, component);
+    }
+
+    public static <T extends JComponent> JScrollPane scrollVertical(T component) {
+        return scroll(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED, component);
+    }
+
+    public static <T extends JComponent> JScrollPane scrollHorizontal(T component) {
+        return scroll(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED,
+                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS, component);
+    }
+
+    public static <T extends JComponent> JScrollPane scrollBoth(T component) {
+        return scroll(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
+                JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS, component);
+    }
+
+    public static <T extends JComponent> T minimumWidth(T component, int width) {
+        Dimension preferredSize = component.getPreferredSize();
+        component.setPreferredSize(new Dimension(
+                Math.max(width, preferredSize.width),
+                (int) preferredSize.getHeight()
+        ));
+        component.setMinimumSize(new Dimension(
+                Math.max(width, preferredSize.width),
+                (int) preferredSize.getHeight()
+        ));
+        return component;
+    }
+
+    public static <T extends JComponent> JPanel space(int top, int left, int bottom, int right, T component) {
+        JPanel outer = new JPanel();
+        JPanel space = new JPanel();
+        emptyBorder(top, left, bottom, right, space);
+        space.add(component);
+        outer.add(space);
+        return outer;
+    }
+
+    public static JPanel wrap(LayoutManager layout, JComponent component, Object layoutData) {
+        JPanel wrapped = new JPanel(layout);
+        wrapped.add(component, layoutData);
+        return wrapped;
+    }
+
 }

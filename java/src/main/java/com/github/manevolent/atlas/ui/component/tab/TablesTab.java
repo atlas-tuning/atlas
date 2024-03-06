@@ -20,6 +20,8 @@ import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 
+import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+
 public class TablesTab
         extends Tab
         implements TreeSelectionListener, MouseListener {
@@ -40,7 +42,7 @@ public class TablesTab
 
     @Override
     public Icon getIcon() {
-        return Icons.get(CarbonIcons.DATA_TABLE, Color.WHITE);
+        return Icons.get(CarbonIcons.TREE_VIEW_ALT, getTextColor());
     }
 
     private Table getTable(TreeNode node) {

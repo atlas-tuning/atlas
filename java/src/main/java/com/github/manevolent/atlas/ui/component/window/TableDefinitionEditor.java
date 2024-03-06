@@ -21,6 +21,7 @@ import java.util.logging.Level;
 import static com.github.manevolent.atlas.definition.Axis.X;
 import static com.github.manevolent.atlas.definition.Axis.Y;
 import static com.github.manevolent.atlas.ui.Fonts.bold;
+import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
 public class TableDefinitionEditor extends Window implements InternalFrameListener {
     private final Table realTable;
@@ -50,7 +51,6 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     private JComponent createEntryRow(JPanel entryPanel, int row,
                                       String label, String helpText,
                                       JComponent input) {
-
         // Label
         JLabel labelField = Labels.darkerText(label);
         entryPanel.add(labelField, Layout.gridBagConstraints(
@@ -95,7 +95,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        panel.add(Inputs.noFocus(Inputs.button(CarbonIcons.RESET, "Reset", "Reset entered values", () -> {
+        panel.add(Inputs.nofocus(Inputs.button(CarbonIcons.RESET, "Reset", "Reset entered values", () -> {
             if (JOptionPane.showConfirmDialog(getComponent(),
                     "Are you sure you want to reset " +
                     workingTable.getName() + "?",
@@ -111,9 +111,9 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
             updateTitle();
         })));
 
-        panel.add(Inputs.noFocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save)));
+        panel.add(Inputs.nofocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save)));
 
-        JButton copy = Inputs.noFocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this definition into a new table", () -> {
+        JButton copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this definition into a new table", () -> {
             String newTableName = workingTable.getName();
             if (newTableName.contains("-")) {
                 newTableName = newTableName.substring(0, newTableName.lastIndexOf("-")) + "- Copy";
@@ -126,7 +126,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         }));
         panel.add(copy);
 
-        JButton open = Inputs.noFocus(Inputs.button(CarbonIcons.OPEN_PANEL_TOP, "Open", "Open table and edit cells",
+        JButton open = Inputs.nofocus(Inputs.button(CarbonIcons.OPEN_PANEL_TOP, "Open", "Open table and edit cells",
                 () -> {
                     getParent().openTable(realTable);
                 }));
@@ -216,6 +216,14 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
             definitionUpdated();
         });
 
+        JTextField nameField = Inputs.textField(series != null ? series.getName() : null, (newName) -> {
+            Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
+            if (s.getName() == null || !s.getName().equals(newName)) {
+                s.setName(newName);
+                definitionUpdated();
+            }
+        });
+
         JComboBox<Scale> scaleField = Inputs.scaleField(
                 getParent().getActiveRom(),
                 workingTable, axis,
@@ -226,20 +234,19 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                     if (newScale.getUnit() != null) {
                         s.setUnit(newScale.getUnit());
                     }
+
                     if (newScale.getFormat() != null) {
                         s.setFormat(newScale.getFormat());
+                    }
+
+                    // Shortcut to set the name of a series
+                    if (newScale.getName() != null && !newScale.getName().isBlank() &&
+                            (nameField.getText() == null || nameField.getText().isBlank())) {
+                        nameField.setText(newScale.getName());
                     }
                     definitionUpdated();
                 }
         );
-
-        JTextField nameField = Inputs.textField(series != null ? series.getName() : null, (newName) -> {
-            Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
-            if (s.getName() == null || !s.getName().equals(newName)) {
-                s.setName(newName);
-                definitionUpdated();
-            }
-        });
 
         boolean enabled;
 
@@ -387,7 +394,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
     @Override
     public Icon getIcon() {
-        return Icons.get(CarbonIcons.CHART_CUSTOM, Color.WHITE);
+        return Icons.get(CarbonIcons.CHART_CUSTOM, getTextColor());
     }
 
     @Override

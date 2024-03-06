@@ -32,6 +32,8 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
+import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+
 public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExceptionHandler {
     private static final String eol = "\r\n";
     private static final DateFormat dateFormatter = new SimpleDateFormat("HH:mm:ss.SSS");;
@@ -54,7 +56,7 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
 
     @Override
     public Icon getIcon() {
-        return Icons.get(CarbonIcons.TERMINAL, Color.WHITE);
+        return Icons.get(CarbonIcons.TERMINAL, getTextColor());
     }
 
     @Override

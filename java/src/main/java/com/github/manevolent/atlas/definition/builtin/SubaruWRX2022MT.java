@@ -19,17 +19,20 @@ public class SubaruWRX2022MT {
     public static final String romResource = "/roms/" + String.format(fileFormat, testRomName);
 
     public static final Scale.Builder rpm_16bit = Scale.builder()
+            .withName("RPM")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
             .withUnit(RPM);
 
     public static final Scale.Builder rpm_8bit = Scale.builder()
+            .withName("RPM")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.LSHIFT, 8)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.1953125f)
             .withUnit(RPM);
 
     public static final Scale.Builder rpm_8bit_2 = Scale.builder()
+            .withName("RPM (2)")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.LSHIFT, 3)
             .withOperation(ArithmeticOperation.MULTIPLY, 16f)
@@ -37,28 +40,33 @@ public class SubaruWRX2022MT {
             .withUnit(RPM);
 
     public static final Scale.Builder req_torque_16bit = Scale.builder()
+            .withName("Requested Torque")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.SUBTRACT, 0x3E80)
             .withOperation(ArithmeticOperation.DIVIDE, 0x50)
             .withUnit(NM);
 
     public static final Scale.Builder calculated_load_16bit = Scale.builder()
+            .withName("Calculated Load")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, 0.00006103515625f)
             .withUnit(G_PER_REV);
 
     public static final Scale.Builder calculated_load_8bit = Scale.builder()
+            .withName("Calculated Load")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.LSHIFT, 8)
             .withOperations(calculated_load_16bit);
 
     public static final Scale.Builder percent_8bit = Scale.builder()
+            .withName("Percent")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.DIVIDE, 255.0f)
             .withOperation(ArithmeticOperation.MULTIPLY, 100)
             .withUnit(PERCENT);
 
     public static final Scale.Builder directInjectionFuelPressureScale_16bit = Scale.builder()
+            .withName("DI Fuel Pressure")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x7D)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
@@ -66,11 +74,13 @@ public class SubaruWRX2022MT {
             .withUnit(KPA);
 
     public static final Scale.Builder directInjectionFuelPressureScale_8bit = Scale.builder()
+            .withName("DI Fuel Pressure")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.MULTIPLY, (float)0x96)
             .withOperations(directInjectionFuelPressureScale_16bit);
 
     public static final Scale.Builder boostTargetPressureScale_16bit = Scale.builder()
+            .withName("Boost Target Abs.")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.ADD, 0x6A6)
             .withOperation(ArithmeticOperation.MULTIPLY, 2)
@@ -78,19 +88,26 @@ public class SubaruWRX2022MT {
             .withUnit(KPA);
 
     public static final Scale.Builder barometricPressure_16bit = Scale.builder()
+            .withName("Barometric Pressure")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.RSHIFT, 8)
             .withOperation(ArithmeticOperation.DIVIDE, 6.895f)
             .withUnit(PSI);
+
     public static final Scale.Builder manifoldPressure_16bit = Scale.builder()
+            .withName("Manifold Pressure")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, 2)
             .withOperations(barometricPressure_16bit)
             .withUnit(PSI);
+
     public static final Scale.Builder boostErrorPressure_16bit = Scale.builder()
+            .withName("Boost Error")
             .withFormat(DataFormat.SSHORT) // This is important
             .withOperations(manifoldPressure_16bit);
+
     public static final Scale.Builder boostTargetPressureScale_RelSL_16bit = Scale.builder()
+            .withName("Boost Target rel. S/L")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.ADD, 0x6A6)
             .withOperation(ArithmeticOperation.MULTIPLY, 2)
@@ -99,6 +116,7 @@ public class SubaruWRX2022MT {
             .withUnit(PSI);
 
     public static final Scale.Builder boostTargetCompensation_8bit = Scale.builder()
+            .withName("Boost Target Compensation")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.SUBTRACT, 0x55)
             .withOperation(ArithmeticOperation.MULTIPLY, 1/85f) // This takes a while to figure out
@@ -106,6 +124,7 @@ public class SubaruWRX2022MT {
             .withUnit(Unit.PERCENT);
 
     public static final Scale.Builder coolantTemp16BitScale = Scale.builder()
+            .withName("Coolant Temperature")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, 5.0f)
             .withOperation(ArithmeticOperation.RSHIFT, 0xB)
@@ -113,28 +132,33 @@ public class SubaruWRX2022MT {
             .withUnit(CELSIUS);
 
     public static final Scale.Builder coolantTemp8BitScale = Scale.builder()
+            .withName("Coolant Temperature")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.LSHIFT, 8)
             .withOperations(coolantTemp16BitScale);
 
 
     public static final Scale.Builder wastegatePosition16bitScale = Scale.builder()
+            .withName("Wastegate Position")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.SUBTRACT, 0x4000)
             .withOperation(ArithmeticOperation.DIVIDE, 0x666)
             .withUnit(Unit.MILLIMETER);
 
     public static final Scale.Builder wastegatePositionErrorCorr16bitScale = Scale.builder()
+            .withName("Wastegate Position Error Corr.")
             .withFormat(DataFormat.SSHORT)
             .withOperation(ArithmeticOperation.DIVIDE, 0x666)
             .withUnit(Unit.MILLIMETER);
 
     public static final Scale.Builder intakeAirTemperature8bitScale = Scale.builder()
+            .withName("Intake Air Temperature")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.SUBTRACT, 50)
             .withUnit(Unit.CELSIUS);
 
     public static final Scale.Builder baseIgnitionTiming = Scale.builder()
+            .withName("Base Ignition Timing")
             .withOperations(
                     ScalingOperation.from(ArithmeticOperation.SUBTRACT, 0x20),
                     ScalingOperation.from(ArithmeticOperation.DIVIDE, 2)
@@ -143,26 +167,31 @@ public class SubaruWRX2022MT {
             .withUnit(Unit.DEGREES);
 
     private static final Scale.Builder sensorVoltageScale = Scale.builder()
+            .withName("Sensor Voltage")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.DIVIDE, 13106.25f)
             .withUnit(Unit.VOLTS);
 
     private static final Scale.Builder sensorTemperatureScale = Scale.builder()
+            .withName("Sensor Temperature")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.SUBTRACT, 50)
             .withUnit(CELSIUS);
 
     public static final Scale.Builder ignitionTimingCompensationScale = Scale.builder()
+            .withName("Ignition Timing Compensation")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.DIVIDE, 2)
             .withUnit(Unit.DEGREES);
 
     public static final Scale.Builder ignitionTimingDynamicAdvanceScale = Scale.builder()
+            .withName("Dynamic Advance Compensation")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.DIVIDE, 2)
             .withUnit(Unit.DEGREES);
 
     private static final Scale.Builder ignitionTimingIatCompensationScale = Scale.builder()
+            .withName("Ignition Timing IAT Compensation")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.MULTIPLY, 5f)
             .withOperation(ArithmeticOperation.ADD, 20480f)
@@ -170,11 +199,13 @@ public class SubaruWRX2022MT {
             .withUnit(Unit.CELSIUS);
 
     public static final Scale.Builder ignitionTimingCoolantCompensationScale = Scale.builder()
+            .withName("Ignition Timing Coolant Compensation")
             .withFormat(DataFormat.USHORT)
             .withOperation(ArithmeticOperation.DIVIDE, 10)
             .withUnit(DEGREES);
 
     private static Scale.Builder percent_8bit_negative = Scale.builder()
+            .withName("Percent (-50 to 50%)")
             .withFormat(DataFormat.UBYTE)
             .withOperation(ArithmeticOperation.SUBTRACT, 0x80)
             .withOperation(ArithmeticOperation.DIVIDE, 0xFF)

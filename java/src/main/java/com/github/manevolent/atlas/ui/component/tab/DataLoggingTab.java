@@ -7,6 +7,8 @@ import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import javax.swing.*;
 import java.awt.*;
 
+import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+
 public class DataLoggingTab extends Tab {
     public DataLoggingTab(EditorForm editor) {
         super(editor);
@@ -19,7 +21,7 @@ public class DataLoggingTab extends Tab {
 
     @Override
     public Icon getIcon() {
-        return Icons.get(CarbonIcons.DOCUMENT_DOWNLOAD, Color.WHITE);
+        return Icons.get(CarbonIcons.DOCUMENT_DOWNLOAD, getTextColor());
     }
 
     @Override

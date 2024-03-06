@@ -4,7 +4,7 @@ import java.nio.ByteOrder;
 import java.util.function.BiFunction;
 
 public enum DataFormat {
-    SBYTE(1, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
+    SBYTE(1, Byte.MIN_VALUE, Byte.MAX_VALUE, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         byte b = data[0];
         return (float) b;
     }, (f, byteOrder) -> {
@@ -18,7 +18,7 @@ public enum DataFormat {
         return new byte[] { (byte) i };
     }),
 
-    UBYTE(1, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
+    UBYTE(1, 0f, 255f, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         byte b = data[0];
         int i = b & 0xFF;
         return (float) i;
@@ -33,7 +33,7 @@ public enum DataFormat {
         return new byte[] { (byte) i };
     }),
 
-    SSHORT(2, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
+    SSHORT(2, Short.MIN_VALUE, Short.MAX_VALUE, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         int low, high;
         if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
             low = data[0] & 0xFF;
@@ -58,7 +58,7 @@ public enum DataFormat {
         return data;
     }),
 
-    USHORT(2, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
+    USHORT(2, 0f, 65535f, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         int low;
         int high;
 
@@ -99,11 +99,15 @@ public enum DataFormat {
     private final BiFunction<Float, ByteOrder, byte[]> convertToBytes;
     private final int size;
     private final Precision precision;
+    private final float min, max;
 
     DataFormat(int size,
+               float min, float max,
                Precision precision,
                BiFunction<byte[], ByteOrder, Float> convertFromBytes,
                BiFunction<Float, ByteOrder, byte[]> convertToBytes) {
+        this.min = min;
+        this.max = max;
         this.size = size;
         this.convertFromBytes = convertFromBytes;
         this.convertToBytes = convertToBytes;
@@ -125,5 +129,19 @@ public enum DataFormat {
 
     public Precision getPrecision() {
         return precision;
+    }
+
+
+    @Override
+    public String toString() {
+        return name().toLowerCase();
+    }
+
+    public float getMin() {
+        return min;
+    }
+
+    public float getMax() {
+        return max;
     }
 }

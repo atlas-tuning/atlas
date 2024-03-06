@@ -122,7 +122,41 @@ public class Inputs {
         return comboBox;
     }
 
-    public static <T extends JComponent> T noFocus(T component) {
+
+    public static JComboBox<DataFormat> dataTypeField(String toolTip, DataFormat intended,
+                                                Consumer<DataFormat> valueChanged) {
+        JComboBox<DataFormat> comboBox = new JComboBox<>(DataFormat.values());
+        if (intended != null) {
+            comboBox.setSelectedItem(intended);
+        } else {
+            comboBox.setSelectedItem(DataFormat.UBYTE);
+        }
+        comboBox.addItemListener(e -> {
+            if (e.getStateChange() != SELECTED) {
+                return;
+            }
+            valueChanged.accept((DataFormat) e.getItem());
+        });
+        return comboBox;
+    }
+
+    public static JComboBox<Unit> unitField(String toolTip, Unit intended, Consumer<Unit> valueChanged) {
+        JComboBox<Unit> comboBox = new JComboBox<>(Unit.values());
+        if (intended != null) {
+            comboBox.setSelectedItem(intended);
+        } else {
+            comboBox.setSelectedItem(Unit.RPM);
+        }
+        comboBox.addItemListener(e -> {
+            if (e.getStateChange() != SELECTED) {
+                return;
+            }
+            valueChanged.accept((Unit) e.getItem());
+        });
+        return comboBox;
+    }
+
+    public static <T extends JComponent> T nofocus(T component) {
         component.setFocusable(false);
         return component;
     }
