@@ -250,6 +250,14 @@ public class Table {
         return getName();
     }
 
+    public void updateLength() {
+        int n = 1;
+        for (Axis axis : axes.keySet()) {
+            n *= getSeries(axis).getLength();
+        }
+        data.setLength(n);
+    }
+
     public static class Builder {
         private final Table table = new Table();
 
@@ -281,11 +289,7 @@ public class Table {
         }
 
         public Table build() {
-            int n = 1;
-            for (Axis axis : table.axes.keySet()) {
-                n *= table.getSeries(axis).getLength();
-            }
-            table.data.setLength(n);
+            table.updateLength();
             return table;
         }
     }

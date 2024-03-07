@@ -5,7 +5,7 @@ import java.io.IOException;
 public class Series {
     private String name;
     private int length;
-    private FlashAddress address;
+    private MemoryAddress address;
     private Scale scale;
 
     public float get(int index) throws IOException {
@@ -67,11 +67,11 @@ public class Series {
         return scale.getFormat();
     }
 
-    public FlashAddress getAddress() {
+    public MemoryAddress getAddress() {
         return address;
     }
 
-    public void setAddress(FlashAddress address) {
+    public void setAddress(MemoryAddress address) {
         this.address = address;
     }
 
@@ -106,14 +106,14 @@ public class Series {
             return this;
         }
 
-        public Builder withAddress(FlashAddress address) {
+        public Builder withAddress(MemoryAddress address) {
             this.series.setAddress(address);
             return this;
         }
 
-        public Builder withAddress(FlashRegion region, int offset) {
-            return withAddress(FlashAddress.builder()
-                    .withRegion(region)
+        public Builder withAddress(MemorySection region, int offset) {
+            return withAddress(MemoryAddress.builder()
+                    .withSection(region)
                     .withOffset(offset)
                     .build());
         }

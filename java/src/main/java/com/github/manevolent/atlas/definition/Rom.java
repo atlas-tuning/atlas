@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 public class Rom {
     private Vehicle vehicle;
-    private List<FlashRegion> regions;
+    private List<MemorySection> sections;
     private FlashMethod flashMethod;
     private List<Table> tables;
     private Set<Scale> scales;
@@ -26,12 +26,12 @@ public class Rom {
         this.vehicle = vehicle;
     }
 
-    public List<FlashRegion> getRegions() {
-        return regions;
+    public List<MemorySection> getSections() {
+        return sections;
     }
 
-    public void setRegions(List<FlashRegion> regions) {
-        this.regions = regions;
+    public void setRegions(List<MemorySection> sections) {
+        this.sections = sections;
     }
 
     public FlashMethod getFlashMethod() {
@@ -140,13 +140,13 @@ public class Rom {
             return withTable(table.build());
         }
 
-        public Builder withRegions(FlashRegion... regions) {
-            rom.getRegions().addAll(Arrays.asList(regions));
+        public Builder withSections(MemorySection... regions) {
+            rom.getSections().addAll(Arrays.asList(regions));
             return this;
         }
 
-        public Builder withRegion(FlashRegion region) {
-            rom.getRegions().add(region);
+        public Builder withSection(MemorySection region) {
+            rom.getSections().add(region);
             return this;
         }
 

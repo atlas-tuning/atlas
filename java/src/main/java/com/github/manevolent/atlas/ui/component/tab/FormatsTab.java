@@ -18,6 +18,7 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
@@ -172,8 +173,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             }
 
             if (JOptionPane.showConfirmDialog(getComponent(),
-                    "Are you sure you want to reset " +
-                            scale.getName() + "?",
+                    "Are you sure you want to reset " + scale.getName() + "?",
                     "Reset",
                     JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
                 return;
@@ -204,6 +204,9 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
             update();
             updateListModel();
+            list.setSelectedValue(newScale, true);
+
+            getParent().getOpenWindows().forEach(Window::reload);
         }));
         panel.add(copy);
 
@@ -524,6 +527,57 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     public void editOperation() {
 
         operationChanged();
+    }
+
+    public void newFormat() {
+        String newScaleName = JOptionPane.showInputDialog(getParent(), "Specify a name", "New Format");
+        if (newScaleName == null || newScaleName.isBlank()) {
+            return;
+        }
+
+        Scale newScale = new Scale();
+        newScale.setUnit(Unit.RPM);
+        newScale.setFormat(DataFormat.UBYTE);
+        newScale.setOperations(new ArrayList<>());
+        newScale.setName(newScaleName);
+        workingCopies.put(newScale, newScale);
+        getParent().getActiveRom().getScales().add(newScale);
+
+        update();
+        updateListModel();
+        list.setSelectedValue(newScale, true);
+
+        getParent().getOpenWindows().forEach(Window::reload);
+    }
+
+    public void deleteFormat() {
+        Scale scale = list.getSelectedValue();
+        if (scale == null) {
+            return;
+        }
+
+        boolean used = getParent().getActiveRom().getTables().stream()
+                .anyMatch(table -> table.hasScale(scale));
+        if (used) {
+            JOptionPane.showMessageDialog(getParent(), scale.getName() +
+                            "\r\nFormat is in use by other tables, and cannot be deleted.",
+                    "Format in use", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (JOptionPane.showConfirmDialog(getParent(),
+                "Are you sure you want to delete \"" + scale.toString() + "\"?",
+                "Delete operation",
+                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        getParent().getActiveRom().getScales().remove(scale);
+
+        update();
+        updateListModel();
+
+        getParent().getOpenWindows().forEach(Window::reload);
     }
 
     private static class Renderer extends DefaultListCellRenderer {

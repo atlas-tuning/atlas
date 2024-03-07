@@ -212,8 +212,8 @@ public class SubaruWRX2022MT {
             .withOperation(ArithmeticOperation.MULTIPLY, 100)
             .withUnit(PERCENT);
 
-    public static Table.Builder ignitionTimingBaseTable(FlashRegion code, String name, int timingDataAddress,
-                                                         int rpmAddress, int loadAddress) {
+    public static Table.Builder ignitionTimingBaseTable(MemorySection code, String name, int timingDataAddress,
+                                                        int rpmAddress, int loadAddress) {
         return Table.builder()
                 .withName("Ignition Timing - Base - " + name)
                 .withData(Series.builder()
@@ -232,8 +232,8 @@ public class SubaruWRX2022MT {
                         .withScale(calculated_load_16bit));
     }
 
-    public static Table.Builder dynamicAdvanceIgnitionTimingTable(FlashRegion code, String name, int timingDataAddress,
-                                                                   int rpmAddress, int rpmLength, int loadAddress, int loadLength) {
+    public static Table.Builder dynamicAdvanceIgnitionTimingTable(MemorySection code, String name, int timingDataAddress,
+                                                                  int rpmAddress, int rpmLength, int loadAddress, int loadLength) {
         return Table.builder()
                 .withName("Ignition Timing - Dynamic Advance - " + name)
                 .withData(Series.builder()
@@ -252,10 +252,10 @@ public class SubaruWRX2022MT {
                         .withScale(calculated_load_16bit));
     }
 
-    public static Table.Builder fuelPressureTargetWarmupTable_1D(FlashRegion code,
-                                                                  String name,
-                                                                  int dataAddress,
-                                                                  int coolantTempAddress) {
+    public static Table.Builder fuelPressureTargetWarmupTable_1D(MemorySection code,
+                                                                 String name,
+                                                                 int dataAddress,
+                                                                 int coolantTempAddress) {
         return Table.builder()
                 .withName("Fuel Pressure Target - " + name)
                 .withData(Series.builder()
@@ -272,12 +272,12 @@ public class SubaruWRX2022MT {
     }
 
 
-    public static Table.Builder fuelPressureTargetWarmupTable_2D(FlashRegion code,
-                                                                  String name,
-                                                                  int dataAddress,
-                                                                  boolean _16bit,
-                                                                  int coolantTempAddress,
-                                                                  int rpmAddress) {
+    public static Table.Builder fuelPressureTargetWarmupTable_2D(MemorySection code,
+                                                                 String name,
+                                                                 int dataAddress,
+                                                                 boolean _16bit,
+                                                                 int coolantTempAddress,
+                                                                 int rpmAddress) {
         return Table.builder()
                 .withName("Fuel Pressure Target - " + name)
                 .withData(Series.builder()
@@ -301,11 +301,11 @@ public class SubaruWRX2022MT {
     }
 
 
-    public static Table.Builder fuelPressureTargetMainTable_2D(FlashRegion code,
-                                                                String name,
-                                                                int dataAddress,
-                                                                int rpmAddress,
-                                                                int loadAddress) {
+    public static Table.Builder fuelPressureTargetMainTable_2D(MemorySection code,
+                                                               String name,
+                                                               int dataAddress,
+                                                               int rpmAddress,
+                                                               int loadAddress) {
         return Table.builder()
                 .withName("Fuel Pressure Target - " + name)
                 .withData(Series.builder()
@@ -325,11 +325,11 @@ public class SubaruWRX2022MT {
                         .withScale(calculated_load_16bit));
     }
 
-    public static Table.Builder ignitionTimingGearCompTable(FlashRegion code,
-                                                             String gear,
-                                                             int dataAddress,
-                                                             int rpmAddress,
-                                                             int loadAddress) {
+    public static Table.Builder ignitionTimingGearCompTable(MemorySection code,
+                                                            String gear,
+                                                            int dataAddress,
+                                                            int rpmAddress,
+                                                            int loadAddress) {
 
         return Table.builder()
                 .withName("Ignition Timing - Compensation - Gear - " + gear)
@@ -350,13 +350,13 @@ public class SubaruWRX2022MT {
                         .withScale(calculated_load_16bit));
     }
 
-    public static Table.Builder[] ignitionTimingIatCompTables(FlashRegion code,
-                                                               String name,
-                                                               int dataAddress,
-                                                               int iatAddress,
-                                                               int activationDataAddress,
-                                                               int activationRpmAddress,
-                                                               int activationCalcLoadAddress) {
+    public static Table.Builder[] ignitionTimingIatCompTables(MemorySection code,
+                                                              String name,
+                                                              int dataAddress,
+                                                              int iatAddress,
+                                                              int activationDataAddress,
+                                                              int activationRpmAddress,
+                                                              int activationCalcLoadAddress) {
         return new Table.Builder[] {
                 Table.builder()
                         .withName("Ignition Timing - Compensation - IAT - " + name)
@@ -392,12 +392,12 @@ public class SubaruWRX2022MT {
         };
     }
 
-    public static Table.Builder ignitionTimingCoolantCompTable(FlashRegion code,
-                                                                String name,
-                                                                int dataAddress,
-                                                                DataFormat dataFormat,
-                                                                Scale.Builder dataScale,
-                                                                int coolantAddress) {
+    public static Table.Builder ignitionTimingCoolantCompTable(MemorySection code,
+                                                               String name,
+                                                               int dataAddress,
+                                                               DataFormat dataFormat,
+                                                               Scale.Builder dataScale,
+                                                               int coolantAddress) {
         return Table.builder()
                 .withName("Ignition Timing - Compensation - Coolant - " + name)
                 .withData(Series.builder()
@@ -413,19 +413,19 @@ public class SubaruWRX2022MT {
                 );
     }
 
-    public static Table.Builder ignitionTimingCoolantActivationTable(FlashRegion code,
-                                                                      String name,
-                                                                      int activationDataAddress,
-                                                                      DataFormat activationFormat,
-                                                                      Scale.Builder activationScale,
-                                                                      int activationRpmAddress,
-                                                                      int rpmLength,
-                                                                      DataFormat rpmFormat,
-                                                                      Scale.Builder rpmScale,
-                                                                      int activationCalcLoadAddress,
-                                                                      int calcLoadLength,
-                                                                      DataFormat calcLoadFormat,
-                                                                      Scale.Builder calcLoadScale) {
+    public static Table.Builder ignitionTimingCoolantActivationTable(MemorySection code,
+                                                                     String name,
+                                                                     int activationDataAddress,
+                                                                     DataFormat activationFormat,
+                                                                     Scale.Builder activationScale,
+                                                                     int activationRpmAddress,
+                                                                     int rpmLength,
+                                                                     DataFormat rpmFormat,
+                                                                     Scale.Builder rpmScale,
+                                                                     int activationCalcLoadAddress,
+                                                                     int calcLoadLength,
+                                                                     DataFormat calcLoadFormat,
+                                                                     Scale.Builder calcLoadScale) {
         return Table.builder()
                 .withName("Ignition Timing - Compensation - Coolant - " + name + " Activation")
                 .withData(Series.builder()
@@ -446,13 +446,13 @@ public class SubaruWRX2022MT {
                 );
     }
 
-    public static Table.Builder[] ignitionTimingCoolantCompTables(FlashRegion code,
-                                                                   String name,
-                                                                   int dataAddress,
-                                                                   int coolantAddress,
-                                                                   int activationDataAddress,
-                                                                   int activationRpmAddress,
-                                                                   int activationCalcLoadAddress) {
+    public static Table.Builder[] ignitionTimingCoolantCompTables(MemorySection code,
+                                                                  String name,
+                                                                  int dataAddress,
+                                                                  int coolantAddress,
+                                                                  int activationDataAddress,
+                                                                  int activationRpmAddress,
+                                                                  int activationCalcLoadAddress) {
         return new Table.Builder[] {
                 ignitionTimingCoolantCompTable(code, name,
                         dataAddress, DataFormat.USHORT, ignitionTimingCoolantCompensationScale,
@@ -467,8 +467,8 @@ public class SubaruWRX2022MT {
         };
     }
 
-    public static final Table.Builder singleValueTable(FlashRegion code, String name, int dataAddress,
-                                                        Scale.Builder scale) {
+    public static final Table.Builder singleValueTable(MemorySection code, String name, int dataAddress,
+                                                       Scale.Builder scale) {
         return Table.builder()
                 .withName(name)
                 .withData(Series.builder()
@@ -479,7 +479,7 @@ public class SubaruWRX2022MT {
     }
 
     public static Rom newRom() throws IOException {
-        FlashRegion code = new FlashRegion();
+        MemorySection code = new MemorySection();
         code.setByteOrder(ByteOrder.LITTLE_ENDIAN);
         code.setBaseAddress(0x0);
         code.setEncryption(SubaruDITFlashEncryption.WRX_MT_2022_USDM);
@@ -494,7 +494,7 @@ public class SubaruWRX2022MT {
                         .withModel("WRX")
                         .withTrim("Premium")
                         .withTransmission("MT"))
-                .withRegion(code)
+                .withSection(code)
                 .withScales(
                         rpm_16bit,
                         rpm_8bit,

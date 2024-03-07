@@ -6,7 +6,7 @@ import com.github.manevolent.atlas.definition.Series;
 import com.github.manevolent.atlas.definition.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.*;
-import com.github.manevolent.atlas.ui.component.JFlashRegionField;
+import com.github.manevolent.atlas.ui.component.JFlashAddressField;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -207,12 +207,11 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
         JPanel panel = createEntryPanel();
 
-        JFlashRegionField flashRegionField = Inputs.flashRegionField(
+        JFlashAddressField memoryAddressField = Inputs.memoryAddressField(
                 getParent().getActiveRom(),
-                workingTable, axis, (newRegion, newLength) -> {
+                workingTable, axis, (newAddress) -> {
             Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
-            s.setAddress(newRegion);
-            s.setLength(newLength);
+            s.setAddress(newAddress);
             definitionUpdated();
         });
 
@@ -242,8 +241,20 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         );
 
         boolean enabled;
-
+        JSpinner memoryLengthField;
         if (axis != null) {
+            memoryLengthField = Inputs.memoryLengthField(
+                    series,
+                    (newLength) -> {
+                        Series currentSeries = workingTable.getSeries(axis);
+                        if (currentSeries != null) {
+                            currentSeries.setLength(newLength);
+                            workingTable.updateLength();
+                            definitionUpdated();
+                        }
+                    }
+            );
+
             JCheckBox checkBox = Inputs.checkbox(axis.name() + " axis",
                     workingTable.hasAxis(axis),
                     checked -> {
@@ -251,14 +262,14 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                             // Try to automatically pick a scale if one isn't picked
                             Scale scale = (Scale) scaleField.getSelectedItem();
                             if (scale == null) {
-                                scale = (Scale) scaleField.getItemAt(0);
+                                scale = scaleField.getItemAt(0);
                             }
 
                             Series newSeries = Series.builder()
                                     .withName(nameField.getText())
                                     .withScale(scale)
-                                    .withAddress(flashRegionField.getDataAddress())
-                                    .withLength(flashRegionField.getDataLength())
+                                    .withAddress(memoryAddressField.getDataAddress())
+                                    .withLength((int) memoryLengthField.getValue())
                                     .build();
 
                             workingTable.setAxis(axis, newSeries);
@@ -267,6 +278,8 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                             workingTable.removeAxis(axis);
                         }
 
+                        workingTable.updateLength();
+
                         if (axis == Y) {
                             axisCheckboxes.get(X).setEnabled(!checked);
                         } else if (axis == X) {
@@ -274,8 +287,9 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                         }
 
                         nameField.setEnabled(checked);
-                        flashRegionField.setEnabled(checked);
+                        memoryAddressField.setEnabled(checked);
                         scaleField.setEnabled(checked);
+                        memoryLengthField.setEnabled(checked);
 
                         definitionUpdated();
                     });
@@ -294,14 +308,18 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
             enabled = checkBox.isSelected();
         } else {
+            memoryLengthField = null;
             enabled = true;
-            panel.add(Layout.emptyBorder(0, 0, 1, 0,
-                            Labels.boldText("Data series")), Layout.gridBagTop(2));
+            panel.add(Layout.emptyBorder(0, 0, 1, 0, Labels.boldText("Data series")),
+                    Layout.gridBagTop(2));
         }
 
         nameField.setEnabled(enabled);
-        flashRegionField.setEnabled(enabled);
+        memoryAddressField.setEnabled(enabled);
         scaleField.setEnabled(enabled);
+        if (memoryLengthField != null) {
+            memoryLengthField.setEnabled(enabled);
+        }
 
         createEntryRow(panel, 1,
                 "Name", axis != null ? "The name of this axis" : "The name of this series",
@@ -310,12 +328,19 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         createEntryRow(panel, 2,
                 axis != null ? "Region" : "Address",
                 axis != null ? "The data region for this axis" : "The data address for this series",
-                flashRegionField);
+                memoryAddressField);
 
         createEntryRow(panel, 3,
                 "Format",
                 axis != null ? "The format of the data in this axis" : "The format of the data in this series",
                 scaleField);
+
+        if (memoryLengthField != null) {
+            createEntryRow(panel, 4,
+                    "Length",
+                    "The length of this axis",
+                    memoryLengthField);
+        }
 
         return panel;
     }
@@ -331,7 +356,13 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     private void definitionUpdated() {
         dirty = true;
         updateTitle();
-        updatePreview();
+
+        try {
+            updatePreview();
+        } catch (Exception ex) {
+            Log.ui().log(Level.WARNING, "Problem updating table preview for table \"" +
+                    getTable().getName() + "\"", ex);
+        }
     }
 
     @Override

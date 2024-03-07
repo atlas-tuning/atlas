@@ -22,11 +22,11 @@ public class FormatsTabToolbar extends Toolbar<FormatsTab> {
     @Override
     protected void initComponent(JToolBar toolbar) {
         toolbar.add(makeSmallButton(FontAwesomeSolid.PLUS, "new", "New format", _ -> {
-
+            getParent().newFormat();
         }));
 
         toolbar.add(makeSmallButton(FontAwesomeSolid.TRASH, "delete", "Delete format", _ -> {
-
+            getParent().deleteFormat();
         }));
     }
 }

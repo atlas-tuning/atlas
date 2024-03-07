@@ -3,16 +3,16 @@ package com.github.manevolent.atlas.definition;
 import java.io.IOException;
 import java.util.HexFormat;
 
-public class FlashAddress {
-    private FlashRegion region;
+public class MemoryAddress {
+    private MemorySection section;
     private int offset;
 
-    public FlashRegion getRegion() {
-        return region;
+    public MemorySection getSection() {
+        return section;
     }
 
-    public void setRegion(FlashRegion region) {
-        this.region = region;
+    public void setSection(MemorySection section) {
+        this.section = section;
     }
 
     public int getOffset() {
@@ -30,8 +30,8 @@ public class FlashAddress {
 
     public float read(int index, DataFormat format) throws IOException {
         byte[] data = new byte[format.getSize()];
-        getRegion().read(data, offset + (index * format.getSize()), 0, format.getSize());
-        return format.convertFromBytes(data, getRegion().getByteOrder());
+        getSection().read(data, offset + (index * format.getSize()), 0, format.getSize());
+        return format.convertFromBytes(data, getSection().getByteOrder());
     }
 
     public static Builder builder() {
@@ -39,19 +39,19 @@ public class FlashAddress {
     }
 
     public void write(int index, float data, DataFormat format) throws IOException {
-        byte[] bytes = format.convertToBytes(data, getRegion().getByteOrder());
-        getRegion().write(bytes, offset + (index * format.getSize()), 0);
+        byte[] bytes = format.convertToBytes(data, getSection().getByteOrder());
+        getSection().write(bytes, offset + (index * format.getSize()), 0);
     }
 
     public static class Builder {
-        private final FlashAddress address;
+        private final MemoryAddress address;
 
         public Builder() {
-            this.address = new FlashAddress();
+            this.address = new MemoryAddress();
         }
 
-        public Builder withRegion(FlashRegion region) {
-            address.setRegion(region);
+        public Builder withSection(MemorySection section) {
+            address.setSection(section);
             return this;
         }
 
@@ -60,7 +60,7 @@ public class FlashAddress {
             return this;
         }
 
-        public FlashAddress build() {
+        public MemoryAddress build() {
             return address;
         }
     }

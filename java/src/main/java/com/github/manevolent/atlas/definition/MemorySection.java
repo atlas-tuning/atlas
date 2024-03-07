@@ -3,7 +3,7 @@ package com.github.manevolent.atlas.definition;
 import java.io.IOException;
 import java.nio.ByteOrder;
 
-public class FlashRegion implements FlashSource {
+public class MemorySection implements FlashSource {
     private FlashType type;
     private FlashSource source;
     private FlashEncryption encryption;

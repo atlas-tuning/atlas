@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.definition.*;
-import com.github.manevolent.atlas.ui.component.JFlashRegionField;
+import com.github.manevolent.atlas.ui.component.JFlashAddressField;
 import org.kordamp.ikonli.Ikon;
 
 import javax.swing.*;
@@ -102,9 +102,34 @@ public class Inputs {
         return textField(null, changed);
     }
 
-    public static JFlashRegionField flashRegionField(Rom rom, Table table, Axis axis,
-                                              BiConsumer<FlashAddress, Integer> changed) {
-        return new JFlashRegionField(rom ,table, axis, changed);
+    public static JFlashAddressField memoryAddressField(Rom rom, Table table, Axis axis,
+                                                        Consumer<MemoryAddress> changed) {
+        return new JFlashAddressField(rom ,table, axis, changed);
+    }
+
+    public static JComboBox<MemorySection> memorySectionField(Rom rom, MemorySection value,
+                                                              Consumer<MemorySection> changed) {
+        JComboBox<MemorySection> comboBox = new JComboBox<>(rom.getSections().toArray(new MemorySection[0]));
+        MemorySection intended = value == null ? rom.getSections().getFirst() : value;
+        comboBox.setSelectedItem(intended);
+        comboBox.addItemListener(e -> {
+            if (e.getStateChange() != SELECTED) {
+                return;
+            }
+
+            changed.accept((MemorySection)e.getItem());
+        });
+        return comboBox;
+    }
+
+    public static JSpinner memoryLengthField(Series series, Consumer<Integer> valueChanged) {
+        SpinnerNumberModel model = new SpinnerNumberModel(
+                series != null ? series.getLength() : 1,
+                1, 1_024_000, 1);
+        JSpinner spinner = new JSpinner(model);
+        ((JSpinner.DefaultEditor)spinner.getEditor()).getTextField().setHorizontalAlignment(JTextField.LEFT);
+        spinner.addChangeListener(e -> valueChanged.accept((int) spinner.getValue()));
+        return spinner;
     }
 
     public static JComboBox<Scale> scaleField(Rom rom, Table table, Axis axis,
@@ -121,7 +146,6 @@ public class Inputs {
         });
         return comboBox;
     }
-
 
     public static JComboBox<DataFormat> dataTypeField(String toolTip, DataFormat intended,
                                                 Consumer<DataFormat> valueChanged) {
