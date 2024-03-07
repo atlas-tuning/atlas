@@ -32,7 +32,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     private TableEditor preview;
     private boolean dirty = false;
 
-    private JButton save, copy, reset;
+    private JButton save, open, copy, reset;
 
     public TableDefinitionEditor(EditorForm editor, Table table) {
         super(editor);
@@ -48,6 +48,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         copy.setEnabled(!dirty);
         save.setEnabled(dirty);
         reset.setEnabled(dirty);
+        open.setEnabled(getParent().getActiveRom().getTables().contains(realTable));
         this.dirty = dirty;
     }
 
@@ -84,11 +85,10 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
             getParent().openTableDefinition(newTable);
         })));
 
-        JButton open = Inputs.nofocus(Inputs.button(CarbonIcons.OPEN_PANEL_TOP, "Open", "Open table and edit cells",
+        panel.add(open = Inputs.nofocus(Inputs.button(CarbonIcons.OPEN_PANEL_TOP, "Open", "Open table and edit cells",
                 () -> {
                     getParent().openTable(realTable);
-                }));
-        panel.add(open);
+                })));
 
         boolean isProjectTable = getParent().getActiveRom().getTables().contains(realTable);
         if (!isProjectTable) {
