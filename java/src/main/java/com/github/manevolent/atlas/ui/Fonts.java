@@ -5,6 +5,7 @@ import java.awt.*;
 import java.util.Arrays;
 
 public class Fonts {
+    public static final Font VALUE_FONT = new Font(Font.MONOSPACED, Font.PLAIN, 12);
     private static final String defaultConsoleFont = "Courier New";
 
     public static Color getTextColor() {

@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas.ui;
 
-import com.github.manevolent.atlas.definition.*;
-import com.github.manevolent.atlas.ui.component.JFlashAddressField;
+import com.github.manevolent.atlas.model.*;
+import com.github.manevolent.atlas.ui.component.MemoryAddressField;
 import org.kordamp.ikonli.Ikon;
 
 import javax.swing.*;
@@ -9,7 +9,7 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import java.awt.*;
-import java.util.function.BiConsumer;
+import java.util.Arrays;
 import java.util.function.Consumer;
 
 import static java.awt.event.ItemEvent.DESELECTED;
@@ -57,8 +57,10 @@ public class Inputs {
         return checkBox;
     }
 
-    public static JTextField textField(String defaultValue, String toolTip,
-                                       boolean editable, Consumer<String> changed) {
+
+    private static JTextField textField(String defaultValue, String toolTip,
+                                        Font font, boolean editable, Consumer<String> changed) {
+
         JTextField textField = new JTextField();
         textField.setEditable(editable);
 
@@ -75,12 +77,10 @@ public class Inputs {
             public void insertUpdate(DocumentEvent e) {
                 changed.accept(textField.getText());
             }
-
             @Override
             public void removeUpdate(DocumentEvent e) {
                 changed.accept(textField.getText());
             }
-
             @Override
             public void changedUpdate(DocumentEvent e) {
                 changed.accept(textField.getText());
@@ -90,26 +90,39 @@ public class Inputs {
         return textField;
     }
 
+    public static JTextField textField(String defaultValue, String toolTip,
+                                       boolean editable, Consumer<String> changed) {
+        return textField(defaultValue, toolTip, (Font) null, editable, changed);
+    }
+
     public static JTextField textField(String defaultValue, String toolTip, Consumer<String> changed) {
         return textField(defaultValue, toolTip, true, changed);
     }
 
+    public static JTextField textField(String defaultValue, Font font, Consumer<String> changed) {
+        return textField(defaultValue, (String) null, font, true, changed);
+    }
+
     public static JTextField textField(String defaultValue, Consumer<String> changed) {
-        return textField(defaultValue, null, changed);
+        return textField(defaultValue, (String) null, changed);
     }
 
     public static JTextField textField(Consumer<String> changed) {
         return textField(null, changed);
     }
 
-    public static JFlashAddressField memoryAddressField(Rom rom, Table table, Axis axis,
+    public static MemoryAddressField memoryAddressField(Rom rom, Table table, Axis axis, boolean localOnly,
                                                         Consumer<MemoryAddress> changed) {
-        return new JFlashAddressField(rom ,table, axis, changed);
+        return new MemoryAddressField(rom ,table, axis, localOnly, changed);
     }
 
-    public static JComboBox<MemorySection> memorySectionField(Rom rom, MemorySection value,
+    public static JComboBox<MemorySection> memorySectionField(Rom rom, MemorySection value, boolean localOnly,
                                                               Consumer<MemorySection> changed) {
-        JComboBox<MemorySection> comboBox = new JComboBox<>(rom.getSections().toArray(new MemorySection[0]));
+        JComboBox<MemorySection> comboBox = new JComboBox<>(
+                rom.getSections().stream()
+                        .filter(x -> !localOnly || x.isLocal())
+                        .toList().toArray(new MemorySection[0])
+        );
         MemorySection intended = value == null ? rom.getSections().getFirst() : value;
         comboBox.setSelectedItem(intended);
         comboBox.addItemListener(e -> {
@@ -207,5 +220,71 @@ public class Inputs {
         component.setOpaque(true);
         component.setBackground(color);
         return component;
+    }
+
+    public static JPanel createButtonRow(JPanel entryPanel, int row, JButton... buttons) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
+        Arrays.stream(buttons).forEach(panel::add);
+
+        entryPanel.add(panel,
+                Layout.gridBagConstraints(
+                        GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE,
+                        1, row, // pos
+                        2, 1, // size
+                        1, 1 // weight
+                ));
+
+        return panel;
+    }
+
+    public static JPanel createEntryPanel() {
+        JPanel panel = new JPanel(new GridBagLayout());
+        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
+        return panel;
+    }
+
+    public static JComponent createEntryRow(JPanel entryPanel, int row,
+                                            String label, String helpText,
+                                            JComponent input) {
+        // Label
+        JLabel labelField = Labels.darkerText(label);
+        entryPanel.add(labelField, Layout.gridBagConstraints(
+                GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, 0, row, 0, 1
+        ));
+
+        // Entry
+        input.setToolTipText(helpText);
+        entryPanel.add(input,
+                Layout.gridBagConstraints(GridBagConstraints.NORTHWEST,
+                        GridBagConstraints.HORIZONTAL, 1, row, 1, 1));
+
+        labelField.setVerticalAlignment(SwingConstants.TOP);
+
+        Insets insets = new JTextField().getInsets();
+        labelField.setBorder(BorderFactory.createEmptyBorder(
+                insets.top,
+                0,
+                insets.bottom,
+                insets.right
+        ));
+        labelField.setMaximumSize(new Dimension(
+                Integer.MAX_VALUE,
+                (int) input.getSize().getHeight()
+        ));
+
+        int height = Math.max(input.getHeight(), input.getPreferredSize().height);
+
+        input.setPreferredSize(new Dimension(
+                100,
+                height
+        ));
+        input.setSize(
+                100,
+                height
+        );
+
+        return entryPanel;
     }
 }

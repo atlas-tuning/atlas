@@ -7,6 +7,12 @@ import java.awt.*;
 
 public class Labels {
 
+    public static JLabel text(String text, Font font) {
+        JLabel label = new JLabel(text);
+        label.setFont(font);
+        return label;
+    }
+
     public static JLabel text(String text) {
         JLabel label = new JLabel(text);
         return label;
@@ -24,6 +30,13 @@ public class Labels {
 
     public static JLabel text(String text, Color color) {
         JLabel label = new JLabel(text);
+        label.setForeground(color);
+        return label;
+    }
+
+    public static JLabel text(String text, Color color, Font font) {
+        JLabel label = new JLabel(text);
+        label.setFont(font);
         label.setForeground(color);
         return label;
     }

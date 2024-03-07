@@ -1,8 +1,8 @@
 package com.github.manevolent.atlas.ui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
-import com.github.manevolent.atlas.definition.Rom;
-import com.github.manevolent.atlas.definition.builtin.SubaruWRX2022MT;
+import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.builtin.SubaruWRX2022MT;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import com.github.manevolent.atlas.ui.window.SplashForm;

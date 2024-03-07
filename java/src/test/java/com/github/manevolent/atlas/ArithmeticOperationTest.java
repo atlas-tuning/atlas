@@ -1,6 +1,6 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.definition.ArithmeticOperation;
+import com.github.manevolent.atlas.model.ArithmeticOperation;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

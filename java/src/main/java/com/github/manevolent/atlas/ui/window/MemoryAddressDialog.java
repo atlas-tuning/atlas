@@ -1,92 +1,194 @@
 package com.github.manevolent.atlas.ui.window;
 
-import com.github.manevolent.atlas.definition.MemoryAddress;
-import com.github.manevolent.atlas.definition.MemorySection;
-import com.github.manevolent.atlas.definition.Rom;
-import com.github.manevolent.atlas.ui.Labels;
-import com.github.manevolent.atlas.ui.Layout;
+import com.github.manevolent.atlas.model.MemoryAddress;
+import com.github.manevolent.atlas.model.MemorySection;
+import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.ui.Fonts;
+import com.github.manevolent.atlas.ui.Inputs;
+import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+
+import java.util.HexFormat;
+import java.util.function.Consumer;
 
 import static com.github.manevolent.atlas.ui.Inputs.memorySectionField;
 
 public class MemoryAddressDialog extends JDialog {
     private final Rom rom;
+    private final Consumer<MemoryAddress> valueChanged;
     private MemorySection section;
-    private int offset;
+    private long offset;
+    private static final char[] VALID_HEX_CHARACTERS = new char[]
+            {'A', 'B', 'C', 'D', 'E', 'F', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9'};
 
-    public MemoryAddressDialog(Rom rom, MemoryAddress address, Frame parent) {
-        super(parent, "Select Region", true);
+    private JTextField memoryAddressField;
+
+    private final boolean localOnly;
+
+    public MemoryAddressDialog(Rom rom, MemoryAddress address, Frame parent,
+                               boolean localOnly, Consumer<MemoryAddress> valueChanged) {
+        super(parent, "Enter Address", true);
+
+        this.localOnly = localOnly;
 
         this.rom = rom;
+        this.valueChanged = valueChanged;
+
         this.section = address != null ? address.getSection() : null;
-        this.offset = address != null ? address.getOffset() : 0;
+        this.offset = address != null ? address.getOffset() : section.getBaseAddress();
 
         setType(Type.POPUP);
         initComponent();
         pack();
         setLocationRelativeTo(parent);
+        setResizable(false);
+        setMinimumSize(new Dimension(300, getMinimumSize().height));
+        memoryAddressField.grabFocus();
     }
 
+    private JTextField createMemoryAddressField(Consumer<Boolean> inputValid, Runnable enter) {
+        String defaultValue = "0x" + HexFormat.of().toHexDigits((int) (offset & 0xFFFFFFFF)).toUpperCase();
+        memoryAddressField = Inputs.textField(defaultValue, (newValue) -> {
+            if (newValue.isBlank()) {
+                inputValid.accept(false);
+                return;
+            }
 
-    private JPanel createEntryPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        return panel;
+            try {
+                if (newValue.toLowerCase().startsWith("0x")) {
+                    offset = HexFormat.fromHexDigits(newValue.substring(2));
+
+                    if (offset < section.getBaseAddress()) {
+                        inputValid.accept(false);
+                        return;
+                    } else if (offset > section.getBaseAddress() + section.getDataLength()) {
+                        offset = section.getBaseAddress() + section.getDataLength() - 1;
+                        SwingUtilities.invokeLater(() -> memoryAddressField.setText("0x" + HexFormat.of().toHexDigits(
+                                (int) (offset)).toUpperCase()));
+                    }
+                } else {
+                    try {
+                        offset = (int) Long.parseLong(newValue);
+                    } catch (NumberFormatException ex) {
+                        if (!newValue.isEmpty()) {
+                            offset = HexFormat.fromHexDigits(newValue);
+                            SwingUtilities.invokeLater(() -> memoryAddressField.setText("0x" +
+                                    Integer.toHexString((int) (offset)).toUpperCase()));
+                        }
+                    }
+
+                    if (offset < section.getBaseAddress()) {
+                        inputValid.accept(false);
+                        return;
+                    } else if (offset > section.getBaseAddress() + section.getDataLength()) {
+                        offset = section.getBaseAddress() + section.getDataLength() - 1;
+                        SwingUtilities.invokeLater(() -> memoryAddressField.setText(Long.toString(offset)));
+                    }
+                }
+
+                inputValid.accept(true);
+            } catch (Exception exception) {
+                SwingUtilities.invokeLater(() -> {
+                    memoryAddressField.setText("");
+                });
+                inputValid.accept(false);
+            }
+        });
+        memoryAddressField.setFont(Fonts.VALUE_FONT);
+        memoryAddressField.addActionListener((e) -> {
+            accept();
+        });
+        memoryAddressField.addKeyListener(new KeyAdapter() {
+            @Override
+            public void keyPressed(KeyEvent e) {
+                if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                    cancel();
+                }
+            }
+
+            @Override
+            public void keyTyped(KeyEvent e) {
+                if (e.isActionKey()) {
+                    e.consume();
+                    accept();
+                    return;
+                }
+
+                if (e.getKeyCode() == KeyEvent.VK_DELETE || e.getKeyCode() == KeyEvent.VK_BACK_SPACE ||
+                    e.getKeyCode() == KeyEvent.VK_KP_RIGHT || e.getKeyCode() == KeyEvent.VK_KP_LEFT) {
+                    return;
+                }
+
+                if (e.getKeyChar() == 'x') {
+                    if (memoryAddressField.getText().equals("0")) {
+                        // This is acceptable (hex string)
+                        return;
+                    }
+                }
+
+                boolean selectedMultiple = memoryAddressField.getSelectionEnd()
+                        - memoryAddressField.getSelectionStart() > 1;
+                if (!selectedMultiple && memoryAddressField.getText().toLowerCase().startsWith("0x")
+                        && memoryAddressField.getText().length() >= 10) {
+                    e.consume();
+                    return;
+                }
+
+                if (!memoryAddressField.getText().startsWith("0x") &&
+                        Character.toString(e.getKeyChar()).matches("[a-fA-F]")) {
+                    memoryAddressField.setText("0x" + memoryAddressField.getText());
+                }
+
+                char[] valid = VALID_HEX_CHARACTERS;
+                for (int i = 0; i < valid.length; i ++) {
+                    if (e.getKeyChar() == valid[i] ||
+                        e.getKeyChar() == Character.toLowerCase(valid[i])) {
+                        e.setKeyChar(Character.toUpperCase(valid[i]));
+                        return;
+                    }
+                }
+
+                e.consume();
+            }
+        });
+        return memoryAddressField;
     }
 
-    private JComponent createEntryRow(JPanel entryPanel, int row,
-                                      String label, String helpText,
-                                      JComponent input) {
-        // Label
-        JLabel labelField = Labels.darkerText(label);
-        entryPanel.add(labelField, Layout.gridBagConstraints(
-                GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, 0, row, 0, 1
-        ));
+    private void accept() {
+        MemoryAddress address = MemoryAddress.builder().withOffset(offset).withSection(section).build();
+        valueChanged.accept(address);
+        dispose();
+    }
 
-        // Entry
-        input.setToolTipText(helpText);
-        entryPanel.add(input,
-                Layout.gridBagConstraints(GridBagConstraints.NORTHWEST,
-                        GridBagConstraints.HORIZONTAL, 1, row, 1, 1));
-
-        labelField.setVerticalAlignment(SwingConstants.TOP);
-
-        Insets insets = new JTextField().getInsets();
-        labelField.setBorder(BorderFactory.createEmptyBorder(
-                insets.top,
-                0,
-                insets.bottom,
-                insets.right
-        ));
-        labelField.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE,
-                (int) input.getSize().getHeight()
-        ));
-
-        int height = Math.max(input.getHeight(), input.getPreferredSize().height);
-
-        input.setPreferredSize(new Dimension(
-                100,
-                height
-        ));
-        input.setSize(
-                100,
-                height
-        );
-
-        return entryPanel;
+    private void cancel() {
+        dispose();
     }
 
     private void initComponent() {
-        JPanel content = createEntryPanel();
+        JPanel content = Inputs.createEntryPanel();
+        JButton ok = Inputs.button(CarbonIcons.CHECKMARK, "OK", null, this::accept);
 
-        createEntryRow(content, 1, "Region", "The ROM section this address will be relative to", memorySectionField(
-            rom, section, (newSection) -> this.section = newSection
-        ));
+
+        JTextField addressField = createMemoryAddressField(ok::setEnabled, this::accept);
+        Inputs.createEntryRow(content, 2, "Address", "The memory address relative to the selected ROM region",
+                addressField);
+
+        Inputs.createEntryRow(content, 1, "Region", "The ROM section this address will reside in",
+                memorySectionField(rom, section, localOnly, (newSection) -> {
+                    this.section = newSection;
+                    addressField.setText("0x" + HexFormat.of().toHexDigits(
+                            (int) (section.getBaseAddress() & 0xFFFFFFFF)).toUpperCase());
+                }));
+
+        JButton cancel = Inputs.button("Cancel", this::cancel);
+        Inputs.createButtonRow(content, 3, cancel, ok);
 
         getContentPane().add(content);
+        addressField.transferFocus();
     }
 
     public MemoryAddress getAddress() {
@@ -95,9 +197,9 @@ public class MemoryAddressDialog extends JDialog {
                 .build();
     }
 
-    public static MemoryAddress show(Frame parent, Rom rom, MemoryAddress current) {
-        MemoryAddressDialog dialog = new MemoryAddressDialog(rom, current, parent);
+    public static void show(Frame parent, Rom rom, MemoryAddress current,
+                            boolean localOnly, Consumer<MemoryAddress> changed) {
+        MemoryAddressDialog dialog = new MemoryAddressDialog(rom, current, parent, localOnly, changed);
         dialog.setVisible(true);
-        return dialog.getAddress();
     }
 }

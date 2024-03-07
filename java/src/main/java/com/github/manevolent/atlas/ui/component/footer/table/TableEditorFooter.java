@@ -1,9 +1,9 @@
 package com.github.manevolent.atlas.ui.component.footer.table;
 
-import com.github.manevolent.atlas.definition.Precision;
-import com.github.manevolent.atlas.definition.Series;
-import com.github.manevolent.atlas.definition.Table;
-import com.github.manevolent.atlas.definition.Unit;
+import com.github.manevolent.atlas.model.Precision;
+import com.github.manevolent.atlas.model.Series;
+import com.github.manevolent.atlas.model.Table;
+import com.github.manevolent.atlas.model.Unit;
 import com.github.manevolent.atlas.ui.Labels;
 import com.github.manevolent.atlas.ui.Separators;
 import com.github.manevolent.atlas.ui.component.footer.Footer;
@@ -14,8 +14,8 @@ import javax.swing.*;
 import java.awt.*;
 import java.io.IOException;
 
-import static com.github.manevolent.atlas.definition.Axis.X;
-import static com.github.manevolent.atlas.definition.Axis.Y;
+import static com.github.manevolent.atlas.model.Axis.X;
+import static com.github.manevolent.atlas.model.Axis.Y;
 
 /**
  * The table editor footer is the strip of values on the very bottom of the table editor window/pane.

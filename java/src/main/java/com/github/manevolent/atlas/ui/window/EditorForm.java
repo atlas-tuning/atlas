@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas.ui.window;
 
-import com.github.manevolent.atlas.definition.Rom;
-import com.github.manevolent.atlas.definition.Table;
+import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;

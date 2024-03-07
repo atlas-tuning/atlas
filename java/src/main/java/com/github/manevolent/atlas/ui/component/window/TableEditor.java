@@ -1,6 +1,6 @@
 package com.github.manevolent.atlas.ui.component.window;
 
-import com.github.manevolent.atlas.definition.*;
+import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.Fonts;
@@ -30,8 +30,8 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.IntStream;
 
-import static com.github.manevolent.atlas.definition.Axis.X;
-import static com.github.manevolent.atlas.definition.Axis.Y;
+import static com.github.manevolent.atlas.model.Axis.X;
+import static com.github.manevolent.atlas.model.Axis.Y;
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
 public class TableEditor extends Window implements
@@ -40,7 +40,6 @@ public class TableEditor extends Window implements
         ListSelectionListener {
     private static final int precisionPoints = 2;
     private static final String valueFormat = "%." + precisionPoints + "f";
-    public static final Font valueFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
     private final Table table;
 
     private ThreadLocal<Boolean> selfUpdate = new ThreadLocal<>();
@@ -108,7 +107,7 @@ public class TableEditor extends Window implements
         tableComponent.getTableHeader().setResizingAllowed(false);
         tableComponent.setColumnSelectionAllowed(true);
         tableComponent.setRowSelectionAllowed(true);
-        tableComponent.getTableHeader().setFont(valueFont);
+        tableComponent.getTableHeader().setFont(Fonts.VALUE_FONT);
 
         // Possibly add X series headers
         tableComponent.setModel(generateTableModel());
@@ -236,7 +235,7 @@ public class TableEditor extends Window implements
         // Default to a minimum spacing of 6 characters
         int longestString = 0;
 
-        FontMetrics metrics = Fonts.getFontMetrics(valueFont);
+        FontMetrics metrics = Fonts.getFontMetrics(Fonts.VALUE_FONT);
 
         // Find the longest string in the columns (X axis)
         Series x = table.getSeries(X);
@@ -302,7 +301,7 @@ public class TableEditor extends Window implements
             if (rowNumberTable == null) {
                 java.util.List<String> rowHeaders = generateRowHeaders();
                 rowNumberTable = new RowNumberTable(tableComponent, rowHeaders);
-                rowNumberTable.getTableHeader().setFont(valueFont);
+                rowNumberTable.getTableHeader().setFont(Fonts.VALUE_FONT);
                 rowNumberTable.updateWidth();
 
                 scrollPane.setRowHeader(new JViewport());
@@ -701,7 +700,7 @@ public class TableEditor extends Window implements
     }
 
     public Font getValueFont() {
-        return valueFont;
+        return Fonts.VALUE_FONT;
     }
 
     public String formatValue(float value) {
@@ -722,7 +721,7 @@ public class TableEditor extends Window implements
                                                        boolean isSelected, boolean hasFocus,
                                                        int row, int col) {
             Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, col);
-            c.setFont(valueFont);
+            c.setFont(Fonts.VALUE_FONT);
 
             if (value != null) {
                 float v;

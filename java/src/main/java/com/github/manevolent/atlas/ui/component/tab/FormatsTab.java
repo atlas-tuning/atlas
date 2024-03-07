@@ -1,14 +1,10 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
-import com.github.manevolent.atlas.definition.*;
+import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.Icons;
-import com.github.manevolent.atlas.ui.Inputs;
-import com.github.manevolent.atlas.ui.Labels;
-import com.github.manevolent.atlas.ui.Layout;
+import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
 import com.github.manevolent.atlas.ui.component.toolbar.OperationsToolbar;
-import com.github.manevolent.atlas.ui.component.window.TableEditor;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.Ikon;
@@ -35,6 +31,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     private final Map<Scale, Scale> workingCopies = new HashMap<>();
     private final Map<Scale, Boolean> dirtyMap = new HashMap<>();
 
+    private JButton resetButton;
     private JButton saveButton;
     private JPanel informationContent;
 
@@ -56,7 +53,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         list = Layout.minimumWidth(list, 200);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        list.setCellRenderer(new Renderer(TableEditor.valueFont));
+        list.setCellRenderer(new Renderer(Fonts.VALUE_FONT));
         return Layout.emptyBorder(list);
     }
 
@@ -103,7 +100,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
     private void addHeader(JPanel panel, Ikon icon, String text) {
         JComponent component = Layout.emptyBorder(0, 0, 5, 0,
-                        Layout.alignLeft(Labels.text(icon, text)));
+                        Layout.alignLeft(Fonts.bold(Labels.text(icon, text))));
 
         panel.add(component, BorderLayout.NORTH);
     }
@@ -166,13 +163,13 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        panel.add(Inputs.nofocus(Inputs.button(CarbonIcons.RESET, "Reset", "Reset entered values", () -> {
+        resetButton = Inputs.nofocus(Inputs.button(CarbonIcons.RESET, "Reset", "Reset entered values", () -> {
             Scale scale = getSelectedScale();
             if (scale == null) {
                 return;
             }
 
-            if (JOptionPane.showConfirmDialog(getComponent(),
+            if (JOptionPane.showConfirmDialog(getParent(),
                     "Are you sure you want to reset " + scale.getName() + "?",
                     "Reset",
                     JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
@@ -180,11 +177,15 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             }
 
             scale.apply(list.getSelectedValue());
-            dirtyMap.put(scale, false);
+            dirtyMap.put(list.getSelectedValue(), false);
             saveButton.setEnabled(false);
+            resetButton.setEnabled(false);
             Log.ui().log(Level.INFO, "Reset format definition back to project copy.");
             update();
-        })));
+        }));
+
+        resetButton.setEnabled(isDirty());
+        panel.add(resetButton);
 
         saveButton = Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save);
         saveButton.setEnabled(isDirty());
@@ -272,7 +273,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         JPanel inner = new JPanel(new GridBagLayout());
         Layout.topBorder(5, inner);
 
-        JTextField nameField = Inputs.textField(scale.getName(), null, (name) -> {
+        JTextField nameField = Inputs.textField(scale.getName(), (String)null, (name) -> {
                     scale.setName(name);
                     operationChanged();
                 });
@@ -341,17 +342,17 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         createEntryRow(
                 content, 0, "Minimum", "Minimum value for data using this scale",
-                Labels.text(formatValue(scale.getMinimum(), scale.getUnit()), Color.RED)
+                Labels.text(formatValue(scale.getMinimum(), scale.getUnit()), Color.RED, Fonts.VALUE_FONT)
         );
 
         createEntryRow(
                 content, 1, "Maximum", "Maximum value for data using this scale",
-                Labels.text(formatValue(scale.getMaximum(), scale.getUnit()), Color.GREEN)
+                Labels.text(formatValue(scale.getMaximum(), scale.getUnit()), Color.GREEN, Fonts.VALUE_FONT)
         );
 
         createEntryRow(
-                content, 2, "Precision", "Precision of values for data using this scale",
-                Labels.text(formatValue(scale.getPrecision(), scale.getUnit()))
+                content, 2, "Precision", "Precision of values using this scale",
+                Labels.text(formatValue(scale.getPrecision(), scale.getUnit()), Fonts.VALUE_FONT)
         );
 
         matteBorder(1, 0, 0, 0, Color.GRAY.darker(), content);
@@ -362,24 +363,44 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     }
 
     private JPanel buildUsages() {
-        JPanel usagesPanel = emptyBorder(0, 0, 5, 0, new JPanel(new BorderLayout()));
+        JPanel usagesPanel = emptyBorder(0, 5, 0, 5, new JPanel(new BorderLayout()));
         addHeader(usagesPanel, CarbonIcons.DATA_TABLE, "Usages");
 
-        JScrollPane content = scrollBoth(initUsagesList());
+        JPanel content = new JPanel(new BorderLayout());
+        JPanel inner = new JPanel(new BorderLayout());
+
+        JScrollPane scrollPane = scrollBoth(initUsagesList());
         maximumWidth(content, 250);
         matteBorder(1, 1, 1, 1, Color.GRAY.darker(), content);
 
-        usagesPanel.add(emptyBorder(5, 0, 5, 0, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
-                BorderLayout.CENTER);
+        inner.add(Layout.emptyBorder(scrollPane), BorderLayout.CENTER);
 
+        content.add(matteBorder(1, 1, 1, 1, Color.GRAY.darker(), inner), BorderLayout.CENTER);
+
+        usagesPanel.add(topBorder(5, content), BorderLayout.CENTER);
         return usagesPanel;
     }
 
     private void buildView(JPanel parent) {
-        parent.add(buildInformation());
-        parent.add(buildSettings());
-        parent.add(buildOperations());
-        parent.add(buildUsages());
+        parent.add(buildInformation(),
+                gridBagConstraints(GridBagConstraints.CENTER,
+                        GridBagConstraints.BOTH,
+                        0, 0, 1, 1));
+
+        parent.add(buildSettings(),
+                gridBagConstraints(GridBagConstraints.CENTER,
+                        GridBagConstraints.BOTH,
+                        1, 0, 1, 1));
+
+        parent.add(buildOperations(),
+                gridBagConstraints(GridBagConstraints.CENTER,
+                        GridBagConstraints.BOTH,
+                        2, 0, 1, 1));
+
+        parent.add(buildUsages(),
+                gridBagConstraints(GridBagConstraints.CENTER,
+                        GridBagConstraints.BOTH,
+                        3, 0, 1, 1));
     }
 
     private void initView() {
@@ -387,7 +408,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         getComponent().remove(center);
 
         if (!list.isSelectionEmpty()) {
-            center.setLayout(new BoxLayout(center, BoxLayout.X_AXIS));
+            center.setLayout(new GridBagLayout());
             buildView(center);
             getComponent().add(emptyBorder(5, 5, 5, 5, center), BorderLayout.CENTER);
         }
@@ -471,6 +492,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         dirtyMap.put(scale, true);
         saveButton.setEnabled(true);
+        resetButton.setEnabled(true);
 
         updateOperationsList();
         updateInformation();
@@ -489,7 +511,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
 
-        if (JOptionPane.showConfirmDialog(getComponent(),
+        if (JOptionPane.showConfirmDialog(getParent(),
                 "Are you sure you want to delete \"" + operation + "\"?",
                 "Delete operation",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {

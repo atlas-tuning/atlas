@@ -1,15 +1,15 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.definition.*;
+import com.github.manevolent.atlas.model.*;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import static com.github.manevolent.atlas.definition.Axis.*;
+import static com.github.manevolent.atlas.model.Axis.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static com.github.manevolent.atlas.definition.builtin.SubaruWRX2022MT.*;
+import static com.github.manevolent.atlas.model.builtin.SubaruWRX2022MT.*;
 
 public class FlashTest {
 

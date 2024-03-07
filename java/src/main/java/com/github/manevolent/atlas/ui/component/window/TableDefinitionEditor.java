@@ -1,12 +1,12 @@
 package com.github.manevolent.atlas.ui.component.window;
 
-import com.github.manevolent.atlas.definition.Axis;
-import com.github.manevolent.atlas.definition.Scale;
-import com.github.manevolent.atlas.definition.Series;
-import com.github.manevolent.atlas.definition.Table;
+import com.github.manevolent.atlas.model.Axis;
+import com.github.manevolent.atlas.model.Scale;
+import com.github.manevolent.atlas.model.Series;
+import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.*;
-import com.github.manevolent.atlas.ui.component.JFlashAddressField;
+import com.github.manevolent.atlas.ui.component.MemoryAddressField;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -18,8 +18,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import static com.github.manevolent.atlas.definition.Axis.X;
-import static com.github.manevolent.atlas.definition.Axis.Y;
+import static com.github.manevolent.atlas.model.Axis.X;
+import static com.github.manevolent.atlas.model.Axis.Y;
 import static com.github.manevolent.atlas.ui.Fonts.bold;
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
@@ -32,6 +32,8 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     private TableEditor preview;
     private boolean dirty = false;
 
+    private JButton save, copy, reset;
+
     public TableDefinitionEditor(EditorForm editor, Table table) {
         super(editor);
         this.realTable = table;
@@ -42,60 +44,18 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         return realTable;
     }
 
-    private JPanel createEntryPanel() {
-        JPanel panel = new JPanel(new GridBagLayout());
-        panel.setBorder(BorderFactory.createEmptyBorder(5, 5, 5, 5));
-        return panel;
-    }
-
-    private JComponent createEntryRow(JPanel entryPanel, int row,
-                                      String label, String helpText,
-                                      JComponent input) {
-        // Label
-        JLabel labelField = Labels.darkerText(label);
-        entryPanel.add(labelField, Layout.gridBagConstraints(
-                GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, 0, row, 0, 1
-        ));
-
-        // Entry
-        input.setToolTipText(helpText);
-        entryPanel.add(input,
-                Layout.gridBagConstraints(GridBagConstraints.NORTHWEST,
-                        GridBagConstraints.HORIZONTAL, 1, row, 1, 1));
-
-        labelField.setVerticalAlignment(SwingConstants.TOP);
-
-        Insets insets = new JTextField().getInsets();
-        labelField.setBorder(BorderFactory.createEmptyBorder(
-                insets.top,
-                0,
-                insets.bottom,
-                insets.right
-        ));
-        labelField.setMaximumSize(new Dimension(
-                Integer.MAX_VALUE,
-                (int) input.getSize().getHeight()
-        ));
-
-        int height = Math.max(input.getHeight(), input.getPreferredSize().height);
-
-        input.setPreferredSize(new Dimension(
-                100,
-                height
-        ));
-        input.setSize(
-                100,
-                height
-        );
-
-        return entryPanel;
+    private void setDirty(boolean dirty) {
+        copy.setEnabled(!dirty);
+        save.setEnabled(dirty);
+        reset.setEnabled(dirty);
+        this.dirty = dirty;
     }
 
     private void createSaveRow(JPanel entryPanel, int row) {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
 
-        panel.add(Inputs.nofocus(Inputs.button(CarbonIcons.RESET, "Reset", "Reset entered values", () -> {
+        panel.add(reset = Inputs.nofocus(Inputs.button(CarbonIcons.RESET, "Reset", "Reset entered values", () -> {
             if (JOptionPane.showConfirmDialog(getComponent(),
                     "Are you sure you want to reset " +
                     workingTable.getName() + "?",
@@ -105,26 +65,24 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
             }
 
             workingTable.apply(realTable);
-            dirty = false;
+            setDirty(false);
             Log.ui().log(Level.INFO, "Reset table definition back to project copy.");
             reinitialize();
             updateTitle();
         })));
 
-        panel.add(Inputs.nofocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save)));
+        panel.add(save = Inputs.nofocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save)));
 
-        JButton copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this definition into a new table", () -> {
-            String newTableName = workingTable.getName();
-            if (newTableName.contains("-")) {
-                newTableName = newTableName.substring(0, newTableName.lastIndexOf("-")) + "- Copy";
-            } else {
-                newTableName = "Copy";
+        panel.add(copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this definition into a new table", () -> {
+            String newTableName = JOptionPane.showInputDialog(getParent(), "Specify a name",
+                    workingTable.getName() + " (Copy)");
+            if (newTableName == null || newTableName.isBlank()) {
+                return;
             }
             Table newTable = workingTable.copy();
             newTable.setName(newTableName);
             getParent().openTableDefinition(newTable);
-        }));
-        panel.add(copy);
+        })));
 
         JButton open = Inputs.nofocus(Inputs.button(CarbonIcons.OPEN_PANEL_TOP, "Open", "Open table and edit cells",
                 () -> {
@@ -134,9 +92,12 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
         boolean isProjectTable = getParent().getActiveRom().getTables().contains(realTable);
         if (!isProjectTable) {
-            dirty = true;
+            setDirty(true);
             updateTitle();
         }
+
+        save.setEnabled(dirty);
+        reset.setEnabled(dirty);
         copy.setEnabled(isProjectTable);
         open.setEnabled(isProjectTable);
 
@@ -159,7 +120,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                     + "\" to project.");
         }
 
-        dirty = false;
+        setDirty(false);
         updateTitle();
         Log.ui().log(Level.INFO, "Saved working table definition of \"" + workingTable.getName()
                 + "\" to project.");
@@ -175,13 +136,13 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     }
 
     private JPanel createTablePanel() {
-        JPanel panel = createEntryPanel();
+        JPanel panel = Inputs.createEntryPanel();
 
         panel.add(Layout.emptyBorder(0, 0, 5, 0,
                         Labels.boldText("Table")),
                 Layout.gridBagTop(2));
 
-        createEntryRow(
+        Inputs.createEntryRow(
                 panel, 1,
                 "Name", "The name of this table",
                 Inputs.textField(workingTable.getName(), (newName) -> {
@@ -205,11 +166,11 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
             series = workingTable.getData();
         }
 
-        JPanel panel = createEntryPanel();
+        JPanel panel = Inputs.createEntryPanel();
 
-        JFlashAddressField memoryAddressField = Inputs.memoryAddressField(
+        MemoryAddressField memoryAddressField = Inputs.memoryAddressField(
                 getParent().getActiveRom(),
-                workingTable, axis, (newAddress) -> {
+                workingTable, axis, true, (newAddress) -> {
             Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
             s.setAddress(newAddress);
             definitionUpdated();
@@ -236,6 +197,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                             (nameField.getText() == null || nameField.getText().isBlank())) {
                         nameField.setText(newScale.getName());
                     }
+
                     definitionUpdated();
                 }
         );
@@ -321,25 +283,27 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
             memoryLengthField.setEnabled(enabled);
         }
 
-        createEntryRow(panel, 1,
+        Inputs.createEntryRow(panel, 1,
                 "Name", axis != null ? "The name of this axis" : "The name of this series",
                 nameField);
 
-        createEntryRow(panel, 2,
+        Inputs.createEntryRow(panel, 2,
                 axis != null ? "Region" : "Address",
                 axis != null ? "The data region for this axis" : "The data address for this series",
                 memoryAddressField);
 
-        createEntryRow(panel, 3,
+        Inputs.createEntryRow(panel, 3,
                 "Format",
                 axis != null ? "The format of the data in this axis" : "The format of the data in this series",
                 scaleField);
 
         if (memoryLengthField != null) {
-            createEntryRow(panel, 4,
+            Inputs.createEntryRow(panel, 4,
                     "Length",
                     "The length of this axis",
                     memoryLengthField);
+        } else {
+            //TODO calculate length
         }
 
         return panel;
@@ -354,7 +318,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     }
 
     private void definitionUpdated() {
-        dirty = true;
+        setDirty(true);
         updateTitle();
 
         try {

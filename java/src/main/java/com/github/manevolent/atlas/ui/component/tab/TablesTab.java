@@ -1,6 +1,6 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
-import com.github.manevolent.atlas.definition.Table;
+import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.Menus;
@@ -312,7 +312,13 @@ public class TablesTab
         if (last instanceof TableNode) {
             Table table = ((TableNode)last).table;
             table = table.copy();
-            table.setName(table.getName() + " (Copy)");
+
+            String newScaleName = JOptionPane.showInputDialog(getParent(), "Specify a name",
+                    table.getName() + " (Copy)");
+            if (newScaleName == null || newScaleName.isBlank()) {
+                return;
+            }
+            table.setName(newScaleName);
             getParent().openTableDefinition(table);
         }
     }
