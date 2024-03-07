@@ -1,13 +1,15 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
-import com.github.manevolent.atlas.definition.DataFormat;
-import com.github.manevolent.atlas.definition.Scale;
-import com.github.manevolent.atlas.definition.Unit;
+import com.github.manevolent.atlas.definition.*;
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.Inputs;
 import com.github.manevolent.atlas.ui.Labels;
 import com.github.manevolent.atlas.ui.Layout;
 import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
+import com.github.manevolent.atlas.ui.component.toolbar.OperationsToolbar;
+import com.github.manevolent.atlas.ui.component.window.TableEditor;
+import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.window.EditorForm;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
@@ -17,16 +19,66 @@ import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
 
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 import static com.github.manevolent.atlas.ui.Layout.*;
 
 public class FormatsTab extends Tab implements ListSelectionListener {
     private JList<Scale> list;
+    private JList<ScalingOperation> ops;
     private JPanel center;
+
+    private final Map<Scale, Scale> workingCopies = new HashMap<>();
+    private final Map<Scale, Boolean> dirtyMap = new HashMap<>();
+
+    private JButton saveButton;
+    private JPanel informationContent;
 
     public FormatsTab(EditorForm editor) {
         super(editor);
+    }
+
+    private ListModel<ScalingOperation> getOperationsModel() {
+        DefaultListModel<ScalingOperation> model = new DefaultListModel<>();
+        Scale scale = getSelectedScale();
+
+        scale.getOperations().forEach(model::addElement);
+
+        return model;
+    }
+
+    private JList<ScalingOperation> initOperationsList() {
+        JList<ScalingOperation> list = new JList<>(getOperationsModel());
+
+        list = Layout.minimumWidth(list, 200);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        list.setCellRenderer(new Renderer(TableEditor.valueFont));
+        return Layout.emptyBorder(list);
+    }
+
+    private ListModel<Table> getUsagesListModel() {
+        DefaultListModel<Table> model = new DefaultListModel<>();
+        Scale scale = list.getSelectedValue();
+
+        if (scale == null) {
+            return model;
+        }
+
+        getParent().getActiveRom().getTables()
+                .stream().filter(table -> table.hasScale(scale))
+                .forEach(model::addElement);
+
+        return model;
+    }
+
+    private JList<Table> initUsagesList() {
+        JList<Table> list = new JList<>(getUsagesListModel());
+        list = Layout.minimumWidth(list, 200);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        return Layout.emptyBorder(list);
     }
 
     private ListModel<Scale> getFormatListModel() {
@@ -41,7 +93,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
     private JList<Scale> initFormatList() {
         JList<Scale> list = new JList<>(getFormatListModel());
-        list.setCellRenderer(new Renderer());
+        list.setCellRenderer(new Renderer(new JLabel().getFont()));
         list = Layout.minimumWidth(list, 200);
         list.addListSelectionListener(this);
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
@@ -49,10 +101,10 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     }
 
     private void addHeader(JPanel panel, Ikon icon, String text) {
-        panel.add(Layout.matteBorder(0, 0, 1, 0, Color.GRAY.darker(),
-                        Layout.space(0, 2, 0, 2, Labels.text(icon, text))),
-                BorderLayout.NORTH
-        );
+        JComponent component = Layout.emptyBorder(0, 0, 5, 0,
+                        Layout.alignLeft(Labels.text(icon, text)));
+
+        panel.add(component, BorderLayout.NORTH);
     }
 
 
@@ -108,32 +160,160 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         return entryPanel;
     }
 
+
+    private void createSaveRow(JPanel entryPanel, int row) {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
+
+        panel.add(Inputs.nofocus(Inputs.button(CarbonIcons.RESET, "Reset", "Reset entered values", () -> {
+            Scale scale = getSelectedScale();
+            if (scale == null) {
+                return;
+            }
+
+            if (JOptionPane.showConfirmDialog(getComponent(),
+                    "Are you sure you want to reset " +
+                            scale.getName() + "?",
+                    "Reset",
+                    JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            scale.apply(list.getSelectedValue());
+            dirtyMap.put(scale, false);
+            saveButton.setEnabled(false);
+            Log.ui().log(Level.INFO, "Reset format definition back to project copy.");
+            update();
+        })));
+
+        saveButton = Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save);
+        saveButton.setEnabled(isDirty());
+        panel.add(Inputs.nofocus(saveButton));
+
+        JButton copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this format", () -> {
+            Scale scale = getSelectedScale();
+            if (scale == null) {
+                return;
+            }
+
+            String newScaleName = scale.getName() + " (Copy)";
+            Scale newScale = scale.copy();
+            newScale.setName(newScaleName);
+            workingCopies.put(newScale, newScale);
+            getParent().getActiveRom().getScales().add(newScale);
+
+            update();
+            updateListModel();
+        }));
+        panel.add(copy);
+
+        boolean isNewTable = workingCopies.containsKey(getSelectedScale());
+        if (isNewTable) {
+            dirtyMap.put(getSelectedScale(), true);
+            operationChanged();
+        }
+
+        copy.setEnabled(!isNewTable);
+
+        entryPanel.add(panel,
+                Layout.gridBagConstraints(
+                        GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE,
+                        1, row, // pos
+                        2, 1, // size
+                        1, 1 // weight
+                ));
+    }
+
+    private boolean isDirty() {
+        Scale scale = list.getSelectedValue();
+        if (scale == null) {
+            return false;
+        }
+
+        Boolean result = dirtyMap.get(scale);
+        if (result == null) {
+            return false;
+        } else {
+            return result;
+        }
+    }
+
+    private void save() {
+        Scale realScale = list.getSelectedValue();
+        Scale workingScale = workingCopies.get(realScale);
+        if (realScale == null || workingScale == null) {
+            return;
+        }
+
+        if (realScale == workingScale) {
+            // It's a new copy
+            getParent().getActiveRom().getScales().add(realScale);
+            workingCopies.put(realScale, realScale.copy());
+        } else {
+            realScale.apply(workingScale);
+        }
+
+        dirtyMap.put(realScale, false);
+        update();
+        updateListModel();
+
+        getParent().getOpenWindows().forEach(Window::reload);
+    }
+
     private JPanel buildSettings() {
         Scale scale = getSelectedScale();
         JPanel settingsPanel = emptyBorder(0, 5, 0, 5, new JPanel(new BorderLayout()));
         addHeader(settingsPanel, CarbonIcons.SETTINGS, "Settings");
 
-        JPanel content = new JPanel(new GridBagLayout());
+        JPanel content = new JPanel(new BorderLayout());
+        JPanel inner = new JPanel(new GridBagLayout());
+        Layout.topBorder(5, inner);
 
-        JTextField nameField = Inputs.textField(scale.getName(), scale::setName);
-        createEntryRow(content, 0, "Name", "Name of the format", nameField);
+        JTextField nameField = Inputs.textField(scale.getName(), null, (name) -> {
+                    scale.setName(name);
+                    operationChanged();
+                });
+        createEntryRow(inner, 0, "Name", "Name of the format", nameField);
 
         JComboBox<Unit> unitField = Inputs.unitField(scale.getName(),
-                scale.getUnit(), scale::setUnit);
-        createEntryRow(content, 1, "Unit", null, unitField);
+                scale.getUnit(), (unit) -> {
+                    scale.setUnit(unit);
+                    operationChanged();
+                });
+        createEntryRow(inner, 1, "Unit", null, unitField);
 
         JComboBox<DataFormat> dataType = Inputs.dataTypeField(scale.getName(),
-                scale.getFormat(), scale::setFormat);
-        createEntryRow(content, 2, "Data Type", null, dataType);
+                scale.getFormat(),  (format) -> {
+                    scale.setFormat(format);
+                    operationChanged();
+                });
+        createEntryRow(inner, 2, "Data Type", null, dataType);
+
+        createSaveRow(inner, 3);
+
+        content.add(inner, BorderLayout.CENTER);
+        matteBorder(1, 0, 0, 0, Color.GRAY.darker(), content);
 
         settingsPanel.add(topBorder(5, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
                 BorderLayout.CENTER);
+
         return settingsPanel;
     }
 
     private JPanel buildOperations() {
         JPanel operationsPanel = emptyBorder(0, 5, 0, 5, new JPanel(new BorderLayout()));
         addHeader(operationsPanel, CarbonIcons.CALCULATOR, "Operations");
+
+        JPanel content = new JPanel(new BorderLayout());
+        JPanel inner = new JPanel(new BorderLayout());
+
+        inner.add(new OperationsToolbar(this).getComponent(), BorderLayout.NORTH);
+        inner.add(Layout.emptyBorder(scrollVertical(ops = initOperationsList())), BorderLayout.CENTER);
+
+        content.add(matteBorder(1, 1, 1, 1, Color.GRAY.darker(), inner), BorderLayout.CENTER);
+
+        operationsPanel.add(topBorder(5, content), BorderLayout.CENTER);
+
         return operationsPanel;
     }
 
@@ -146,8 +326,13 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     private JPanel buildInformation() {
         Scale scale = getSelectedScale();
 
-        JPanel usagesPanel = emptyBorder(0, 5, 0, 5, new JPanel(new BorderLayout()));
-        addHeader(usagesPanel, CarbonIcons.INFORMATION_SQUARE, "Info");
+        if (informationContent == null) {
+            informationContent = emptyBorder(0, 5, 0, 5, new JPanel(new BorderLayout()));
+        } else {
+            informationContent.removeAll();
+        }
+
+        addHeader(informationContent, CarbonIcons.INFORMATION_SQUARE, "Info");
 
         JPanel content = new JPanel(new GridBagLayout());
 
@@ -166,24 +351,31 @@ public class FormatsTab extends Tab implements ListSelectionListener {
                 Labels.text(formatValue(scale.getPrecision(), scale.getUnit()))
         );
 
-        usagesPanel.add(topBorder(5, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
-                BorderLayout.CENTER);
-        return usagesPanel;
+        matteBorder(1, 0, 0, 0, Color.GRAY.darker(), content);
+
+        informationContent.add(topBorder(5, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
+            BorderLayout.CENTER);
+        return informationContent;
     }
 
     private JPanel buildUsages() {
-        JPanel usagesPanel = emptyBorder(0, 5, 0, 5, new JPanel(new BorderLayout()));
-        addHeader(usagesPanel, CarbonIcons.TABLE, "Usages");
+        JPanel usagesPanel = emptyBorder(0, 0, 5, 0, new JPanel(new BorderLayout()));
+        addHeader(usagesPanel, CarbonIcons.DATA_TABLE, "Usages");
 
+        JScrollPane content = scrollBoth(initUsagesList());
+        maximumWidth(content, 250);
+        matteBorder(1, 1, 1, 1, Color.GRAY.darker(), content);
 
+        usagesPanel.add(emptyBorder(5, 0, 5, 0, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
+                BorderLayout.CENTER);
 
         return usagesPanel;
     }
 
     private void buildView(JPanel parent) {
+        parent.add(buildInformation());
         parent.add(buildSettings());
         parent.add(buildOperations());
-        parent.add(buildInformation());
         parent.add(buildUsages());
     }
 
@@ -198,7 +390,17 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         }
     }
 
+    public void updateListModel() {
+        Scale selectedFormat = list.getSelectedValue();
+        list.setModel(getFormatListModel());
+        list.setSelectedValue(selectedFormat, true);
+    }
+
     public void update() {
+        if (list.getSelectedValue() != null) {
+            workingCopies.computeIfAbsent(list.getSelectedValue(), Scale::copy);
+        }
+
         initView();
 
         getComponent().revalidate();
@@ -225,7 +427,12 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     }
 
     public Scale getSelectedScale() {
-        return list.getSelectedValue();
+        Scale realCopy = list.getSelectedValue();
+        if (realCopy == null) {
+            return null;
+        }
+
+        return workingCopies.get(realCopy);
     }
 
     @Override
@@ -243,12 +450,94 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         update();
     }
 
-    private class Renderer extends DefaultListCellRenderer {
+    public void updateOperationsList() {
+        if (ops == null) {
+            return;
+        }
+
+        ScalingOperation selected = ops.getSelectedValue();
+        ops.setModel(getOperationsModel());
+        ops.setSelectedValue(selected, true);
+    }
+
+    public void operationChanged() {
+        Scale scale = list.getSelectedValue();
+        if (scale == null) {
+            return;
+        }
+
+        dirtyMap.put(scale, true);
+        saveButton.setEnabled(true);
+
+        updateOperationsList();
+        updateInformation();
+
+        getComponent().revalidate();
+        getComponent().repaint();
+    }
+
+    private void updateInformation() {
+        buildInformation();
+    }
+
+    public void deleteOperation() {
+        ScalingOperation operation = ops.getSelectedValue();
+        if (operation == null) {
+            return;
+        }
+
+        if (JOptionPane.showConfirmDialog(getComponent(),
+                "Are you sure you want to delete \"" + operation + "\"?",
+                "Delete operation",
+                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        getSelectedScale().removeOperation(operation);
+
+        updateOperationsList();
+    }
+
+    public void addOperation() {
+
+        operationChanged();
+    }
+
+    public void moveDown() {
+        ScalingOperation operation = ops.getSelectedValue();
+        if (operation == null) {
+            return;
+        }
+        getSelectedScale().moveOperationDown(operation);
+        operationChanged();
+    }
+
+    public void moveUp() {
+        ScalingOperation operation = ops.getSelectedValue();
+        if (operation == null) {
+            return;
+        }
+        getSelectedScale().moveOperationUp(operation);
+        operationChanged();
+    }
+
+    public void editOperation() {
+
+        operationChanged();
+    }
+
+    private static class Renderer extends DefaultListCellRenderer {
+        private final Font font;
+
+        private Renderer(Font font) {
+            this.font = font;
+        }
+
         @Override
         public Component getListCellRendererComponent(JList<?> list, Object value, int index,
                                                       boolean isSelected, boolean cellHasFocus) {
             Component component = super.getListCellRendererComponent(list, value, index, isSelected, cellHasFocus);
-
+            component.setFont(font);
             return component;
         }
     }

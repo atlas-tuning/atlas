@@ -156,6 +156,24 @@ public class Inputs {
         return comboBox;
     }
 
+    public static JComboBox<ArithmeticOperation> arithmeticOperationField(String toolTip,
+                                                                          ScalingOperation operation,
+                                                                          Consumer<ArithmeticOperation> valueChanged) {
+        JComboBox<ArithmeticOperation> comboBox = new JComboBox<>(ArithmeticOperation.values());
+        if (operation != null) {
+            comboBox.setSelectedItem(operation.getOperation());
+        } else {
+            comboBox.setSelectedItem(ArithmeticOperation.ADD);
+        }
+        comboBox.addItemListener(e -> {
+            if (e.getStateChange() != SELECTED) {
+                return;
+            }
+            valueChanged.accept((ArithmeticOperation) e.getItem());
+        });
+        return comboBox;
+    }
+
     public static <T extends JComponent> T nofocus(T component) {
         component.setFocusable(false);
         return component;

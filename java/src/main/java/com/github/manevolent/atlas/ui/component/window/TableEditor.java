@@ -40,7 +40,7 @@ public class TableEditor extends Window implements
         ListSelectionListener {
     private static final int precisionPoints = 2;
     private static final String valueFormat = "%." + precisionPoints + "f";
-    private static final Font valueFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
+    public static final Font valueFont = new Font(Font.MONOSPACED, Font.PLAIN, 12);
     private final Table table;
 
     private ThreadLocal<Boolean> selfUpdate = new ThreadLocal<>();

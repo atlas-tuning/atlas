@@ -231,6 +231,25 @@ public class Table {
         this.name = changed.name;
     }
 
+    public boolean hasScale(Scale scale) {
+        if (getData().getScale() == scale) {
+            return true;
+        }
+
+        for (Axis axis : axes.keySet()) {
+            if (getSeries(axis).getScale() == scale) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
+
     public static class Builder {
         private final Table table = new Table();
 

@@ -4,43 +4,43 @@ import java.util.function.BiFunction;
 
 public enum ArithmeticOperation {
 
-    EXPONENT((a, x) -> {
+    EXPONENT("^", (a, x) -> {
         return (float) Math.pow(a, x);
     },(a, x) -> {
         return (float) Math.pow(a, 1f/x);
     }),
 
-    MULTIPLY((a, x) -> {
+    MULTIPLY("x", (a, x) -> {
         return a * x;
     }, (a, x) -> {
         return a / x;
     }),
 
-    DIVIDE((a, x) -> {
+    DIVIDE("/", (a, x) -> {
         return a / x;
     }, (a, x) -> {
         return a * x;
     }),
 
-    ADD((a, x) -> {
+    ADD("+", (a, x) -> {
         return a + x;
     }, (a, x) -> {
         return a - x;
     }),
 
-    SUBTRACT((a, x) -> {
+    SUBTRACT("-", (a, x) -> {
         return a - x;
     }, (a, x) -> {
         return a + x;
     }),
 
-    RSHIFT((a, x) -> {
+    RSHIFT(">>", (a, x) -> {
         return a / (float)Math.pow(2, x.intValue());
     }, (a, x) -> {
         return a * (float)Math.pow(2, x.intValue());
     }),
 
-    LSHIFT((a, x) -> {
+    LSHIFT("<<", (a, x) -> {
         return a * (float)Math.pow(2, x.intValue());
     }, (a, x) -> {
         return a / (float)Math.pow(2, x.intValue());
@@ -48,11 +48,14 @@ public enum ArithmeticOperation {
 
     private final BiFunction<Float, Float, Float> forwardOperation;
     private final BiFunction<Float, Float, Float> reverseOperation;
+    private final String text;
 
-    ArithmeticOperation(BiFunction<Float, Float, Float> forwardOperation,
+    ArithmeticOperation(String text,
+                        BiFunction<Float, Float, Float> forwardOperation,
                         BiFunction<Float, Float, Float> reverseOperation) {
         this.forwardOperation = forwardOperation;
         this.reverseOperation = reverseOperation;
+        this.text = text;
     }
 
     public float forward(float a, float x) {
@@ -63,4 +66,9 @@ public enum ArithmeticOperation {
         return reverseOperation.apply(a, x);
     }
 
+
+    @Override
+    public String toString() {
+        return text;
+    }
 }

@@ -231,13 +231,6 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                 (newScale) -> {
                     Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
                     s.setScale(newScale);
-                    if (newScale.getUnit() != null) {
-                        s.setUnit(newScale.getUnit());
-                    }
-
-                    if (newScale.getFormat() != null) {
-                        s.setFormat(newScale.getFormat());
-                    }
 
                     // Shortcut to set the name of a series
                     if (newScale.getName() != null && !newScale.getName().isBlank() &&
@@ -395,6 +388,12 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     @Override
     public Icon getIcon() {
         return Icons.get(CarbonIcons.CHART_CUSTOM, getTextColor());
+    }
+
+    @Override
+    public void reload() {
+        reinitialize();
+        updatePreview();
     }
 
     @Override

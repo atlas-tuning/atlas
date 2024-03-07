@@ -50,11 +50,14 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
     }
 
     public abstract String getTitle();
+
     public abstract Icon getIcon();
 
     public void updateTitle() {
         getComponent().setTitle(getTitle());
     }
+
+    public abstract void reload();
 
     @Override
     protected JInternalFrame newComponent() {

@@ -163,6 +163,20 @@ public class Layout {
         return component;
     }
 
+
+    public static <T extends JComponent> T maximumWidth(T component, int width) {
+        Dimension preferredSize = component.getPreferredSize();
+        component.setMaximumSize(new Dimension(
+                Math.min(width, preferredSize.width),
+                (int) preferredSize.getHeight()
+        ));
+        component.setPreferredSize(new Dimension(
+                Math.min(width, preferredSize.width),
+                (int) preferredSize.getHeight()
+        ));
+        return component;
+    }
+
     public static <T extends JComponent> JPanel space(int top, int left, int bottom, int right, T component) {
         JPanel outer = new JPanel();
         JPanel space = new JPanel();

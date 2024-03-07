@@ -25,8 +25,20 @@ public class ScalingOperation {
         this.coefficient = coefficient;
     }
 
+    public ScalingOperation copy() {
+        ScalingOperation copy = new ScalingOperation();
+        copy.operation = operation;
+        copy.coefficient = coefficient;
+        return copy;
+    }
+
     public static Builder builder() {
         return new Builder();
+    }
+
+    @Override
+    public String toString() {
+        return String.format("%s %f", operation.toString(), coefficient);
     }
 
     public static class Builder {

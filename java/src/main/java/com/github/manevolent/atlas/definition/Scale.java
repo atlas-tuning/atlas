@@ -1,9 +1,6 @@
 package com.github.manevolent.atlas.definition;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.ListIterator;
+import java.util.*;
 
 public class Scale {
     public static Scale ONE = Scale.builder().build();
@@ -57,6 +54,26 @@ public class Scale {
         return format;
     }
 
+    public Scale copy() {
+        Scale copy = new Scale();
+
+        copy.operations = new ArrayList<>(getOperations().stream().map(ScalingOperation::copy).toList());
+        copy.unit = getUnit();
+        copy.name = getName();
+        copy.format = getFormat();
+
+        return copy;
+    }
+
+    public void apply(Scale other) {
+        operations.clear();
+        operations.addAll(other.getOperations());
+
+        unit = other.unit;
+        name = other.name;
+        format = other.format;
+    }
+
     public static Builder builder() {
         return new Builder();
     }
@@ -87,6 +104,34 @@ public class Scale {
 
     public void setFormat(DataFormat format) {
         this.format = format;
+    }
+
+    public List<ScalingOperation> getOperations() {
+        return Collections.unmodifiableList(operations);
+    }
+
+    public void removeOperation(ScalingOperation operation) {
+        operations.remove(operation);
+    }
+
+    public void moveOperationDown(ScalingOperation operation) {
+        int index = operations.indexOf(operation);
+        if (index < 0 || index >= operations.size() - 1) {
+            return;
+        }
+
+        operations.remove(operation);
+        operations.add(index+1, operation);
+    }
+
+    public void moveOperationUp(ScalingOperation operation) {
+        int index = operations.indexOf(operation);
+        if (index <= 0 || index > operations.size() - 1) {
+            return;
+        }
+
+        operations.remove(operation);
+        operations.add(index-1, operation);
     }
 
     public static class Builder {

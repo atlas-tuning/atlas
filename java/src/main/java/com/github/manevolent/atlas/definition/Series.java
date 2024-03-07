@@ -6,8 +6,6 @@ public class Series {
     private String name;
     private int length;
     private FlashAddress address;
-    private DataFormat format;
-    private Unit unit;
     private Scale scale;
 
     public float get(int index) throws IOException {
@@ -15,7 +13,7 @@ public class Series {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        float data = address.read(index, format);
+        float data = address.read(index, scale.getFormat());
         return scale.forward(data);
     }
 
@@ -54,11 +52,7 @@ public class Series {
     }
 
     public Unit getUnit() {
-        return unit;
-    }
-
-    public void setUnit(Unit unit) {
-        this.unit = unit;
+        return scale.getUnit();
     }
 
     public Scale getScale() {
@@ -70,11 +64,7 @@ public class Series {
     }
 
     public DataFormat getFormat() {
-        return format;
-    }
-
-    public void setFormat(DataFormat format) {
-        this.format = format;
+        return scale.getFormat();
     }
 
     public FlashAddress getAddress() {
@@ -91,7 +81,7 @@ public class Series {
 
     public float set(int index, float value) throws IOException {
         float data = scale.reverse(value);
-        address.write(index, data, format);
+        address.write(index, data, scale.getFormat());
         return get(index);
     }
 
@@ -100,8 +90,6 @@ public class Series {
         copy.scale = scale;
         copy.name = name;
         copy.length = length;
-        copy.format = format;
-        copy.unit = unit;
         copy.address = address;
         return copy;
     }
@@ -130,19 +118,8 @@ public class Series {
                     .build());
         }
 
-        public Builder withFormat(DataFormat format) {
-            this.series.setFormat(format);
-            return this;
-        }
-
         public Builder withScale(Scale scale) {
             this.series.setScale(scale);
-            if (scale.getUnit() != null && series.getUnit() == null) {
-                withUnit(scale.getUnit());
-            }
-            if (scale.getFormat() != null && series.getFormat() == null) {
-                withFormat(scale.getFormat());
-            }
             return this;
         }
 
@@ -155,22 +132,9 @@ public class Series {
             return this;
         }
 
-        public Builder withUnit(Unit unit) {
-            this.series.setUnit(unit);
-            return this;
-        }
-
         public Series build() {
             if (series.address == null) {
                 throw new NullPointerException("address");
-            }
-
-            if (series.format == null) {
-                throw new NullPointerException("format");
-            }
-
-            if (series.scale == null) {
-                throw new NullPointerException("scale");
             }
 
             if (series.length < 0) {
