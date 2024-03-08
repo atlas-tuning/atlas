@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.model;
 
-public enum FlashType {
+public enum MemoryType {
     BOOTLOADER,
-    CODE
+    CODE,
+    RAM
 }

@@ -24,6 +24,11 @@ public class UDSTesterPresentRequest extends UDSRequest<UDSTesterPresentResponse
     }
 
     @Override
+    public boolean isResponseExpected() {
+        return false;
+    }
+
+    @Override
     public byte[] getData() {
         return data;
     }

@@ -13,6 +13,7 @@ import com.rm5248.serial.NotASerialPortException;
 import com.rm5248.serial.SerialPort;
 import com.rm5248.serial.SerialPortBuilder;
 
+import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
@@ -42,6 +43,12 @@ public class SerialTactrixOpenPort implements J2534Device {
     }
 
     private void preconnect() throws IOException {
+        // Empty the buffer
+        while (is.available() > 0) {
+            //noinspection ResultOfMethodCallIgnored
+            is.read();
+        }
+
         os.write("\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
         os.write("ati\r\n".getBytes(StandardCharsets.US_ASCII));
         os.flush();

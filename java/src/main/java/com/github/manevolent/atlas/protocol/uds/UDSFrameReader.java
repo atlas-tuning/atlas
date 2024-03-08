@@ -3,8 +3,10 @@ package com.github.manevolent.atlas.protocol.uds;
 import com.github.manevolent.atlas.Addressed;
 import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.FrameReader;
+import com.github.manevolent.atlas.logging.Log;
 
 import java.io.IOException;
+import java.util.logging.Level;
 
 public class UDSFrameReader implements FrameReader<UDSFrame> {
     private final FrameReader<?> transport;
@@ -32,6 +34,9 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
         } catch (Exception ex) {
             throw new IOException("Problem reading frame " + frame.toHexString(), ex);
         }
+
+        Log.can().log(Level.INFO, udsFrame.toString());
+
         return udsFrame;
     }
 

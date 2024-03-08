@@ -10,7 +10,7 @@ import static com.github.manevolent.atlas.ssm4.SubaruDITFlashEncryption.feistel_
 import static com.github.manevolent.atlas.ssm4.SubaruDITFlashEncryption.feistel_encrypt;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-public class SubaruDITFlashEncryptionTest {
+public class SubaruDITMemoryEncryptionTest {
 
     @Test
     public void test_feistel_encrypt() {

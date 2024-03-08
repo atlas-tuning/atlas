@@ -3,10 +3,10 @@ package com.github.manevolent.atlas.model.builtin;
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.model.source.ArraySource;
 import com.github.manevolent.atlas.model.source.VehicleSource;
-import com.github.manevolent.atlas.model.subaru.SubaruDITFlashEncryption;
+import com.github.manevolent.atlas.model.subaru.SubaruDITMemoryEncryption;
+import com.github.manevolent.atlas.ssm4.Crypto;
 
 import java.io.IOException;
-import java.nio.ByteOrder;
 
 import static com.github.manevolent.atlas.model.Axis.X;
 import static com.github.manevolent.atlas.model.Axis.Y;
@@ -480,26 +480,31 @@ public class SubaruWRX2022MT {
     }
 
     public static Rom newRom() throws IOException {
-        byte[] rom = SubaruWRX2022MT.class.getResourceAsStream(romResource)
-                .readAllBytes();
+        byte[] rom = SubaruWRX2022MT.class.getResourceAsStream(romResource).readAllBytes();
 
         MemorySection code = MemorySection.builder()
                 .withName("Code")
-                .withByteOrder(ByteOrder.LITTLE_ENDIAN)
+                .withByteOrder(MemoryByteOrder.LITTLE_ENDIAN)
+                .withType(MemoryType.CODE)
                 .withBaseAddress(0x00010000)
                 .withEndAddress(0x003F0000)
                 .withSource(new ArraySource(rom, 0x10000, 0x3F0000 - 0x10000))
-                .withEncryption(SubaruDITFlashEncryption.WRX_MT_2022_USDM).build();
+                .withEncryptionType(MemoryEncryptionType.SUBARU_DIT)
+                .build();
 
         MemorySection ram4 = MemorySection.builder()
                 .withName("RAM4")
-                .withByteOrder(ByteOrder.LITTLE_ENDIAN)
+                .withByteOrder(MemoryByteOrder.LITTLE_ENDIAN)
+                .withType(MemoryType.RAM)
                 .withBaseAddress(0xFEF00000L)
                 .withEndAddress(0xFEF1FFFFL)
                 .withSource(new VehicleSource())
                 .build();
 
         return Rom.builder()
+                .withProperty("subaru.dit.flashkey", new KeyProperty(
+                        Crypto.toByteArray("b74042daa7ca5fb1")
+                ))
                 .withVehicle(Vehicle.builder()
                         .withYear("2022")
                         .withMarket("USDM")
@@ -510,26 +515,30 @@ public class SubaruWRX2022MT {
                 .withSection(code)
                 .withSection(MemorySection.builder()
                         .withName("Bootloader")
-                        .withByteOrder(ByteOrder.LITTLE_ENDIAN)
+                        .withByteOrder(MemoryByteOrder.LITTLE_ENDIAN)
+                        .withType(MemoryType.BOOTLOADER)
                         .withBaseAddress(0x00000000)
                         .withLength(0x00010000)
                         .withSource(new ArraySource(rom, 0x00000000, 0x00010000))
-                        .withEncryption(SubaruDITFlashEncryption.WRX_MT_2022_USDM))
+                        .withEncryptionType(MemoryEncryptionType.SUBARU_DIT))
                 .withSection(MemorySection.builder()
                         .withName("RAM1")
-                        .withByteOrder(ByteOrder.LITTLE_ENDIAN)
+                        .withType(MemoryType.RAM)
+                        .withByteOrder(MemoryByteOrder.LITTLE_ENDIAN)
                         .withBaseAddress(0xFEBF0000L)
                         .withEndAddress(0xFEBFFFFFL)
                         .withSource(new VehicleSource()))
                 .withSection(MemorySection.builder()
                         .withName("RAM2")
-                        .withByteOrder(ByteOrder.LITTLE_ENDIAN)
+                        .withType(MemoryType.RAM)
+                        .withByteOrder(MemoryByteOrder.LITTLE_ENDIAN)
                         .withBaseAddress(0xFEEE0000L)
                         .withEndAddress(0xFEEEFFFFL)
                         .withSource(new VehicleSource()))
                 .withSection(MemorySection.builder()
                         .withName("RAM3")
-                        .withByteOrder(ByteOrder.LITTLE_ENDIAN)
+                        .withType(MemoryType.RAM)
+                        .withByteOrder(MemoryByteOrder.LITTLE_ENDIAN)
                         .withBaseAddress(0xFEEF0000L)
                         .withEndAddress(0xFEEFFFFFL)
                         .withSource(new VehicleSource()))

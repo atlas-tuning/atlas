@@ -31,7 +31,7 @@ public class MemoryAddress {
     public float read(int index, DataFormat format) throws IOException {
         byte[] data = new byte[format.getSize()];
         getSection().read(data, offset + (index * format.getSize()), 0, format.getSize());
-        return format.convertFromBytes(data, getSection().getByteOrder());
+        return format.convertFromBytes(data, getSection().getByteOrder().getByteOrder());
     }
 
     public static Builder builder() {
@@ -39,7 +39,7 @@ public class MemoryAddress {
     }
 
     public void write(int index, float data, DataFormat format) throws IOException {
-        byte[] bytes = format.convertToBytes(data, getSection().getByteOrder());
+        byte[] bytes = format.convertToBytes(data, getSection().getByteOrder().getByteOrder());
         getSection().write(bytes, offset + (index * format.getSize()), 0);
     }
 

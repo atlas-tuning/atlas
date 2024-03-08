@@ -1,15 +1,19 @@
 package com.github.manevolent.atlas.model;
 
+import com.github.manevolent.atlas.model.source.ArraySource;
+import com.github.manevolent.atlas.model.source.VehicleSource;
+
 import java.io.IOException;
-import java.nio.ByteOrder;
+import java.io.OutputStream;
 import java.util.HexFormat;
 
 public class MemorySection implements MemorySource {
     private String name;
-    private FlashType type;
+    private MemoryType memoryType;
     private MemorySource source;
-    private FlashEncryption encryption;
-    private ByteOrder byteOrder = ByteOrder.nativeOrder();
+    private MemoryEncryptionType encryptionType;
+    private MemoryEncryption encryption;
+    private MemoryByteOrder byteOrder;
     private long baseAddress;
     private int dataLength;
 
@@ -21,28 +25,24 @@ public class MemorySection implements MemorySource {
         this.name = name;
     }
 
-    public FlashType getType() {
-        return type;
+    public MemoryType getMemoryType() {
+        return memoryType;
     }
 
-    public void setType(FlashType type) {
-        this.type = type;
-    }
-
-    public MemorySource getSource() {
-        return source;
+    public void setMemoryType(MemoryType memoryType) {
+        this.memoryType = memoryType;
     }
 
     public void setSource(MemorySource source) {
         this.source = source;
     }
 
-    public FlashEncryption getEncryption() {
-        return encryption;
+    public MemoryEncryptionType getEncryptionType() {
+        return encryptionType;
     }
 
-    public void setEncryption(FlashEncryption encryption) {
-        this.encryption = encryption;
+    public void setEncryptionType(MemoryEncryptionType type) {
+        this.encryptionType = type;
     }
 
     public long getBaseAddress() {
@@ -61,49 +61,71 @@ public class MemorySection implements MemorySource {
         this.dataLength = dataLength;
     }
 
+    public int copyTo(OutputStream outputStream) throws IOException {
+        int length = getDataLength();
+        for (int i = 0; i < length; i ++) {
+            outputStream.write(read(getBaseAddress() + i));
+        }
+        return length;
+    }
+
+    public void setup(Rom rom, byte[] data) {
+        if (encryptionType != null && encryptionType != MemoryEncryptionType.NONE) {
+            encryption = encryptionType.create(rom);
+        } else {
+            encryption = null;
+        }
+
+        if (data != null) {
+            source = new ArraySource(data, 0, data.length);
+        } else {
+            source = new VehicleSource();
+        }
+    }
+
     @Override
-    public int read(byte[] dst, long flashOffs, int offs, int len) throws IOException {
-        int readAddress = (int) (flashOffs - baseAddress);
+    public int read(byte[] dst, long memoryOffs, int offs, int len) throws IOException {
+        int readAddress = (int) (memoryOffs - baseAddress);
         if (readAddress < 0 || readAddress + len >= dataLength) {
             throw new ArrayIndexOutOfBoundsException(readAddress);
         }
 
         if (encryption != null) {
-            return encryption.read(getSource(), flashOffs, dst, offs, len);
+            return encryption.read(source, memoryOffs, dst, offs, len);
         } else {
-            return getSource().read(dst, flashOffs - baseAddress, offs, len);
+            return source.read(dst, memoryOffs - baseAddress, offs, len);
         }
     }
 
     @Override
-    public void write(byte[] src, long flashOffs, int offs, int len) throws IOException {
-        int writeAddress = (int) (flashOffs - baseAddress);
+    public void write(byte[] src, long memoryOffs, int offs, int len) throws IOException {
+        int writeAddress = (int) (memoryOffs - baseAddress);
         if (writeAddress < 0 || writeAddress + len >= dataLength) {
             throw new ArrayIndexOutOfBoundsException(writeAddress);
         }
 
         if (encryption != null) {
-            encryption.write(getSource(), flashOffs, src, offs, len);
+            encryption.write(source, memoryOffs, src, offs, len);
         } else {
-            getSource().write(src, flashOffs - baseAddress, offs, len);
+            source.write(src, memoryOffs - baseAddress, offs, len);
         }
     }
 
     @Override
-    public int read(long flashOffs) throws IOException {
-        int readAddress = (int) (flashOffs - baseAddress);
+    public int read(long memoryOffs) throws IOException {
+        int readAddress = (int) (memoryOffs - baseAddress);
         if (readAddress < 0 || readAddress >= dataLength) {
             throw new ArrayIndexOutOfBoundsException(readAddress);
         }
 
-        return getSource().read(readAddress);
+        return source.read(readAddress - memoryOffs);
     }
 
-    public ByteOrder getByteOrder() {
+    public MemoryByteOrder getByteOrder() {
         return byteOrder;
     }
 
-    public void setByteOrder(ByteOrder byteOrder) {
+    public void setByteOrder(MemoryByteOrder byteOrder) {
         this.byteOrder = byteOrder;
     }
 
@@ -125,8 +147,8 @@ public class MemorySection implements MemorySource {
             return this;
         }
 
-        public Builder withByteOrder(ByteOrder name) {
-            section.setByteOrder(name);
+        public Builder withByteOrder(MemoryByteOrder byteOrder) {
+            section.setByteOrder(byteOrder);
             return this;
         }
 
@@ -150,8 +172,13 @@ public class MemorySection implements MemorySource {
             return this;
         }
 
-        public Builder withEncryption(FlashEncryption encryption) {
-            section.setEncryption(encryption);
+        public Builder withEncryptionType(MemoryEncryptionType type) {
+            section.setEncryptionType(type);
+            return this;
+        }
+
+        public Builder withType(MemoryType type) {
+            section.setMemoryType(type);
             return this;
         }
 

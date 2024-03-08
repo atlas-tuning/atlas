@@ -5,6 +5,7 @@ public enum ConnectionMode {
     DISCONNECTED,
     IDLE,
     FLASH_ROM,
-    READ_MEMORY
+    READ_MEMORY,
+    WRITE_MEMORY
 
 }

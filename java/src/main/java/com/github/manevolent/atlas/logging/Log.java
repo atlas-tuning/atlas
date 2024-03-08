@@ -5,6 +5,7 @@ import java.util.logging.Logger;
 public class Log {
     private static Logger logger;
     private static Logger uiLogger;
+    private static Logger canLogger;
 
     public static Logger get() {
         if (logger == null) {
@@ -21,6 +22,14 @@ public class Log {
 
         }
         return uiLogger;
+    }
+
+    public static Logger can() {
+        if (canLogger == null) {
+            canLogger = Logger.getLogger("can");
+            canLogger.setParent(get());
+        }
+        return canLogger;
     }
 
 }

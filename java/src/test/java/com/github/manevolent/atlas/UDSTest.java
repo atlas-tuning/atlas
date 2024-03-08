@@ -7,6 +7,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -14,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class UDSTest {
 
     @Test
-    public void testWrite() throws IOException {
+    public void testWrite() throws IOException, TimeoutException {
         int did = 0x1234;
 
         TestCANFrameWriter writer = new TestCANFrameWriter();

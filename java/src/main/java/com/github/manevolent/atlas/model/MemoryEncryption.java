@@ -2,13 +2,15 @@ package com.github.manevolent.atlas.model;
 
 import java.io.IOException;
 
-public interface FlashEncryption {
+public interface MemoryEncryption {
 
     void encrypt(byte[] data, int offs, int len) throws IOException;
 
     void decrypt(byte[] data, int offs, int len) throws IOException;
 
     int getBlockSize();
+
+    void setEncryptionKeys(Rom rom);
 
     default int read(MemorySource source, long flashOffs, byte[] dst, int offs, int len) throws IOException {
         int blockStart = (int) Math.floor((double)flashOffs / (double)getBlockSize());

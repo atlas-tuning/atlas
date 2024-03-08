@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
@@ -22,12 +23,18 @@ public class AsyncUDSSession extends Thread implements UDSSession {
     private UDSFrameReader reader;
     private UDSFrameWriter writer;
 
+    private final Object[] writeLocks = new Object[256];
+
     public AsyncUDSSession(ISOTPDevice device, UDSProtocol protocol) {
         this.setName("UDSSession/" + device.toString() + "/" + protocol.toString());
         this.setDaemon(true);
 
         this.device = device;
         this.protocol = protocol;
+
+        for (int i = 0; i < writeLocks.length; i ++) {
+            writeLocks[i] = new Object();
+        }
     }
 
     public AsyncUDSSession(ISOTPDevice device) {
@@ -111,6 +118,12 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         }
     }
 
+    public <T extends UDSResponse> void requestAndWait(UDSComponent component, UDSRequest<T> request)
+            throws IOException, TimeoutException {
+        UDSTransaction<T> transaction = request(component.getSendAddress(), request);
+        transaction.join();
+    }
+
     public <T extends UDSResponse> void request(UDSComponent component, UDSRequest<T> request)
             throws IOException {
         request(component, request, (response) -> { /*ignored*/ });
@@ -143,22 +156,54 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         }
     }
 
+    @SuppressWarnings("unchecked")
     public <T extends UDSResponse> UDSTransaction<T> request(Address destination, UDSRequest<T> request)
-            throws IOException {
+            throws IOException, TimeoutException {
         final int serviceId = protocol.getSid(request.getClass());
-
-        UDSTransaction<T> transaction = new UDSTransaction<>() {
-            @Override
-            public void close() {
-                AsyncUDSSession.this.activeTransactions.remove((serviceId & 0xFF), this);
+        synchronized (writeLocks[serviceId & 0xFF]) {
+            UDSTransaction<T> transaction = activeTransactions.get(serviceId & 0xFF);
+            if (transaction != null) {
+                // Wait for this transaction to complete before submitting another
+                transaction.join();
             }
-        };
 
-        if (this.activeTransactions.putIfAbsent((serviceId & 0xFF), transaction) != null) {
-            throw new IllegalStateException("There is an outstanding transaction for SID " + (serviceId & 0xFF));
+            // Construct the new transaction
+            transaction = new UDSTransaction<>(request.isResponseExpected()) {
+                @Override
+                public void close() {
+                    AsyncUDSSession.this.activeTransactions.remove(serviceId & 0xFF, this);
+                }
+            };
+
+            activeTransactions.put(serviceId & 0xFF, transaction);
+
+            // Write to the bus
+            try {
+                writer().write(destination, request);
+            } catch (IOException ex) {
+                // If there is a failure, remove the transaction, otherwise we 'brick' this SID
+                try {
+                    transaction.close();
+                } catch (Exception e) {
+                    ex.addSuppressed(e);
+                }
+
+                throw ex;
+            }
+
+            // Return the transaction and release the lock
+            return transaction;
         }
+    }
 
-        writer().write(destination, request);
-        return transaction;
+    @Override
+    public void close() throws IOException {
+        try {
+            reader.close();
+            device.close();
+            activeTransactions.clear();
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
     }
 }
