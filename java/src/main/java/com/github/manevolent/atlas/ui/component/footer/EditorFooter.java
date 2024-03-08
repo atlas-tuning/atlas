@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas.ui.component.footer;
 
 import com.github.manevolent.atlas.ui.Labels;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 
 import javax.swing.*;
 import java.awt.*;

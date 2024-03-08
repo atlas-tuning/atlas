@@ -49,10 +49,6 @@ public class Rom {
 
     }
 
-    private void setScales(Set<Scale> scales) {
-        this.scales = scales;
-    }
-
     public Vehicle getVehicle() {
         return vehicle;
     }
@@ -94,6 +90,10 @@ public class Rom {
 
     public Set<Scale> getScales() {
         return scales;
+    }
+
+    public void setScales(Set<Scale> scales) {
+        this.scales = scales;
     }
 
     public boolean hasTable(Table table) {
@@ -210,6 +210,7 @@ public class Rom {
             rom.setScales(new LinkedHashSet<>());
             rom.setParameters(new LinkedHashSet<>());
             rom.setProperties(new LinkedHashMap<>());
+            rom.setVehicle(new Vehicle());
 
             withScales(Scale.NONE);
         }
@@ -241,8 +242,7 @@ public class Rom {
 
         public Builder withTable(Table table) {
             // Verify scales are registered
-            Set<Scale> unknownScales = new HashSet<>();
-            unknownScales.addAll(table.getAxes().stream()
+            Set<Scale> unknownScales = new HashSet<>(table.getAxes().keySet().stream()
                     .map(table::getSeries)
                     .map(Series::getScale)
                     .filter(scale -> !this.rom.scales.contains(scale))
@@ -306,7 +306,17 @@ public class Rom {
         }
 
         public Rom build() {
+            rom.sections.forEach(x -> {
+                x.setup(rom, null);
+            });
+
             return rom;
+        }
+    }
+
+    public static Rom loadFromArchive(File file) throws IOException {
+        try (FileInputStream fis = new FileInputStream(file)) {
+            return loadFromArchive(fis);
         }
     }
 

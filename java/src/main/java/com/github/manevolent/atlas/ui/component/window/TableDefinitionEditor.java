@@ -7,7 +7,7 @@ import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.MemoryAddressField;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -112,6 +112,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
     private void save() {
         realTable.apply(workingTable);
+        getParent().setDirty(true);
 
         // Make sure the table is a part of the project
         if (!getParent().getActiveRom().hasTable(realTable)) {
@@ -292,8 +293,8 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                 nameField);
 
         Inputs.createEntryRow(panel, 2,
-                axis != null ? "Region" : "Address",
-                axis != null ? "The data region for this axis" : "The data address for this series",
+                "Address",
+                "The data address for this series",
                 memoryAddressField);
 
         Inputs.createEntryRow(panel, 3,
@@ -408,11 +409,13 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     @Override
     public void internalFrameClosing(InternalFrameEvent e) {
         if (dirty) {
+            focus();
+
             boolean isProjectTable = getParent().getActiveRom().hasTable(realTable);
 
             String message = isProjectTable ?
                 "You have unsaved changes to " + workingTable.getName() + " that will be lost. Save before closing?" :
-                    "You haven't created " + workingTable.getName() + " yet. Save before closing?";
+                    "You haven't saved the new table " + workingTable.getName() + " yet. Save before closing?";
 
             int answer = JOptionPane.showConfirmDialog(getParent(),
                     message,

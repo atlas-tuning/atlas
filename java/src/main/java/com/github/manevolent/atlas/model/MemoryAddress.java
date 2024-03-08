@@ -40,7 +40,7 @@ public class MemoryAddress {
 
     public void write(int index, float data, DataFormat format) throws IOException {
         byte[] bytes = format.convertToBytes(data, getSection().getByteOrder().getByteOrder());
-        getSection().write(bytes, offset + (index * format.getSize()), 0);
+        getSection().write(bytes, offset + (index * format.getSize()), 0, bytes.length);
     }
 
     public static class Builder {

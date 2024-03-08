@@ -7,7 +7,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HexFormat;
 
-public class MemorySection implements MemorySource {
+public class MemorySection {
     private String name;
     private MemoryType memoryType;
     private MemorySource source;
@@ -64,11 +64,16 @@ public class MemorySection implements MemorySource {
     public int copyTo(OutputStream outputStream) throws IOException {
         int length = getDataLength();
         for (int i = 0; i < length; i ++) {
-            outputStream.write(read(getBaseAddress() + i));
+            outputStream.write(source.read(baseAddress + i) & 0xFF);
         }
         return length;
     }
 
+    /**
+     * Sets up this memory section when a ROM/project is loaded
+     * @param rom ROM loaded
+     * @param data data for this section
+     */
     public void setup(Rom rom, byte[] data) {
         if (encryptionType != null && encryptionType != MemoryEncryptionType.NONE) {
             encryption = encryptionType.create(rom);
@@ -76,49 +81,46 @@ public class MemorySection implements MemorySource {
             encryption = null;
         }
 
-        if (data != null) {
-            source = new ArraySource(data, 0, data.length);
-        } else {
-            source = new VehicleSource();
+        if (this.source == null) {
+            if (data != null) {
+                source = new ArraySource(getBaseAddress(), data, 0, data.length);
+            } else {
+                source = new VehicleSource();
+            }
         }
     }
 
-    @Override
     public int read(byte[] dst, long memoryOffs, int offs, int len) throws IOException {
-        int readAddress = (int) (memoryOffs - baseAddress);
-        if (readAddress < 0 || readAddress + len >= dataLength) {
-            throw new ArrayIndexOutOfBoundsException(readAddress);
+        if (memoryOffs < baseAddress || memoryOffs + len >= baseAddress + dataLength) {
+            throw new ArrayIndexOutOfBoundsException(Long.toString(memoryOffs));
         }
 
         if (encryption != null) {
             return encryption.read(source, memoryOffs, dst, offs, len);
         } else {
-            return source.read(dst, memoryOffs - baseAddress, offs, len);
+            return source.read(dst, memoryOffs, offs, len);
         }
     }
 
-    @Override
     public void write(byte[] src, long memoryOffs, int offs, int len) throws IOException {
-        int writeAddress = (int) (memoryOffs - baseAddress);
-        if (writeAddress < 0 || writeAddress + len >= dataLength) {
-            throw new ArrayIndexOutOfBoundsException(writeAddress);
+        if (memoryOffs < baseAddress || memoryOffs + len >= baseAddress + dataLength) {
+            throw new ArrayIndexOutOfBoundsException(Long.toString(memoryOffs));
         }
 
         if (encryption != null) {
             encryption.write(source, memoryOffs, src, offs, len);
         } else {
-            source.write(src, memoryOffs - baseAddress, offs, len);
+            source.write(src, memoryOffs, offs, len);
         }
     }
 
-    @Override
-    public int read(long memoryOffs) throws IOException {
-        int readAddress = (int) (memoryOffs - baseAddress);
+    public int read(long position) throws IOException {
+        int readAddress = (int) (position - baseAddress);
         if (readAddress < 0 || readAddress >= dataLength) {
             throw new ArrayIndexOutOfBoundsException(readAddress);
         }
 
-        return source.read(readAddress - memoryOffs);
+        return source.read(position);
     }
 
     public MemoryByteOrder getByteOrder() {

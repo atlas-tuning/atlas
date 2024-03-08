@@ -12,7 +12,7 @@ public class VehicleSource implements MemorySource {
     }
 
     @Override
-    public int read(long flashOffs) throws IOException {
+    public int read(long position) throws IOException {
         return 0;
     }
 

@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.window;
+package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.model.Rom;
 import com.github.manevolent.atlas.model.Table;
@@ -16,9 +16,12 @@ import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import javax.swing.*;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -38,7 +41,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     private TablesTab tablesTab;
     private ProjectTab projectTab;
     private ConsoleTab consoleTab;
-    private ParametersTab dataLoggingTab;
+    private ParametersTab parametersTab;
     private HelpTab helpTab;
     private FormatsTab formatsTab;
 
@@ -47,6 +50,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     private java.util.List<Window> openWindows = new ArrayList<>();
     private Map<Table, TableEditor> openedTables = new LinkedHashMap<>();
     private Map<Table, TableDefinitionEditor> openedTableDefs = new LinkedHashMap<>();
+    private boolean dirty;
 
     public EditorForm(Rom rom) {
         // Just to make sure it shows up in the taskbar/dock/etc.
@@ -60,16 +64,117 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
         setBackground(Color.BLACK);
         setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
+        setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setLocationRelativeTo(null);
+
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                exit();
+            }
+        });
     }
 
     public Rom getActiveRom() {
         return rom;
     }
 
+    /**
+     *
+     * @return true if the editor is ready to close
+     */
+    public boolean closing() {
+        new ArrayList<>(getOpenWindows()).forEach(window -> window.getComponent().doDefaultCloseAction());
+
+        if (dirty) {
+            String message = "You have unsaved changes to your project " +
+                    "that will be lost. Save before closing?";
+
+            int answer = JOptionPane.showConfirmDialog(getParent(),
+                    message,
+                    "Unsaved changes",
+                    JOptionPane.YES_NO_CANCEL_OPTION
+            );
+
+            switch (answer) {
+                case JOptionPane.CANCEL_OPTION:
+                    return false;
+                case JOptionPane.YES_OPTION:
+                    saveRom();
+                case JOptionPane.NO_OPTION:
+            }
+        }
+
+        return getOpenWindows().isEmpty();
+    }
+
+    public void saveRom() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter def = new FileNameExtensionFilter("Atlas project files", "atlas");
+        fileChooser.addChoosableFileFilter(def);
+        fileChooser.setFileFilter(def);
+        fileChooser.setDialogTitle("Save Project");
+        if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try {
+                rom.saveToArchive(file);
+                setDirty(false);
+                Log.ui().log(Level.INFO, "Project saved to " + file.getPath());
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Failed to save project!\r\nSee console output for more details.",
+                        "Save failed",
+                        JOptionPane.ERROR_MESSAGE);
+
+                saveRom();
+            }
+        }
+    }
+
+    public void openRom() {
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter def = new FileNameExtensionFilter("Atlas project files (*.atlas)", "atlas");
+        fileChooser.addChoosableFileFilter(def);
+        fileChooser.setFileFilter(def);
+        fileChooser.setDialogTitle("Open Project");
+        if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+            try {
+                openRom(Rom.loadFromArchive(file));
+                Log.ui().log(Level.INFO, "Project opened from " + file.getPath());
+            } catch (IOException e) {
+                JOptionPane.showMessageDialog(this, "Failed to open project!\r\nSee console output for more details.",
+                        "Open failed",
+                        JOptionPane.ERROR_MESSAGE);
+            }
+        }
+    }
+
     public void openRom(Rom rom) {
+        closing();
+
         this.rom = rom;
-        setTitle("Atlas - " + rom.getVehicle().toString());
+
+        updateTitle();
+        if (parametersTab != null) {
+            parametersTab.reinitialize();
+        }
+        if (formatsTab != null) {
+            formatsTab.reinitialize();
+        }
+        if (projectTab != null) {
+            projectTab.reinitialize();
+        }
+        if (tablesTab != null) {
+            tablesTab.reinitialize();
+        }
+    }
+
+    public void updateTitle() {
+        if (rom.getVehicle() == null) {
+            setTitle("Atlas - Empty Project");
+        } else {
+            setTitle("Atlas - " + rom.getVehicle().toString());
+        }
     }
 
     public JDesktopPane getDesktop() {
@@ -89,6 +194,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     public void updateWindowTitles() {
+        updateTitle();
         for (Window window : openWindows) {
             window.updateTitle();
         }
@@ -276,7 +382,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     private Tab initLoggingTab() {
-        return (dataLoggingTab = new ParametersTab(this));
+        return (parametersTab = new ParametersTab(this));
     }
 
     private Tab initFormatsTab() {
@@ -387,8 +493,9 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     public void exit() {
-        //TODO save before exit, etc.
-        dispose();
+        if (closing()) {
+            dispose();
+        }
     }
 
     public void tableFocused(Table table) {
@@ -397,5 +504,9 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     public TableEditor getActiveTableEditor(Table realTable) {
         return openedTables.get(realTable);
+    }
+
+    public void setDirty(boolean dirty) {
+        this.dirty = dirty;
     }
 }

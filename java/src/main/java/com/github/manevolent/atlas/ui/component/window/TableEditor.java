@@ -9,7 +9,7 @@ import com.github.manevolent.atlas.ui.component.RowNumberTable;
 import com.github.manevolent.atlas.ui.component.footer.TableEditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.table.*;
 import com.github.manevolent.atlas.ui.component.toolbar.TableEditorToolbar;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -297,7 +297,7 @@ public class TableEditor extends Window implements
     }
 
     private void updateRowHeaders() {
-        if (table.getAxes().contains(Y)) {
+        if (table.hasAxis(Y)) {
             if (rowNumberTable == null) {
                 java.util.List<String> rowHeaders = generateRowHeaders();
                 rowNumberTable = new RowNumberTable(tableComponent, rowHeaders);
@@ -321,7 +321,7 @@ public class TableEditor extends Window implements
         Map<Axis, Integer> coordinates = new HashMap<>();
         int size = 1;
 
-        for (Axis axis : table.getAxes()) {
+        for (Axis axis : table.getAxes().keySet()) {
             coordinates.put(axis, 0);
             size *= table.getSeries(axis).getLength();
         }
@@ -611,6 +611,7 @@ public class TableEditor extends Window implements
 
             if (!valueString.equals(oldString)) {
                 newValue = table.setCell(value, col, row);
+                getParent().setDirty(true);
             } else {
                 newValue = value;
             }

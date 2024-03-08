@@ -1,8 +1,7 @@
 package com.github.manevolent.atlas.ui.component.window;
 
-import com.github.manevolent.atlas.ui.component.AtlasComponent;
 import com.github.manevolent.atlas.ui.component.EditorComponent;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;

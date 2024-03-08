@@ -2,7 +2,7 @@ package com.github.manevolent.atlas.ui.component;
 
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.Inputs;
-import com.github.manevolent.atlas.ui.window.MemoryAddressDialog;
+import com.github.manevolent.atlas.ui.MemoryAddressDialog;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;

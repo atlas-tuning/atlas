@@ -1,8 +1,8 @@
 package com.github.manevolent.atlas.ui.component;
 
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.window.EditorForm;
 
+import javax.swing.*;
 import java.awt.*;
 import java.util.logging.Level;
 
@@ -49,8 +49,12 @@ public abstract class AtlasComponent<T extends Component, E> {
     protected void postInitComponent(T component) { }
 
     public void reinitialize() {
-        initComponent(getComponent());
-        postInitComponent(getComponent());
+        T component = getComponent();
+        if (component instanceof JComponent) {
+            ((JComponent) component).removeAll();
+        }
+        initComponent(component);
+        postInitComponent(component);
 
         getComponent().revalidate();
         getComponent().repaint();

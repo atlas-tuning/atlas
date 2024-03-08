@@ -1,10 +1,8 @@
-package com.github.manevolent.atlas.ui.window;
+package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemorySection;
 import com.github.manevolent.atlas.model.Rom;
-import com.github.manevolent.atlas.ui.Fonts;
-import com.github.manevolent.atlas.ui.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -38,7 +36,7 @@ public class MemoryAddressDialog extends JDialog {
         this.rom = rom;
         this.valueChanged = valueChanged;
 
-        this.section = address != null ? address.getSection() : null;
+        this.section = address != null ? address.getSection() : getDefaultSection();
         this.offset = address != null ? address.getOffset() : section.getBaseAddress();
 
         setType(Type.POPUP);
@@ -48,6 +46,10 @@ public class MemoryAddressDialog extends JDialog {
         setResizable(false);
         setMinimumSize(new Dimension(300, getMinimumSize().height));
         memoryAddressField.grabFocus();
+    }
+
+    private MemorySection getDefaultSection() {
+        return rom.getSections().getFirst();
     }
 
     private JTextField createMemoryAddressField(Consumer<Boolean> inputValid, Runnable enter) {

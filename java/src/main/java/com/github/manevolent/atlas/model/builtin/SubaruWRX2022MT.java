@@ -3,7 +3,6 @@ package com.github.manevolent.atlas.model.builtin;
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.model.source.ArraySource;
 import com.github.manevolent.atlas.model.source.VehicleSource;
-import com.github.manevolent.atlas.model.subaru.SubaruDITMemoryEncryption;
 import com.github.manevolent.atlas.ssm4.Crypto;
 
 import java.io.IOException;
@@ -487,8 +486,8 @@ public class SubaruWRX2022MT {
                 .withByteOrder(MemoryByteOrder.LITTLE_ENDIAN)
                 .withType(MemoryType.CODE)
                 .withBaseAddress(0x00010000)
-                .withEndAddress(0x003F0000)
-                .withSource(new ArraySource(rom, 0x10000, 0x3F0000 - 0x10000))
+                .withEndAddress(0x003FFFFF)
+                .withSource(new ArraySource(0x10000, rom, 0x10000, 0x003FFFFF - 0x00010000))
                 .withEncryptionType(MemoryEncryptionType.SUBARU_DIT)
                 .build();
 
@@ -519,7 +518,7 @@ public class SubaruWRX2022MT {
                         .withType(MemoryType.BOOTLOADER)
                         .withBaseAddress(0x00000000)
                         .withLength(0x00010000)
-                        .withSource(new ArraySource(rom, 0x00000000, 0x00010000))
+                        .withSource(new ArraySource(0x00000000, rom, 0x00000000, 0x00010000))
                         .withEncryptionType(MemoryEncryptionType.SUBARU_DIT))
                 .withSection(MemorySection.builder()
                         .withName("RAM1")

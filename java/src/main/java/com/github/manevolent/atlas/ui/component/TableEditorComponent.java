@@ -1,7 +1,6 @@
 package com.github.manevolent.atlas.ui.component;
 
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
-import com.github.manevolent.atlas.ui.window.EditorForm;
 
 import java.awt.*;
 

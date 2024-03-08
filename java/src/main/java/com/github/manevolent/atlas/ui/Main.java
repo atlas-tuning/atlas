@@ -2,10 +2,7 @@ package com.github.manevolent.atlas.ui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.github.manevolent.atlas.model.Rom;
-import com.github.manevolent.atlas.model.builtin.SubaruWRX2022MT;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.window.EditorForm;
-import com.github.manevolent.atlas.ui.window.SplashForm;
 
 import java.util.logging.Level;
 
@@ -27,7 +24,8 @@ public class Main {
         FlatDarculaLaf.setup();
         splashForm.setProgress(0.1f);
 
-        Rom rom = SubaruWRX2022MT.newRom();
+        //TODO: load last saved rom
+        Rom rom = Rom.builder().build();
         splashForm.setProgress(0.5f);
 
         EditorForm editorForm = new EditorForm(rom);

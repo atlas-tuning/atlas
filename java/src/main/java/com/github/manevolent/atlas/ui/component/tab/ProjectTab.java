@@ -1,11 +1,10 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.ui.Icons;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
-import java.awt.*;
 
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
@@ -26,6 +25,10 @@ public class ProjectTab extends Tab {
 
     @Override
     protected void initComponent(JPanel panel) {
+
+    }
+
+    public void update() {
 
     }
 }

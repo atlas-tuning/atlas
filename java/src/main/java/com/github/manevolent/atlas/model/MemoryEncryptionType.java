@@ -6,13 +6,24 @@ import java.util.function.Supplier;
 
 public enum MemoryEncryptionType {
 
-    NONE(() -> null),
-    SUBARU_DIT(SubaruDITMemoryEncryption::new);
+    NONE("None", () -> null),
+    SUBARU_DIT("Subaru DIT (2015+)", SubaruDITMemoryEncryption::new);
 
     private final Supplier<MemoryEncryption> instanceSupplier;
+    private final String name;
 
-    MemoryEncryptionType(Supplier<MemoryEncryption> instanceSupplier) {
+    MemoryEncryptionType(String name, Supplier<MemoryEncryption> instanceSupplier) {
+        this.name = name;
         this.instanceSupplier = instanceSupplier;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    @Override
+    public String toString() {
+        return name;
     }
 
     public MemoryEncryption create(Rom rom) {

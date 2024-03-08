@@ -4,15 +4,11 @@ import java.io.IOException;
 
 public interface MemorySource {
 
-    int read(byte[] dst, long flashOffs, int offs, int len) throws IOException;
+    int read(byte[] dst, long memoryBase, int offs, int len) throws IOException;
 
-    int read(long flashOffs) throws IOException;
+    int read(long position) throws IOException;
 
-    void write(byte[] bytes, long flashOffs, int offs, int len) throws IOException;
-
-    default void write(byte[] bytes, long flashOffs, int offs) throws IOException {
-        write(bytes, flashOffs, offs, bytes.length);
-    }
+    void write(byte[] bytes, long memoryBase, int offs, int len) throws IOException;
 
     default boolean isLocal() {
         return true;

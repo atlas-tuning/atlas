@@ -4,7 +4,7 @@ import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Fonts;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.toolbar.ConsoleTabToolbar;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -22,7 +22,6 @@ import java.awt.event.FocusListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.DateFormat;

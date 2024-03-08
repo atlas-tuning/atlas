@@ -6,7 +6,7 @@ import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
 import com.github.manevolent.atlas.ui.component.toolbar.OperationsToolbar;
 import com.github.manevolent.atlas.ui.component.window.Window;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -180,6 +180,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             newScale.setName(newScaleName);
             workingCopies.put(newScale, newScale);
             getParent().getActiveRom().getScales().add(newScale);
+            getParent().setDirty(true);
 
             update();
             updateListModel();
@@ -235,6 +236,8 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             realScale.apply(workingScale);
         }
 
+        getParent().setDirty(true);
+
         dirtyMap.put(realScale, false);
         update();
         updateListModel();
@@ -255,6 +258,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
                     scale.setName(name);
                     scaleChanged();
                 });
+        nameField.setEnabled(getRealScale() != Scale.NONE);
         createEntryRow(inner, 0, "Name", "Name of the format", nameField);
 
         JComboBox<Unit> unitField = Inputs.unitField(scale.getName(),
@@ -262,6 +266,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
                     scale.setUnit(unit);
                     scaleChanged();
                 });
+        unitField.setEnabled(getRealScale() != Scale.NONE);
         createEntryRow(inner, 1, "Unit", null, unitField);
 
         JComboBox<DataFormat> dataType = Inputs.dataTypeField(scale.getName(),
@@ -269,6 +274,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
                     scale.setFormat(format);
                     scaleChanged();
                 });
+        dataType.setEnabled(getRealScale() != Scale.NONE);
         createEntryRow(inner, 2, "Data Type", null, dataType);
 
         createSaveRow(inner, 3);
@@ -289,7 +295,9 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         JPanel content = new JPanel(new BorderLayout());
         JPanel inner = new JPanel(new BorderLayout());
 
-        inner.add(new OperationsToolbar(this).getComponent(), BorderLayout.NORTH);
+        if (getRealScale() != Scale.NONE) {
+            inner.add(new OperationsToolbar(this).getComponent(), BorderLayout.NORTH);
+        }
         inner.add(Layout.emptyBorder(scrollVertical(ops = initOperationsList())), BorderLayout.CENTER);
 
         content.add(matteBorder(1, 1, 1, 1, Color.GRAY.darker(), inner), BorderLayout.CENTER);
@@ -404,6 +412,10 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         }
     }
 
+    public Scale getRealScale() {
+        return list.getSelectedValue();
+    }
+
     public Scale getSelectedScale() {
         Scale realCopy = list.getSelectedValue();
         if (realCopy == null) {
@@ -506,6 +518,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     }
 
     public void newFormat() {
+
         String newScaleName = JOptionPane.showInputDialog(getParent(), "Specify a name", "New Format");
         if (newScaleName == null || newScaleName.isBlank()) {
             return;
@@ -529,6 +542,12 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     public void deleteFormat() {
         Scale scale = list.getSelectedValue();
         if (scale == null) {
+            JOptionPane.showMessageDialog(getParent(), "No format was selected.",
+                    "Delete", JOptionPane.ERROR_MESSAGE);
+            return;
+        } else if (scale == Scale.NONE) {
+            JOptionPane.showMessageDialog(getParent(), "Cannot delete this built-in format.",
+                    "Delete", JOptionPane.ERROR_MESSAGE);
             return;
         }
 

@@ -4,10 +4,9 @@ import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.MemoryAddressField;
-import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
 import com.github.manevolent.atlas.ui.component.toolbar.ParametersTabToolbar;
 import com.github.manevolent.atlas.ui.component.window.Window;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -161,6 +160,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
             newParam.setName(newParamName);
             workingCopies.put(newParam, newParam);
             getParent().getActiveRom().addParameter(newParam);
+            getParent().setDirty(true);
 
             update();
             updateListModel();
@@ -216,6 +216,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
             realParam.apply(workingParam);
         }
 
+        getParent().setDirty(true);
         dirtyMap.put(realParam, false);
         update();
         updateListModel();
@@ -390,6 +391,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         left.add(new ParametersTabToolbar(this).getComponent(), BorderLayout.NORTH);
         left.add(Layout.emptyBorder(scrollVertical(list = initParameterList())), BorderLayout.CENTER);
 
+        tab.removeAll();
         tab.add(matteBorder(0, 0, 0, 1, Color.GRAY.darker(), left), BorderLayout.WEST);
 
         center = new JPanel(new BorderLayout());
@@ -428,6 +430,13 @@ public class ParametersTab extends Tab implements ListSelectionListener {
     }
 
     public void newParameter() {
+        if (getParent().getActiveRom().getSections().stream().noneMatch(x -> x.getMemoryType() == MemoryType.RAM)) {
+            JOptionPane.showMessageDialog(getParent(), "Please define any RAM memory " +
+                            "section before adding a parameter.",
+                    "No sections", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         String newParameterName = JOptionPane.showInputDialog(getParent(), "Specify a name", "New Parameter");
         if (newParameterName == null || newParameterName.isBlank()) {
             return;
@@ -449,6 +458,8 @@ public class ParametersTab extends Tab implements ListSelectionListener {
     public void deleteParameter() {
         MemoryParameter parameter = list.getSelectedValue();
         if (parameter == null) {
+            JOptionPane.showMessageDialog(getParent(), "No parameter was selected.",
+                    "Delete", JOptionPane.ERROR_MESSAGE);
             return;
         }
 

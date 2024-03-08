@@ -120,7 +120,7 @@ public class Inputs {
                                                               Consumer<MemorySection> changed) {
         JComboBox<MemorySection> comboBox = new JComboBox<>(
                 rom.getSections().stream()
-                        .filter(x -> !localOnly || x.isLocal())
+                        .filter(x -> !localOnly || x.getMemoryType() != MemoryType.RAM)
                         .toList().toArray(new MemorySection[0])
         );
         MemorySection intended = value == null ? rom.getSections().getFirst() : value;

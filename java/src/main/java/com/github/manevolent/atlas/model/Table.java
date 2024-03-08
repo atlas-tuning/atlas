@@ -23,6 +23,10 @@ public class Table {
 
     }
 
+    public Map<Axis, Series> getAxes() {
+        return axes;
+    }
+
     public float getCell(Map<Axis, Integer> coordinates) throws IOException {
         return data.get(getDataIndex(coordinates));
     }
@@ -188,10 +192,6 @@ public class Table {
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public Collection<Axis> getAxes() {
-        return axes.keySet();
     }
 
     public boolean hasAxis(Axis axis) {

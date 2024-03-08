@@ -2,10 +2,8 @@ package com.github.manevolent.atlas.ui.component.menu.table;
 
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
-import com.github.manevolent.atlas.ui.window.NewRomForm;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class FileMenu extends TableEditorMenu {
     public FileMenu(TableEditor editor) {

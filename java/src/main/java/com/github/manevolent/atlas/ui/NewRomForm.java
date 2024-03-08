@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.window;
+package com.github.manevolent.atlas.ui;
 
 import javax.swing.*;
 

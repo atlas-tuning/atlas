@@ -2,7 +2,7 @@ package com.github.manevolent.atlas.ui.component.menu.editor;
 
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.window.Window;
-import com.github.manevolent.atlas.ui.window.EditorForm;
+import com.github.manevolent.atlas.ui.EditorForm;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
