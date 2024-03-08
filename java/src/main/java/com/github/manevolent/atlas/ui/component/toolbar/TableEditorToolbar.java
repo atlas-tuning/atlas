@@ -18,6 +18,10 @@ public class TableEditorToolbar extends Toolbar<TableEditor> {
 
     @Override
     protected void initComponent(JToolBar toolbar) {
+        toolbar.add(makeButton(CarbonIcons.CHART_CUSTOM, "define", "Edit table definition", (e) -> {
+            getParent().getParent().openTableDefinition(getParent().getTable());
+        }));
+        toolbar.addSeparator();
         toolbar.add(makeButton(FontAwesomeSolid.CALCULATOR, "calc", "Run custom function"));
         toolbar.addSeparator();
         toolbar.add(makeButton(FontAwesomeSolid.TIMES, "multiply", "Multiply value at selected cells"));
@@ -30,11 +34,6 @@ public class TableEditorToolbar extends Toolbar<TableEditor> {
         toolbar.add(makeButton(FontAwesomeSolid.GRIP_HORIZONTAL, "interpolate-horizontal", "Interpolate horizontally"));
         toolbar.add(makeButton(FontAwesomeSolid.GRIP_VERTICAL, "interpolate-vertical", "Interpolate vertically"));
 
-        // Right side
-        toolbar.add(Separators.vertical());
-        toolbar.add(makeButton(CarbonIcons.CHART_CUSTOM, "define", "Edit table definition", (e) -> {
-            getParent().getParent().openTableDefinition(getParent().getTable());
-        }));
 
     }
 }

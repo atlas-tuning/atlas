@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.component.footer.table;
+package com.github.manevolent.atlas.ui.component.footer;
 
 import com.github.manevolent.atlas.model.Precision;
 import com.github.manevolent.atlas.model.Series;

@@ -4,6 +4,7 @@ import com.github.manevolent.atlas.model.Rom;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.component.footer.EditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.editor.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
@@ -112,18 +113,16 @@ public class EditorForm extends JFrame implements InternalFrameListener {
                 initLeftPane(),
                 this.desktop
         );
-        eastWestSplitPane.setDividerLocation(200);
 
         JSplitPane northSouthSplitPane = new JSplitPane(
                 JSplitPane.VERTICAL_SPLIT,
                 eastWestSplitPane,
                 initBottomPane()
         );
-        northSouthSplitPane.setDividerLocation(507);
 
-        add(northSouthSplitPane);
-
-        setContentPane(northSouthSplitPane);
+        setLayout(new BorderLayout());
+        add(northSouthSplitPane, BorderLayout.CENTER);
+        add(new EditorFooter(this).getComponent(), BorderLayout.SOUTH);
     }
 
     private JMenuBar initMenu() {

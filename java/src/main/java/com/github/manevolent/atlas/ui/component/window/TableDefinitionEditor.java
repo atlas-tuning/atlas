@@ -404,9 +404,14 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
     @Override
     public void internalFrameClosing(InternalFrameEvent e) {
         if (dirty) {
-            int answer = JOptionPane.showConfirmDialog(getComponent(),
-                    "You have unsaved changes to " +
-                    workingTable.getName() + " that will be lost. Save before closing?",
+            boolean isProjectTable = getParent().getActiveRom().hasTable(realTable);
+
+            String message = isProjectTable ?
+                "You have unsaved changes to " + workingTable.getName() + " that will be lost. Save before closing?" :
+                    "You haven't created " + workingTable.getName() + " yet. Save before closing?";
+
+            int answer = JOptionPane.showConfirmDialog(getParent(),
+                    message,
                     "Unsaved changes",
                     JOptionPane.YES_NO_CANCEL_OPTION
             );

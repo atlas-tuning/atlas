@@ -6,7 +6,7 @@ import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.Fonts;
 import com.github.manevolent.atlas.ui.component.JRotateLabel;
 import com.github.manevolent.atlas.ui.component.RowNumberTable;
-import com.github.manevolent.atlas.ui.component.footer.table.TableEditorFooter;
+import com.github.manevolent.atlas.ui.component.footer.TableEditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.table.*;
 import com.github.manevolent.atlas.ui.component.toolbar.TableEditorToolbar;
 import com.github.manevolent.atlas.ui.window.EditorForm;
