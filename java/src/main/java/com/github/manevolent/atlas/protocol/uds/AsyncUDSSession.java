@@ -23,7 +23,7 @@ public class AsyncUDSSession extends Thread implements UDSSession {
     private UDSFrameWriter writer;
 
     public AsyncUDSSession(ISOTPDevice device, UDSProtocol protocol) {
-        this.setName("UDSSession/" +device.toString() + "/" + protocol.toString());
+        this.setName("UDSSession/" + device.toString() + "/" + protocol.toString());
         this.setDaemon(true);
 
         this.device = device;
