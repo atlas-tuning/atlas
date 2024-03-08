@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.can.CANFrame;
-import com.github.manevolent.atlas.can.CANFrameWriter;
+import com.github.manevolent.atlas.protocol.can.CANFrame;
+import com.github.manevolent.atlas.protocol.can.CANFrameWriter;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;

@@ -127,7 +127,9 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
         // Reload any active editor
         TableEditor editor = getParent().getActiveTableEditor(realTable);
-        editor.reload();
+        if (editor != null) {
+            editor.reload();
+        }
 
         // Reload various menus across the editor
         getParent().updateWindowTitles();
@@ -170,7 +172,9 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
         MemoryAddressField memoryAddressField = Inputs.memoryAddressField(
                 getParent().getActiveRom(),
-                workingTable, axis, true, (newAddress) -> {
+                series != null ? series.getAddress() : null,
+                true,
+                (newAddress) -> {
             Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();
             s.setAddress(newAddress);
             definitionUpdated();
@@ -186,7 +190,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
         JComboBox<Scale> scaleField = Inputs.scaleField(
                 getParent().getActiveRom(),
-                workingTable, axis,
+                series != null ? series.getScale() : null,
                 "The data scale and format for this series",
                 (newScale) -> {
                     Series s = axis != null ? workingTable.getSeries(axis) : workingTable.getData();

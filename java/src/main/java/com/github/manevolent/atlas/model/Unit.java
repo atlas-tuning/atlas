@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.model;
 import java.util.function.Supplier;
 
 public enum Unit {
+    NONE(() -> UnitClass.NONE, ""),
     CELSIUS(() -> UnitClass.TEMPERATURE, "\u00B0C"),
     FAHRENHEIT(() -> UnitClass.TEMPERATURE, "\u00B0F"),
     DEGREES(() -> UnitClass.NONE, "\u00B0"),

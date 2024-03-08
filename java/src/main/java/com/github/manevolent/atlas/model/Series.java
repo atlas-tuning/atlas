@@ -98,7 +98,7 @@ public class Series {
         private final Series series = new Series();
 
         public Builder() {
-            series.setScale(Scale.ONE);
+            series.setScale(Scale.NONE);
         }
 
         public Builder withName(String name) {

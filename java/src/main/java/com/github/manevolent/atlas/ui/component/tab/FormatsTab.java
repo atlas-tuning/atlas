@@ -57,28 +57,6 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         return Layout.emptyBorder(list);
     }
 
-    private ListModel<Table> getUsagesListModel() {
-        DefaultListModel<Table> model = new DefaultListModel<>();
-        Scale scale = list.getSelectedValue();
-
-        if (scale == null) {
-            return model;
-        }
-
-        getParent().getActiveRom().getTables()
-                .stream().filter(table -> table.hasScale(scale))
-                .forEach(model::addElement);
-
-        return model;
-    }
-
-    private JList<Table> initUsagesList() {
-        JList<Table> list = new JList<>(getUsagesListModel());
-        list = Layout.minimumWidth(list, 200);
-        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        return Layout.emptyBorder(list);
-    }
-
     private ListModel<Scale> getFormatListModel() {
         DefaultListModel<Scale> model = new DefaultListModel<>();
 
@@ -214,7 +192,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         boolean isNewTable = workingCopies.containsKey(getSelectedScale());
         if (isNewTable) {
             dirtyMap.put(getSelectedScale(), true);
-            operationChanged();
+            scaleChanged();
         }
 
         copy.setEnabled(!isNewTable);
@@ -275,21 +253,21 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         JTextField nameField = Inputs.textField(scale.getName(), (String)null, (name) -> {
                     scale.setName(name);
-                    operationChanged();
+                    scaleChanged();
                 });
         createEntryRow(inner, 0, "Name", "Name of the format", nameField);
 
         JComboBox<Unit> unitField = Inputs.unitField(scale.getName(),
                 scale.getUnit(), (unit) -> {
                     scale.setUnit(unit);
-                    operationChanged();
+                    scaleChanged();
                 });
         createEntryRow(inner, 1, "Unit", null, unitField);
 
         JComboBox<DataFormat> dataType = Inputs.dataTypeField(scale.getName(),
                 scale.getFormat(),  (format) -> {
                     scale.setFormat(format);
-                    operationChanged();
+                    scaleChanged();
                 });
         createEntryRow(inner, 2, "Data Type", null, dataType);
 
@@ -362,25 +340,6 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         return informationContent;
     }
 
-    private JPanel buildUsages() {
-        JPanel usagesPanel = emptyBorder(0, 5, 0, 5, new JPanel(new BorderLayout()));
-        addHeader(usagesPanel, CarbonIcons.DATA_TABLE, "Usages");
-
-        JPanel content = new JPanel(new BorderLayout());
-        JPanel inner = new JPanel(new BorderLayout());
-
-        JScrollPane scrollPane = scrollBoth(initUsagesList());
-        maximumWidth(content, 250);
-        matteBorder(1, 1, 1, 1, Color.GRAY.darker(), content);
-
-        inner.add(Layout.emptyBorder(scrollPane), BorderLayout.CENTER);
-
-        content.add(matteBorder(1, 1, 1, 1, Color.GRAY.darker(), inner), BorderLayout.CENTER);
-
-        usagesPanel.add(topBorder(5, content), BorderLayout.CENTER);
-        return usagesPanel;
-    }
-
     private void buildView(JPanel parent) {
         parent.add(buildInformation(),
                 gridBagConstraints(GridBagConstraints.CENTER,
@@ -396,11 +355,6 @@ public class FormatsTab extends Tab implements ListSelectionListener {
                 gridBagConstraints(GridBagConstraints.CENTER,
                         GridBagConstraints.BOTH,
                         2, 0, 1, 1));
-
-        parent.add(buildUsages(),
-                gridBagConstraints(GridBagConstraints.CENTER,
-                        GridBagConstraints.BOTH,
-                        3, 0, 1, 1));
     }
 
     private void initView() {
@@ -484,7 +438,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         ops.setSelectedValue(selected, true);
     }
 
-    public void operationChanged() {
+    public void scaleChanged() {
         Scale scale = list.getSelectedValue();
         if (scale == null) {
             return;
@@ -525,7 +479,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
     public void addOperation() {
 
-        operationChanged();
+        scaleChanged();
     }
 
     public void moveDown() {
@@ -534,7 +488,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
         getSelectedScale().moveOperationDown(operation);
-        operationChanged();
+        scaleChanged();
     }
 
     public void moveUp() {
@@ -543,12 +497,12 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
         getSelectedScale().moveOperationUp(operation);
-        operationChanged();
+        scaleChanged();
     }
 
     public void editOperation() {
 
-        operationChanged();
+        scaleChanged();
     }
 
     public void newFormat() {

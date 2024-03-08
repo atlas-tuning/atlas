@@ -9,12 +9,13 @@ public class Rom {
     private FlashMethod flashMethod;
     private List<Table> tables;
     private Set<Scale> scales;
+    private Set<MemoryParameter> parameters;
 
     public Rom() {
 
     }
 
-    private void setScales(LinkedHashSet<Scale> scales) {
+    private void setScales(Set<Scale> scales) {
         this.scales = scales;
     }
 
@@ -73,8 +74,32 @@ public class Rom {
         tables.remove(toDelete);
     }
 
+    public void addParameter(MemoryParameter parameter) {
+        if (!scales.contains(parameter.getScale())) {
+            throw new IllegalArgumentException("Unknown scale(s) for parameter " + parameter.toString() + ": " +
+                    parameter.getScale().toString());
+        }
+        parameters.add(parameter);
+    }
+
+    public void removeParameter(MemoryParameter parameter) {
+        parameters.remove(parameter);
+    }
+
     public static Builder builder() {
         return new Builder();
+    }
+
+    public Set<MemoryParameter> getParameters() {
+        return parameters;
+    }
+
+    public void setParameters(Set<MemoryParameter> parameters) {
+        this.parameters = parameters;
+    }
+
+    public boolean hasParameter(MemoryParameter parameter) {
+        return parameters.contains(parameter);
     }
 
     public static class Builder {
@@ -84,6 +109,9 @@ public class Rom {
             rom.setTables(new ArrayList<>());
             rom.setSections(new ArrayList<>());
             rom.setScales(new LinkedHashSet<>());
+            rom.setParameters(new LinkedHashSet<>());
+
+            withScales(Scale.NONE);
         }
 
         public Builder withScales(Scale.Builder... scales) {
@@ -161,6 +189,15 @@ public class Rom {
         public Builder withVehicle(Vehicle vehicle) {
             rom.setVehicle(vehicle);
             return this;
+        }
+
+        public Builder withParameter(MemoryParameter parameter) {
+            rom.addParameter(parameter);
+            return this;
+        }
+
+        public Builder withParameter(MemoryParameter.Builder parameter) {
+            return withParameter(parameter.build());
         }
 
         public Rom build() {

@@ -1,8 +1,8 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.uds.AsyncUDSSession;
-import com.github.manevolent.atlas.uds.UDSFrame;
-import com.github.manevolent.atlas.uds.request.UDSReadDataByIDRequest;
+import com.github.manevolent.atlas.protocol.uds.AsyncUDSSession;
+import com.github.manevolent.atlas.protocol.uds.UDSFrame;
+import com.github.manevolent.atlas.protocol.uds.request.UDSReadDataByIDRequest;
 import org.junit.jupiter.api.Test;
 
 import java.io.ByteArrayInputStream;

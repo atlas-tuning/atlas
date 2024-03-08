@@ -1,16 +1,16 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.isotp.ISOTPFrameReader;
-import com.github.manevolent.atlas.j2534.J2534Device;
-import com.github.manevolent.atlas.j2534.J2534DeviceDescriptor;
-import com.github.manevolent.atlas.j2534.serial.SerialTatrixOpenPortFactory;
-import com.github.manevolent.atlas.j2534.tactrix.SerialTactrixOpenPort;
-import com.github.manevolent.atlas.subaru.SubaruProtocols;
-import com.github.manevolent.atlas.uds.UDSFrame;
-import com.github.manevolent.atlas.uds.UDSFrameReader;
-import com.github.manevolent.atlas.uds.request.UDSDefineDataIdentifierRequest;
-import com.github.manevolent.atlas.uds.request.UDSTransferRequest;
-import com.github.manevolent.atlas.uds.response.UDSReadDataByIDResponse;
+import com.github.manevolent.atlas.protocol.isotp.ISOTPFrameReader;
+import com.github.manevolent.atlas.protocol.j2534.J2534Device;
+import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
+import com.github.manevolent.atlas.protocol.j2534.serial.SerialTatrixOpenPortFactory;
+import com.github.manevolent.atlas.protocol.j2534.tactrix.SerialTactrixOpenPort;
+import com.github.manevolent.atlas.protocol.subaru.SubaruProtocols;
+import com.github.manevolent.atlas.protocol.uds.UDSFrame;
+import com.github.manevolent.atlas.protocol.uds.UDSFrameReader;
+import com.github.manevolent.atlas.protocol.uds.request.UDSDefineDataIdentifierRequest;
+import com.github.manevolent.atlas.protocol.uds.request.UDSTransferRequest;
+import com.github.manevolent.atlas.protocol.uds.response.UDSReadDataByIDResponse;
 
 import java.io.IOException;
 import java.io.RandomAccessFile;

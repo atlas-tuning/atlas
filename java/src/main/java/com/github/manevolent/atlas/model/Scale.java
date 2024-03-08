@@ -3,7 +3,11 @@ package com.github.manevolent.atlas.model;
 import java.util.*;
 
 public class Scale {
-    public static Scale ONE = Scale.builder().build();
+    public static Scale NONE = Scale.builder()
+            .withName("None")
+            .withFormat(DataFormat.UBYTE)
+            .withUnit(Unit.NONE)
+            .build();
 
     private List<ScalingOperation> operations;
     private Unit unit;

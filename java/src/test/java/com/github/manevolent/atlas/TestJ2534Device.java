@@ -1,14 +1,14 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.can.CANFrame;
-import com.github.manevolent.atlas.isotp.ISOTPFrame;
-import com.github.manevolent.atlas.isotp.ISOTPFrameReader;
-import com.github.manevolent.atlas.isotp.ISOTPFrameWriter;
-import com.github.manevolent.atlas.j2534.CANDevice;
-import com.github.manevolent.atlas.j2534.ISOTPDevice;
-import com.github.manevolent.atlas.j2534.J2534Device;
-import com.github.manevolent.atlas.can.CANFrameReader;
-import com.github.manevolent.atlas.can.CANFrameWriter;
+import com.github.manevolent.atlas.protocol.can.CANFrame;
+import com.github.manevolent.atlas.protocol.isotp.ISOTPFrame;
+import com.github.manevolent.atlas.protocol.isotp.ISOTPFrameReader;
+import com.github.manevolent.atlas.protocol.isotp.ISOTPFrameWriter;
+import com.github.manevolent.atlas.protocol.j2534.CANDevice;
+import com.github.manevolent.atlas.protocol.j2534.ISOTPDevice;
+import com.github.manevolent.atlas.protocol.j2534.J2534Device;
+import com.github.manevolent.atlas.protocol.can.CANFrameReader;
+import com.github.manevolent.atlas.protocol.can.CANFrameWriter;
 
 import java.io.IOException;
 

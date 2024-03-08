@@ -38,7 +38,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     private TablesTab tablesTab;
     private ProjectTab projectTab;
     private ConsoleTab consoleTab;
-    private DataLoggingTab dataLoggingTab;
+    private ParametersTab dataLoggingTab;
     private HelpTab helpTab;
     private FormatsTab formatsTab;
 
@@ -276,7 +276,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     private Tab initLoggingTab() {
-        return (dataLoggingTab = new DataLoggingTab(this));
+        return (dataLoggingTab = new ParametersTab(this));
     }
 
     private Tab initFormatsTab() {

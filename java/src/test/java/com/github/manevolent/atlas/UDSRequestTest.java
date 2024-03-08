@@ -1,14 +1,14 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.uds.UDSQuery;
-import com.github.manevolent.atlas.uds.UDSRequest;
-import com.github.manevolent.atlas.uds.UDSResponse;
-import com.github.manevolent.atlas.uds.UDSSide;
-import com.github.manevolent.atlas.uds.request.UDSAuthenticationRequest;
-import com.github.manevolent.atlas.uds.response.UDSAuthenticationResponse;
+import com.github.manevolent.atlas.protocol.uds.UDSQuery;
+import com.github.manevolent.atlas.protocol.uds.UDSRequest;
+import com.github.manevolent.atlas.protocol.uds.UDSResponse;
+import com.github.manevolent.atlas.protocol.uds.UDSSide;
+import com.github.manevolent.atlas.protocol.uds.request.UDSAuthenticationRequest;
+import com.github.manevolent.atlas.protocol.uds.response.UDSAuthenticationResponse;
 import org.junit.jupiter.api.Test;
 
-import static com.github.manevolent.atlas.uds.UDSProtocol.STANDARD;
+import static com.github.manevolent.atlas.protocol.uds.UDSProtocol.STANDARD;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 

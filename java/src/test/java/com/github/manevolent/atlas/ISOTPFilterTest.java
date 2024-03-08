@@ -1,10 +1,9 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.j2534.J2534Device;
-import com.github.manevolent.atlas.subaru.SubaruDITComponent;
+import com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent;
 import org.junit.jupiter.api.Test;
 
-import static com.github.manevolent.atlas.subaru.SubaruProtocols.DIT_FILTER;
+import static com.github.manevolent.atlas.protocol.subaru.SubaruProtocols.DIT_FILTER;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ISOTPFilterTest {

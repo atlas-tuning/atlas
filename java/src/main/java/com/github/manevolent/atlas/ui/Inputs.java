@@ -111,9 +111,9 @@ public class Inputs {
         return textField(null, changed);
     }
 
-    public static MemoryAddressField memoryAddressField(Rom rom, Table table, Axis axis, boolean localOnly,
+    public static MemoryAddressField memoryAddressField(Rom rom, MemoryAddress existing, boolean localOnly,
                                                         Consumer<MemoryAddress> changed) {
-        return new MemoryAddressField(rom ,table, axis, localOnly, changed);
+        return new MemoryAddressField(rom, existing, localOnly, changed);
     }
 
     public static JComboBox<MemorySection> memorySectionField(Rom rom, MemorySection value, boolean localOnly,
@@ -145,12 +145,10 @@ public class Inputs {
         return spinner;
     }
 
-    public static JComboBox<Scale> scaleField(Rom rom, Table table, Axis axis,
+    public static JComboBox<Scale> scaleField(Rom rom, Scale existing,
                                               String toolTip, Consumer<Scale> valueChanged) {
         JComboBox<Scale> comboBox = new JComboBox<>(rom.getScales().toArray(new Scale[0]));
-        Scale axisScale = table.hasAxis(axis) ? table.getSeries(axis).getScale() : null;
-        Scale intended = axis == null ? table.getData().getScale() : axisScale;
-        comboBox.setSelectedItem(intended);
+        comboBox.setSelectedItem(existing);
         comboBox.addItemListener(e -> {
             if (e.getStateChange() != SELECTED) {
                 return;

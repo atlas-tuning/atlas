@@ -20,7 +20,7 @@ public class MemoryAddressField extends JPanel {
 
     private MemoryAddress address;
 
-    public MemoryAddressField(Rom rom, Table table, Axis axis, boolean localOnly, Consumer<MemoryAddress> changed) {
+    public MemoryAddressField(Rom rom, MemoryAddress existing, boolean localOnly, Consumer<MemoryAddress> changed) {
         this.rom = rom;
 
         Supplier<String> defaultValue = () -> address.toString();
@@ -28,8 +28,7 @@ public class MemoryAddressField extends JPanel {
         setLayout(new BorderLayout());
 
         // Set default values
-        Series series = axis == null ? table.getData() : table.getSeries(axis);
-        address = series != null ? series.getAddress() : null;
+        address = existing;
         if (address == null) {
             address = getDefaultAddress();
         }
@@ -43,7 +42,8 @@ public class MemoryAddressField extends JPanel {
 
         Runnable set = () -> MemoryAddressDialog.show(
                 null,
-                rom, series != null ? series.getAddress() : getDefaultAddress(),
+                rom,
+                existing,
                 localOnly,
                 (newValue) -> {
                     textField.setText(newValue.toString());
@@ -71,11 +71,7 @@ public class MemoryAddressField extends JPanel {
                 new JLabel().getForeground(),
                 set);
 
-        if (axis != null) {
-            selectButton.setToolTipText("Select region...");
-        } else {
-            selectButton.setToolTipText("Select address...");
-        }
+        selectButton.setToolTipText("Select address...");
 
         selectButton.setFocusable(false);
 

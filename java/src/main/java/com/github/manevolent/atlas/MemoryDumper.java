@@ -1,14 +1,20 @@
 package com.github.manevolent.atlas;
 
-import com.github.manevolent.atlas.j2534.J2534Device;
-import com.github.manevolent.atlas.j2534.J2534DeviceDescriptor;
-import com.github.manevolent.atlas.j2534.serial.SerialTatrixOpenPortFactory;
-import com.github.manevolent.atlas.j2534.tactrix.SerialTactrixOpenPort;
-import com.github.manevolent.atlas.subaru.SubaruDITCommands;
-import com.github.manevolent.atlas.subaru.SubaruProtocols;
-import com.github.manevolent.atlas.subaru.uds.request.SubaruStatus1Request;
-import com.github.manevolent.atlas.uds.*;
-import com.github.manevolent.atlas.uds.request.*;
+import com.github.manevolent.atlas.protocol.j2534.J2534Device;
+import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
+import com.github.manevolent.atlas.protocol.j2534.serial.SerialTatrixOpenPortFactory;
+import com.github.manevolent.atlas.protocol.j2534.tactrix.SerialTactrixOpenPort;
+import com.github.manevolent.atlas.protocol.uds.AsyncUDSSession;
+import com.github.manevolent.atlas.protocol.uds.DiagnosticSessionType;
+import com.github.manevolent.atlas.protocol.uds.RoutineControlSubFunction;
+import com.github.manevolent.atlas.protocol.uds.UDSProtocol;
+import com.github.manevolent.atlas.protocol.uds.request.UDSDiagSessionControlRequest;
+import com.github.manevolent.atlas.protocol.uds.request.UDSReadMemoryByAddressRequest;
+import com.github.manevolent.atlas.protocol.uds.request.UDSRoutineControlRequest;
+import com.github.manevolent.atlas.protocol.subaru.SubaruDITCommands;
+import com.github.manevolent.atlas.protocol.subaru.SubaruProtocols;
+import com.github.manevolent.atlas.protocol.subaru.uds.request.SubaruStatus1Request;
+
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -16,7 +22,7 @@ import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.util.Collection;
 
-import static com.github.manevolent.atlas.subaru.SubaruDITComponent.*;
+import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.*;
 
 public class MemoryDumper {
 
