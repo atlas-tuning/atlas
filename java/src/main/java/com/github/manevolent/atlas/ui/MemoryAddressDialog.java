@@ -56,7 +56,9 @@ public class MemoryAddressDialog extends JDialog {
     }
 
     private MemorySection getMemorySection(long offset) {
-        return rom.getSections().stream().filter(section -> section.getBaseAddress() <= offset &&
+        return rom.getSections().stream()
+                .filter(predicate)
+                .filter(section -> section.getBaseAddress() <= offset &&
                 section.getBaseAddress() + section.getDataLength() >= offset)
                 .findFirst()
                 .orElse(null);
