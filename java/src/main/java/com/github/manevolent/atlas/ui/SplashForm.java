@@ -16,6 +16,7 @@ public class SplashForm extends JFrame {
     private final Timer timer;
 
     private float progress;
+    private String status = "Loading...";
 
     public SplashForm() throws IOException, FontFormatException {
         splashImage = ImageIO.read(SplashForm.class.getResource("/splash.png"));
@@ -70,7 +71,7 @@ public class SplashForm extends JFrame {
                 g.setColor(Color.GRAY);
                 g.fillRect(0, getHeight() - progressHeight, getWidth(), getHeight());
 
-                String progressString = String.format("%.0f", progress * 100) + "%";
+                String progressString = status;
 
                 // Get the FontMetrics
                 FontMetrics metrics = g.getFontMetrics(serif);
@@ -109,8 +110,9 @@ public class SplashForm extends JFrame {
         timer.stop();
     }
 
-    public void setProgress(float progress) {
+    public void setProgress(float progress, String status) {
         this.progress = progress;
+        this.status = status;
         java.awt.EventQueue.invokeLater(SplashForm.this::repaint);
     }
 

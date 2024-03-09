@@ -3,7 +3,11 @@ package com.github.manevolent.atlas.ui;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.github.manevolent.atlas.model.Rom;
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.settings.Setting;
+import com.github.manevolent.atlas.settings.Settings;
 
+import javax.swing.*;
+import java.io.File;
 import java.util.logging.Level;
 
 public class Main {
@@ -16,24 +20,49 @@ public class Main {
             splashForm.setVisible(true);
         });
 
-        // TODO: Load resources?
-
         Thread.sleep(250L);
-        splashForm.setProgress(0f);
 
+        splashForm.setProgress(0.1f, "Loading settings...");
+        Settings.getAll();
+
+        splashForm.setProgress(0.1f, "Loading theme...");
         FlatDarculaLaf.setup();
-        splashForm.setProgress(0.1f);
 
-        //TODO: load last saved rom
+        splashForm.setProgress(0.25f, "Loading ROM...");
         Rom rom = Rom.builder().build();
-        splashForm.setProgress(0.5f);
+        String lastOpenedProject = Settings.get(Setting.LAST_OPENED_PROJECT);
+        if (lastOpenedProject != null) {
+            File lastOpenedProjectFile = new File(lastOpenedProject);
+            if (lastOpenedProjectFile.exists()) {
+                Log.ui().log(Level.INFO, "Reopened last project at " +
+                        lastOpenedProjectFile.getPath() + ".");
 
+                try {
+                    rom = Rom.loadFromArchive(lastOpenedProjectFile);
+                } catch (Exception ex) {
+                    Log.ui().log(Level.SEVERE, "Problem opening last project at " +
+                            lastOpenedProjectFile.getPath(), ex);
+                    JOptionPane.showMessageDialog(splashForm,
+                            "Failed to open project!\r\nSee console output for more details.",
+                            "Open failed",
+                            JOptionPane.ERROR_MESSAGE);
+                }
+            } else {
+                Log.ui().log(Level.WARNING, "Last opened project at " +
+                        lastOpenedProjectFile.getPath() + " does not exist!");
+            }
+        } else {
+            Log.ui().log(Level.INFO, "Opened a new project.");
+        }
+
+
+        splashForm.setProgress(0.5f, "Initializing UI...");
         EditorForm editorForm = new EditorForm(rom);
-        splashForm.setProgress(0.7f);
 
+        splashForm.setProgress(0.75f, "Opening ROM...");
         editorForm.openRom(rom);
-        splashForm.setProgress(1.0f);
 
+        splashForm.setProgress(1.0f, "Opening Atlas...");
         Thread.sleep(500L);
         splashForm.dispose();
 

@@ -3,6 +3,8 @@ package com.github.manevolent.atlas.ui;
 import com.github.manevolent.atlas.model.Rom;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.settings.Setting;
+import com.github.manevolent.atlas.settings.Settings;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.footer.EditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
@@ -141,6 +143,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
             try {
                 openRom(Rom.loadFromArchive(file));
                 Log.ui().log(Level.INFO, "Project opened from " + file.getPath());
+                Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(this, "Failed to open project!\r\nSee console output for more details.",
                         "Open failed",
@@ -492,8 +495,13 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         getWindowMenu().update();
     }
 
+    public void saveUiSettings() {
+
+    }
+
     public void exit() {
         if (closing()) {
+            saveUiSettings();
             dispose();
         }
     }

@@ -6,6 +6,7 @@ public class Log {
     private static Logger logger;
     private static Logger uiLogger;
     private static Logger canLogger;
+    private static Logger settingsLogger;
 
     public static Logger get() {
         if (logger == null) {
@@ -30,6 +31,14 @@ public class Log {
             canLogger.setParent(get());
         }
         return canLogger;
+    }
+
+    public static Logger settings() {
+        if (settingsLogger == null) {
+            settingsLogger = Logger.getLogger("settings");
+            settingsLogger.setParent(get());
+        }
+        return settingsLogger;
     }
 
 }
