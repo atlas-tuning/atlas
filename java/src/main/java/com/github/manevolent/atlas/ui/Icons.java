@@ -25,6 +25,7 @@ public class Icons {
         FontIcon icon = new FontIcon();
         icon.setIkon(ikon);
         icon.setIconSize(size);
+        icon.setIconColor(Fonts.getTextColor());
         return icon;
     }
 
@@ -38,9 +39,10 @@ public class Icons {
         return get(ikon, color, DEFAULT_ICON_SIZE);
     }
 
-
     public static FontIcon get(Ikon ikon) {
-        return get(ikon, DEFAULT_ICON_SIZE);
+        FontIcon icon = get(ikon, DEFAULT_ICON_SIZE);
+        icon.setIconColor(Fonts.getTextColor());
+        return icon;
     }
 
     public static ImageIcon getImage(Ikon ikon, Color color) {

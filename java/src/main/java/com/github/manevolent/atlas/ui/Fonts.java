@@ -34,4 +34,7 @@ public class Fonts {
         component.setFont(component.getFont().deriveFont(Font.BOLD));
         return component;
     }
+    public static Font bold(Font font) {
+        return font.deriveFont(Font.BOLD);
+    }
 }

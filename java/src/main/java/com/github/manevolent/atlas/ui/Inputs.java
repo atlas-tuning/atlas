@@ -11,6 +11,7 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.util.Arrays;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static java.awt.event.ItemEvent.DESELECTED;
 import static java.awt.event.ItemEvent.SELECTED;
@@ -116,11 +117,12 @@ public class Inputs {
         return new MemoryAddressField(rom, existing, localOnly, changed);
     }
 
-    public static JComboBox<MemorySection> memorySectionField(Rom rom, MemorySection value, boolean localOnly,
+    public static JComboBox<MemorySection> memorySectionField(Rom rom, MemorySection value,
+                                                              Predicate<MemorySection> predicate,
                                                               Consumer<MemorySection> changed) {
         JComboBox<MemorySection> comboBox = new JComboBox<>(
                 rom.getSections().stream()
-                        .filter(x -> !localOnly || x.getMemoryType() != MemoryType.RAM)
+                        .filter(predicate)
                         .toList().toArray(new MemorySection[0])
         );
         MemorySection intended = value == null ? rom.getSections().getFirst() : value;

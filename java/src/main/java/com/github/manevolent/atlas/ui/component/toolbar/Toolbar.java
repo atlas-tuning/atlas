@@ -13,6 +13,9 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
         super(editor);
     }
 
+    public static int BUTTON_ICON_SIZE = 18;
+    public static int BUTTON_SMALL_ICON_SIZE = 14;
+
     @Override
     protected JToolBar newComponent() {
         JToolBar toolBar = new JToolBar();
@@ -33,7 +36,7 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
 
     protected JButton makeButton(Ikon ikon, String actionCommand, String toolTipText,
                                  ActionListener listener) {
-        return makeButton(ikon, 18, actionCommand, toolTipText, listener);
+        return makeButton(ikon, BUTTON_ICON_SIZE, actionCommand, toolTipText, listener);
     }
 
     protected JButton makeButton(Ikon ikon, String actionCommand, String toolTipText) {
@@ -42,7 +45,7 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
 
     protected JButton makeSmallButton(Ikon ikon, String actionCommand, String toolTipText,
                                       ActionListener listener) {
-        return makeButton(ikon, 14, actionCommand, toolTipText, listener);
+        return makeButton(ikon, BUTTON_SMALL_ICON_SIZE, actionCommand, toolTipText, listener);
     }
 
     protected JButton makeSmallButton(Ikon ikon, String actionCommand, String toolTipText) {

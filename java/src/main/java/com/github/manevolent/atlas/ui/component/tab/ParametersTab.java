@@ -20,6 +20,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 import static com.github.manevolent.atlas.ui.Layout.*;
@@ -42,7 +44,10 @@ public class ParametersTab extends Tab implements ListSelectionListener {
     private ListModel<MemoryParameter> getParameterListModel() {
         DefaultListModel<MemoryParameter> model = new DefaultListModel<>();
 
-        getParent().getActiveRom().getParameters().stream()
+        Stream.concat(workingCopies.keySet().stream(),
+                        getParent().getActiveRom().getParameters().stream())
+                .collect(Collectors.toSet())
+                .stream()
                 .sorted(Comparator.comparing(MemoryParameter::toString))
                 .forEach(model::addElement);
 
@@ -243,7 +248,9 @@ public class ParametersTab extends Tab implements ListSelectionListener {
 
         MemoryAddressField memoryAddressField = Inputs.memoryAddressField(
                 getParent().getActiveRom(),
-                parameter.getAddress(), true, (newAddress) -> {
+                parameter.getAddress(),
+                false, /* allow local and non-local */
+                (newAddress) -> {
                     parameter.setAddress(newAddress);
                     parameterChanged();
                 });
@@ -459,8 +466,8 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         MemoryParameter newParameter = new MemoryParameter();
         newParameter.setScale(Scale.NONE);
         newParameter.setName(newParameterName);
+        newParameter.setAddress(getParent().getActiveRom().getDefaultMemoryAddress());
         workingCopies.put(newParameter, newParameter);
-        getParent().getActiveRom().addParameter(newParameter);
 
         update();
         updateListModel();

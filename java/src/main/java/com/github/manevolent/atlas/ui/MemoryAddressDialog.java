@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemorySection;
+import com.github.manevolent.atlas.model.MemoryType;
 import com.github.manevolent.atlas.model.Rom;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -12,6 +13,7 @@ import java.awt.event.KeyEvent;
 
 import java.util.HexFormat;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 import static com.github.manevolent.atlas.ui.Inputs.memorySectionField;
 
@@ -25,13 +27,14 @@ public class MemoryAddressDialog extends JDialog {
 
     private JTextField memoryAddressField;
 
-    private final boolean localOnly;
+    private JComboBox<MemorySection> sectionField;
+    private final Predicate<MemorySection> predicate;
 
     public MemoryAddressDialog(Rom rom, MemoryAddress address, Frame parent,
                                boolean localOnly, Consumer<MemoryAddress> valueChanged) {
         super(parent, "Enter Address", true);
 
-        this.localOnly = localOnly;
+        this.predicate = x -> !localOnly || x.getMemoryType() != MemoryType.RAM;
 
         this.rom = rom;
         this.valueChanged = valueChanged;
@@ -52,6 +55,13 @@ public class MemoryAddressDialog extends JDialog {
         return rom.getSections().getFirst();
     }
 
+    private MemorySection getMemorySection(long offset) {
+        return rom.getSections().stream().filter(section -> section.getBaseAddress() <= offset &&
+                section.getBaseAddress() + section.getDataLength() >= offset)
+                .findFirst()
+                .orElse(null);
+    }
+
     private JTextField createMemoryAddressField(Consumer<Boolean> inputValid, Runnable enter) {
         String defaultValue = "0x" + HexFormat.of().toHexDigits((int) (offset & 0xFFFFFFFF)).toUpperCase();
         memoryAddressField = Inputs.textField(defaultValue, (newValue) -> {
@@ -62,9 +72,13 @@ public class MemoryAddressDialog extends JDialog {
 
             try {
                 if (newValue.toLowerCase().startsWith("0x")) {
-                    offset = HexFormat.fromHexDigits(newValue.substring(2));
+                    offset = HexFormat.fromHexDigits(newValue.substring(2)) & 0xFFFFFFFFL;
 
-                    if (offset < section.getBaseAddress()) {
+                    MemorySection suggested = getMemorySection(offset);
+                    if (suggested != null && this.section != suggested) {
+                        this.section = suggested;
+                        sectionField.setSelectedItem(suggested);
+                    } else if (offset < section.getBaseAddress()) {
                         inputValid.accept(false);
                         return;
                     } else if (offset > section.getBaseAddress() + section.getDataLength()) {
@@ -74,7 +88,7 @@ public class MemoryAddressDialog extends JDialog {
                     }
                 } else {
                     try {
-                        offset = (int) Long.parseLong(newValue);
+                        offset = Long.parseLong(newValue);
                     } catch (NumberFormatException ex) {
                         if (!newValue.isEmpty()) {
                             offset = HexFormat.fromHexDigits(newValue);
@@ -83,7 +97,11 @@ public class MemoryAddressDialog extends JDialog {
                         }
                     }
 
-                    if (offset < section.getBaseAddress()) {
+                    MemorySection suggested = getMemorySection(offset);
+                    if (suggested != null && this.section != suggested) {
+                        this.section = suggested;
+                        sectionField.setSelectedItem(suggested);
+                    } else if (offset < section.getBaseAddress()) {
                         inputValid.accept(false);
                         return;
                     } else if (offset > section.getBaseAddress() + section.getDataLength()) {
@@ -180,10 +198,13 @@ public class MemoryAddressDialog extends JDialog {
                 addressField);
 
         Inputs.createEntryRow(content, 1, "Region", "The ROM section this address will reside in",
-                memorySectionField(rom, section, localOnly, (newSection) -> {
+                sectionField = memorySectionField(rom, section, predicate, (newSection) -> {
                     this.section = newSection;
-                    addressField.setText("0x" + HexFormat.of().toHexDigits(
-                            (int) (section.getBaseAddress() & 0xFFFFFFFF)).toUpperCase());
+                    if (this.offset < newSection.getBaseAddress() ||
+                            this.offset > newSection.getBaseAddress() + newSection.getDataLength()) {
+                        addressField.setText("0x" + HexFormat.of().toHexDigits(
+                                (int) (section.getBaseAddress() & 0xFFFFFFFF)).toUpperCase());
+                    }
                 }));
 
         JButton cancel = Inputs.button("Cancel", this::cancel);

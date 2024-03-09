@@ -80,6 +80,13 @@ public class Labels {
         return label;
     }
 
+    public static JLabel text(Ikon icon, Font font, String text) {
+        JLabel label = new JLabel(text);
+        label.setIcon(Icons.get(icon, label.getForeground()));
+        label.setFont(font);
+        return label;
+    }
+
     public static JLabel text(Ikon icon, String text, String toolTipText) {
         JLabel label = new JLabel(text);
         label.setIcon(Icons.get(icon, label.getForeground()));

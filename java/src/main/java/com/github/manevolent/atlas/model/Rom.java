@@ -103,6 +103,10 @@ public class Rom {
         parameters.add(parameter);
     }
 
+    public MemoryAddress getDefaultMemoryAddress() {
+        return MemoryAddress.builder().withSection(sections.getFirst()).withOffset(0x00000000L).build();
+    }
+
     public void removeParameter(MemoryParameter parameter) {
         parameters.remove(parameter);
     }
