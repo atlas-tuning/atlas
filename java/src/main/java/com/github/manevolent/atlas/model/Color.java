@@ -44,5 +44,9 @@ public class Color {
     public java.awt.Color toAwtColor() {
         return new java.awt.Color(red, green, blue);
     }
+
+    public java.awt.Color toAwtColor(int alpha) {
+        return new java.awt.Color(red, green, blue, alpha);
+    }
 }
 

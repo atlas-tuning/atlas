@@ -6,7 +6,7 @@ import java.nio.ByteBuffer;
 
 public class ISOTPPeer {
     private final int arbitrationId;
-    private final ByteBuffer buffer = ByteBuffer.allocate(4095);
+    private final ByteBuffer buffer = ByteBuffer.allocate(8192);
     private int expected = -1;
 
     public ISOTPPeer(int arbitrationId) {

@@ -5,13 +5,12 @@ import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
-import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.footer.EditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.editor.VehicleMenu;
 import com.github.manevolent.atlas.ui.component.menu.editor.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
-import com.github.manevolent.atlas.ui.component.window.DataLoggingWindow;
+import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
 import com.github.manevolent.atlas.ui.component.window.TableDefinitionEditor;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
 import com.github.manevolent.atlas.ui.component.window.Window;
@@ -536,11 +535,11 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     public void openDataLogging() {
         Window dataLoggingWindow = getOpenWindows().stream()
-                .filter(w -> w instanceof DataLoggingWindow)
+                .filter(w -> w instanceof DatalogWindow)
                 .findFirst().orElse(null);
 
         if (dataLoggingWindow == null) {
-            dataLoggingWindow = new DataLoggingWindow(this);
+            dataLoggingWindow = new DatalogWindow(this);
             openWindow(dataLoggingWindow);
         }
 

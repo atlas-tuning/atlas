@@ -31,6 +31,6 @@ public class UDSDownloadRequest extends UDSRequest<UDSDownloadResponse> {
     public String toString() {
         return "comp=" + dataCompression + " crypto=" + dataEncryption
                 + " memid=" + memoryIdentifier
-                + " addr=" + memoryAddress + " sz=" + memorySize;
+                + " addr=" + (memoryAddress & 0xFFFFFFFFL) + " sz=" + memorySize;
     }
 }
