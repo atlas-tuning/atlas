@@ -8,8 +8,10 @@ import com.github.manevolent.atlas.settings.Settings;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.footer.EditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
+import com.github.manevolent.atlas.ui.component.menu.editor.VehicleMenu;
 import com.github.manevolent.atlas.ui.component.menu.editor.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
+import com.github.manevolent.atlas.ui.component.window.DataLoggingWindow;
 import com.github.manevolent.atlas.ui.component.window.TableDefinitionEditor;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
 import com.github.manevolent.atlas.ui.component.window.Window;
@@ -38,6 +40,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     // Menus
     private FileMenu fileMenu;
     private WindowMenu windowMenu;
+    private VehicleMenu vehicleMenu;
 
     // Tabs
     private TablesTab tablesTab;
@@ -48,6 +51,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     private FormatsTab formatsTab;
 
     // State variables (open windows, etc.)
+    private File romFile;
     private Rom rom;
     private java.util.List<Window> openWindows = new ArrayList<>();
     private Map<Table, TableEditor> openedTables = new LinkedHashMap<>();
@@ -58,7 +62,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         // Just to make sure it shows up in the taskbar/dock/etc.
         setType(Type.NORMAL);
 
-        openRom(rom);
+        openRom(null, rom);
 
         initComponents();
 
@@ -90,7 +94,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
         if (dirty) {
             String message = "You have unsaved changes to your project " +
-                    "that will be lost. Save before closing?";
+                    "that will be lost. Save changes?";
 
             int answer = JOptionPane.showConfirmDialog(getParent(),
                     message,
@@ -102,7 +106,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
                 case JOptionPane.CANCEL_OPTION:
                     return false;
                 case JOptionPane.YES_OPTION:
-                    saveRom();
+                    return saveRom();
                 case JOptionPane.NO_OPTION:
             }
         }
@@ -110,26 +114,36 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         return getOpenWindows().isEmpty();
     }
 
-    public void saveRom() {
-        JFileChooser fileChooser = new JFileChooser();
-        FileNameExtensionFilter def = new FileNameExtensionFilter("Atlas project files", "atlas");
-        fileChooser.addChoosableFileFilter(def);
-        fileChooser.setFileFilter(def);
-        fileChooser.setDialogTitle("Save Project");
-        if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
-            File file = fileChooser.getSelectedFile();
-            try {
-                rom.saveToArchive(file);
-                setDirty(false);
-                Log.ui().log(Level.INFO, "Project saved to " + file.getPath());
-                Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
-            } catch (IOException e) {
-                JOptionPane.showMessageDialog(this, "Failed to save project!\r\nSee console output for more details.",
-                        "Save failed",
-                        JOptionPane.ERROR_MESSAGE);
-
-                saveRom();
+    public boolean saveRom() {
+        File file;
+        if (this.romFile == null || !romFile.exists()) {
+            JFileChooser fileChooser = new JFileChooser();
+            FileNameExtensionFilter def = new FileNameExtensionFilter("Atlas project files", "atlas");
+            fileChooser.addChoosableFileFilter(def);
+            fileChooser.setFileFilter(def);
+            fileChooser.setDialogTitle("Save Project");
+            if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+                file = fileChooser.getSelectedFile();
+            } else {
+                return false;
             }
+        } else {
+            file = this.romFile;
+        }
+
+        try {
+            rom.saveToArchive(file);
+            setDirty(false);
+            Log.ui().log(Level.INFO, "Project saved to " + file.getPath());
+            Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
+
+            return true;
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "Failed to save project!\r\nSee console output for more details.",
+                    "Save failed",
+                    JOptionPane.ERROR_MESSAGE);
+
+            return false;
         }
     }
 
@@ -142,7 +156,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         if (fileChooser.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             try {
-                openRom(Rom.loadFromArchive(file));
+                openRom(file, Rom.loadFromArchive(file));
                 Log.ui().log(Level.INFO, "Project opened from " + file.getPath());
                 Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
             } catch (IOException e) {
@@ -153,10 +167,11 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         }
     }
 
-    public void openRom(Rom rom) {
+    public void openRom(File file, Rom rom) {
         closing();
 
         this.rom = rom;
+        this.romFile = file;
 
         updateTitle();
         if (parametersTab != null) {
@@ -174,11 +189,18 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     public void updateTitle() {
+        String title;
         if (rom.getVehicle() == null) {
-            setTitle("Atlas - Empty Project");
+            title = ("Atlas - Empty Project");
         } else {
-            setTitle("Atlas - " + rom.getVehicle().toString());
+            title = ("Atlas - " + rom.getVehicle().toString());
         }
+
+        if (dirty) {
+            title += "*";
+        }
+
+        setTitle(title);
     }
 
     public JDesktopPane getDesktop() {
@@ -261,16 +283,8 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
         }
 
-        JMenu vehicleMenu = new JMenu("Vehicle");
-        menuBar.add(vehicleMenu);
-        {
-            JMenuItem connect = new JMenuItem("Connect...");
-            vehicleMenu.add(connect);
-
-            JMenuItem disconnect = new JMenuItem("Disconnect");
-            disconnect.setEnabled(false);
-            vehicleMenu.add(disconnect);
-        }
+        vehicleMenu = new VehicleMenu(this);
+        menuBar.add(vehicleMenu.getComponent());
 
         windowMenu = new WindowMenu(this);
         menuBar.add(windowMenu.getComponent());
@@ -517,5 +531,19 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     public void setDirty(boolean dirty) {
         this.dirty = dirty;
+        updateTitle();
+    }
+
+    public void openDataLogging() {
+        Window dataLoggingWindow = getOpenWindows().stream()
+                .filter(w -> w instanceof DataLoggingWindow)
+                .findFirst().orElse(null);
+
+        if (dataLoggingWindow == null) {
+            dataLoggingWindow = new DataLoggingWindow(this);
+            openWindow(dataLoggingWindow);
+        }
+
+        dataLoggingWindow.focus();
     }
 }

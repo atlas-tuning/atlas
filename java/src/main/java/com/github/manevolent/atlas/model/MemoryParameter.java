@@ -4,8 +4,13 @@ public class MemoryParameter {
     private String name;
     private MemoryAddress address;
     private Scale scale;
+    private Color color;
 
     public Scale getScale() {
+        if (scale == null) {
+            return Scale.NONE;
+        }
+
         return scale;
     }
 
@@ -29,6 +34,14 @@ public class MemoryParameter {
         this.name = name;
     }
 
+    public Color getColor() {
+        return color;
+    }
+
+    public void setColor(Color color) {
+        this.color = color;
+    }
+
     public String toString() {
         return name + " (" + getScale().getFormat().name().toLowerCase() + ", " + address.toString() + ")";
     }
@@ -38,6 +51,7 @@ public class MemoryParameter {
         copy.name = name;
         copy.scale = scale;
         copy.address = address;
+        copy.color = color;
         return copy;
     }
 
@@ -45,10 +59,20 @@ public class MemoryParameter {
         this.name = parameter.name;
         this.scale = parameter.scale;
         this.address = parameter.address;
+        this.color = parameter.color;
     }
 
     public static Builder builder() {
         return new Builder();
+    }
+
+    public float getValue(byte[] data) {
+        float unscaled = getScale().getFormat().convertFromBytes(
+                data,
+                getAddress().getSection().getByteOrder().getByteOrder()
+        );
+
+        return getScale().forward(unscaled);
     }
 
     public static class Builder {

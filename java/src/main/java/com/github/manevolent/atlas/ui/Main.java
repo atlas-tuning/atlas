@@ -31,6 +31,7 @@ public class Main {
         splashForm.setProgress(0.2f, "Loading ROM data...");
         Rom rom;
         String lastOpenedProject = Settings.get(Setting.LAST_OPENED_PROJECT);
+        File romFile = null;
         if (lastOpenedProject != null) {
             File lastOpenedProjectFile = new File(lastOpenedProject);
             if (lastOpenedProjectFile.exists()) {
@@ -38,6 +39,7 @@ public class Main {
 
                 try {
                     rom = Rom.loadFromArchive(lastOpenedProjectFile);
+                    romFile = lastOpenedProjectFile;
 
                     Log.ui().log(Level.INFO, "Reopened last project at " +
                             lastOpenedProjectFile.getPath() + ".");
@@ -65,7 +67,7 @@ public class Main {
         EditorForm editorForm = new EditorForm(rom);
 
         splashForm.setProgress(0.75f, "Opening ROM...");
-        editorForm.openRom(rom);
+        editorForm.openRom(romFile, rom);
 
         splashForm.setProgress(1.0f, "Opening Atlas...");
         Thread.sleep(500L);

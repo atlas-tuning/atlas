@@ -17,7 +17,7 @@ import static java.awt.event.ItemEvent.SELECTED;
 
 public class Inputs {
 
-    public static JButton button(Ikon icon, Color color, Runnable clicked) {
+    public static JButton button(Ikon icon, java.awt.Color color, Runnable clicked) {
         JButton button = new JButton(Icons.get(icon, color));
         button.addActionListener(e -> clicked.run());
         return button;
@@ -214,7 +214,7 @@ public class Inputs {
         return component;
     }
 
-    public static <T extends JComponent> T bg(Color color, T component) {
+    public static <T extends JComponent> T bg(java.awt.Color color, T component) {
         component.setOpaque(true);
         component.setBackground(color);
         return component;

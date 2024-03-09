@@ -192,4 +192,8 @@ public class Layout {
         return wrapped;
     }
 
+    public static Border emptyBorder(Insets insets) {
+        return BorderFactory.createEmptyBorder(insets.top, insets.left, insets.bottom, insets.right);
+    }
+
 }

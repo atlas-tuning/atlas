@@ -16,25 +16,12 @@ import java.util.zip.ZipOutputStream;
 
 public class Rom {
     private static final Set<String> acceptableClassNames = Collections.unmodifiableSet(Stream.of(
-            Rom.class,
-            VehicleSource.class,
-            Scale.class,
-            ScalingOperation.class,
-            Series.class,
-            Table.class,
-            Unit.class,
-            UnitClass.class,
-            Vehicle.class,
-            Precision.class,
-            MemorySection.class,
-            MemoryParameter.class,
-            MemoryByteOrder.class,
-            MemoryAddress.class,
-            DataFormat.class,
-            Axis.class,
-            ArithmeticOperation.class,
-            MemoryEncryptionType.class,
-            KeyProperty.class
+            Rom.class, VehicleSource.class, Scale.class, ScalingOperation.class,
+            Series.class, Table.class, Unit.class, UnitClass.class,
+            Vehicle.class, Precision.class, MemorySection.class, MemoryParameter.class,
+            MemoryByteOrder.class, MemoryAddress.class, DataFormat.class,
+            Axis.class, ArithmeticOperation.class, MemoryEncryptionType.class, KeyProperty.class,
+            Color.class
     ).map(Class::getName).collect(Collectors.toSet()));
 
     private Vehicle vehicle;

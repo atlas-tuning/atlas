@@ -280,7 +280,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         createSaveRow(inner, 3);
 
         content.add(inner, BorderLayout.CENTER);
-        matteBorder(1, 0, 0, 0, Color.GRAY.darker(), content);
+        matteBorder(1, 0, 0, 0, java.awt.Color.GRAY.darker(), content);
 
         settingsPanel.add(topBorder(5, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
                 BorderLayout.CENTER);
@@ -300,7 +300,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         }
         inner.add(Layout.emptyBorder(scrollVertical(ops = initOperationsList())), BorderLayout.CENTER);
 
-        content.add(matteBorder(1, 1, 1, 1, Color.GRAY.darker(), inner), BorderLayout.CENTER);
+        content.add(matteBorder(1, 1, 1, 1, java.awt.Color.GRAY.darker(), inner), BorderLayout.CENTER);
 
         operationsPanel.add(topBorder(5, content), BorderLayout.CENTER);
 
@@ -328,12 +328,12 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         createEntryRow(
                 content, 0, "Minimum", "Minimum value for data using this scale",
-                Labels.text(formatValue(scale.getMinimum(), scale.getUnit()), Color.RED, Fonts.VALUE_FONT)
+                Labels.text(formatValue(scale.getMinimum(), scale.getUnit()), java.awt.Color.RED, Fonts.VALUE_FONT)
         );
 
         createEntryRow(
                 content, 1, "Maximum", "Maximum value for data using this scale",
-                Labels.text(formatValue(scale.getMaximum(), scale.getUnit()), Color.GREEN, Fonts.VALUE_FONT)
+                Labels.text(formatValue(scale.getMaximum(), scale.getUnit()), java.awt.Color.GREEN, Fonts.VALUE_FONT)
         );
 
         createEntryRow(
@@ -341,7 +341,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
                 Labels.text(formatValue(scale.getPrecision(), scale.getUnit()), Fonts.VALUE_FONT)
         );
 
-        matteBorder(1, 0, 0, 0, Color.GRAY.darker(), content);
+        matteBorder(1, 0, 0, 0, java.awt.Color.GRAY.darker(), content);
 
         informationContent.add(topBorder(5, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
             BorderLayout.CENTER);
@@ -389,8 +389,10 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         initView();
 
+        list.revalidate();
         getComponent().revalidate();
         getComponent().repaint();
+
     }
 
     @Override
@@ -402,7 +404,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         left.add(new FormatsTabToolbar(this).getComponent(), BorderLayout.NORTH);
         left.add(Layout.emptyBorder(scrollVertical(list = initFormatList())), BorderLayout.CENTER);
 
-        tab.add(matteBorder(0, 0, 0, 1, Color.GRAY.darker(), left), BorderLayout.WEST);
+        tab.add(matteBorder(0, 0, 0, 1, java.awt.Color.GRAY.darker(), left), BorderLayout.WEST);
 
         center = new JPanel(new BorderLayout());
 

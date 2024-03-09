@@ -12,7 +12,7 @@ public abstract class AtlasComponent<T extends Component, E> {
 
     private boolean initialized = false;
 
-    ThreadLocal<Boolean> initializing = new ThreadLocal<>();
+    private ThreadLocal<Boolean> initializing = new ThreadLocal<>();
 
     protected AtlasComponent(E editor) {
         initializing.set(false);

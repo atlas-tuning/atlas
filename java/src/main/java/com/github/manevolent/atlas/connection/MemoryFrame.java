@@ -15,6 +15,10 @@ public class MemoryFrame {
         this.data = new LinkedHashMap<>();
     }
 
+    public MemoryFrame() {
+        this(Instant.now());
+    }
+
     public void setData(MemoryParameter parameter, byte[] data) {
         this.data.put(parameter, data);
     }
@@ -25,6 +29,14 @@ public class MemoryFrame {
 
     public byte[] getData(MemoryParameter parameter) {
         return data.get(parameter);
+    }
+
+    public Float getValue(MemoryParameter parameter) {
+        byte[] data = getData(parameter);
+        if (data == null || data.length == 0) {
+            return null;
+        }
+        return parameter.getValue(data);
     }
 
     public Instant getInstant() {

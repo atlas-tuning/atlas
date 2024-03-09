@@ -21,6 +21,7 @@ import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableModel;
 
 import java.awt.*;
+import java.awt.Color;
 import java.awt.event.*;
 import java.io.IOException;
 import java.util.Arrays;

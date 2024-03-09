@@ -2,7 +2,9 @@ package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.*;
+import com.github.manevolent.atlas.model.Color;
 import com.github.manevolent.atlas.ui.*;
+import com.github.manevolent.atlas.ui.component.ColorField;
 import com.github.manevolent.atlas.ui.component.MemoryAddressField;
 import com.github.manevolent.atlas.ui.component.toolbar.ParametersTabToolbar;
 import com.github.manevolent.atlas.ui.component.window.Window;
@@ -246,6 +248,13 @@ public class ParametersTab extends Tab implements ListSelectionListener {
                     parameterChanged();
                 });
 
+
+        ColorField colorField = new ColorField(getParent().getActiveRom(),
+                parameter.getColor(), (newColor) -> {
+            parameter.setColor(newColor);
+            parameterChanged();
+        });
+
         JComboBox<Scale> scaleField = Inputs.scaleField(
                 getParent().getActiveRom(),
                 parameter.getScale(),
@@ -273,10 +282,15 @@ public class ParametersTab extends Tab implements ListSelectionListener {
                 "The format of the data in this parameter",
                 scaleField);
 
-        createSaveRow(inner, 3);
+        Inputs.createEntryRow(inner, 3,
+                "Color",
+                "The color of data for this parameter in data logging",
+                colorField);
+
+        createSaveRow(inner, 4);
 
         content.add(inner, BorderLayout.CENTER);
-        matteBorder(1, 0, 0, 0, Color.GRAY.darker(), content);
+        matteBorder(1, 0, 0, 0, java.awt.Color.GRAY.darker(), content);
 
         settingsPanel.add(topBorder(5, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
                 BorderLayout.CENTER);
@@ -305,12 +319,12 @@ public class ParametersTab extends Tab implements ListSelectionListener {
 
         createEntryRow(
                 content, 0, "Minimum", "Minimum value for this parameter",
-                Labels.text(formatValue(param.getScale().getMinimum(), param.getScale().getUnit()), Color.RED, Fonts.VALUE_FONT)
+                Labels.text(formatValue(param.getScale().getMinimum(), param.getScale().getUnit()), java.awt.Color.RED, Fonts.VALUE_FONT)
         );
 
         createEntryRow(
                 content, 1, "Maximum", "Maximum value for this parameter",
-                Labels.text(formatValue(param.getScale().getMaximum(), param.getScale().getUnit()), Color.GREEN, Fonts.VALUE_FONT)
+                Labels.text(formatValue(param.getScale().getMaximum(), param.getScale().getUnit()), java.awt.Color.GREEN, Fonts.VALUE_FONT)
         );
 
         createEntryRow(
@@ -318,7 +332,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
                 Labels.text(formatValue(param.getScale().getPrecision(), param.getScale().getUnit()), Fonts.VALUE_FONT)
         );
 
-        matteBorder(1, 0, 0, 0, Color.GRAY.darker(), content);
+        matteBorder(1, 0, 0, 0, java.awt.Color.GRAY.darker(), content);
 
         informationContent.add(topBorder(5, wrap(new BorderLayout(), content, BorderLayout.NORTH)),
             BorderLayout.CENTER);
@@ -392,7 +406,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         left.add(Layout.emptyBorder(scrollVertical(list = initParameterList())), BorderLayout.CENTER);
 
         tab.removeAll();
-        tab.add(matteBorder(0, 0, 0, 1, Color.GRAY.darker(), left), BorderLayout.WEST);
+        tab.add(matteBorder(0, 0, 0, 1, java.awt.Color.GRAY.darker(), left), BorderLayout.WEST);
 
         center = new JPanel(new BorderLayout());
 
@@ -417,7 +431,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
 
     @Override
     public Icon getIcon() {
-        return Icons.get(CarbonIcons.ANALYTICS, getTextColor());
+        return Icons.get(CarbonIcons.ACTIVITY, getTextColor());
     }
 
     @Override
