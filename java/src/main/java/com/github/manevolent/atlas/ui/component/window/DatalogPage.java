@@ -45,6 +45,10 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         initComponent();
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getName() {
         return this.name;
     }

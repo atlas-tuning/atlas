@@ -13,6 +13,7 @@ import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
 import java.awt.*;
+import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
@@ -122,7 +123,15 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
         if (recordingPage != null) {
             stopRecording();
         } else {
+            String suggestedName = Instant.now().toString();
+            String newDatalogName = JOptionPane.showInputDialog(getParent(),
+                    "Specify a name for this recording", suggestedName);
+            if (newDatalogName == null || newDatalogName.isBlank()) {
+                newDatalogName = suggestedName;
+            }
+
             DatalogPage page = new DatalogPage(this);
+            page.setName(newDatalogName);
             addPage(page);
             setRecordingPage(page);
         }
