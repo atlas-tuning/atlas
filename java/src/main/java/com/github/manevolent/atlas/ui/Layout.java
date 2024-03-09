@@ -79,6 +79,11 @@ public class Layout {
         return component;
     }
 
+    public static <T extends JComponent> T alignCenter(T component) {
+        component.setAlignmentX(Component.CENTER_ALIGNMENT);
+        return component;
+    }
+
     public static <T extends JPanel> Box leftJustify(T panel)  {
         Box b = Box.createHorizontalBox();
         b.add(panel);
@@ -189,6 +194,12 @@ public class Layout {
     public static JPanel wrap(LayoutManager layout, JComponent component, Object layoutData) {
         JPanel wrapped = new JPanel(layout);
         wrapped.add(component, layoutData);
+        return wrapped;
+    }
+
+    public static JPanel wrap(JComponent component) {
+        JPanel wrapped = new JPanel(new BorderLayout());
+        wrapped.add(component, BorderLayout.CENTER);
         return wrapped;
     }
 

@@ -9,7 +9,6 @@ import com.github.manevolent.atlas.ui.Layout;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
-import javax.swing.border.Border;
 import java.awt.*;
 import java.awt.event.*;
 import java.time.Instant;
@@ -22,7 +21,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
     private final DatalogWindow window;
     private JPanel graphContainer;
     private JScrollPane scrollPane;
-    private JPanel addPanel;
+    private JPanel footerPanel;
     private Integer cursorX;
     private long maximumHistoryMillis = 60_000L;
     private long windowWidthMillis = 60_000L;
@@ -86,25 +85,47 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         return new DatalogParameterPanel(this, parameter);
     }
 
-    private void initAddPanel() {
-        if (addPanel != null) {
-            graphContainer.remove(addPanel);
+    private void initFooterPanel() {
+        if (footerPanel != null) {
+            graphContainer.remove(footerPanel);
         }
 
-        if (isPaused()) {
-            return;
+        if (!isPaused()) {
+            footerPanel = new JPanel();
+            footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.Y_AXIS));
+
+            if (getActiveParameters().isEmpty()) {
+                footerPanel.add(Layout.emptyBorder(5, 0, 5, 0,
+                        Layout.alignCenter(Labels.text("This datalog is empty; recording will begin" +
+                                " when the first parameter is added."))));
+            }
+
+            footerPanel.add(Layout.alignCenter(Inputs.button(CarbonIcons.ADD,
+                    "Add Parameter...", "Add a new parameter to this datalog",
+                    this::addParameter)));
+
+            graphContainer.add(footerPanel,
+                    Layout.gridBagConstraints(
+                            GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+                            0, activeParameters.size(),
+                            1, 1));
+        } else if (getActiveParameters().isEmpty()) {
+            footerPanel = new JPanel();
+
+            footerPanel.setLayout(new BoxLayout(footerPanel, BoxLayout.Y_AXIS));
+            footerPanel.add(Layout.emptyBorder(5, 0, 5, 0,
+                    Layout.alignCenter(Labels.text("This datalog is empty; it can be deleted to save space."))));
+            footerPanel.add(Layout.alignCenter(Inputs.button(CarbonIcons.TRASH_CAN, "Delete", "Delete this datalog",
+                    () -> window.deletePage(this))));
+
+            graphContainer.add(footerPanel,
+                    Layout.gridBagConstraints(
+                            GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
+                            0, activeParameters.size(),
+                            1, 1));
         }
 
-        addPanel = new JPanel();
-        addPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        addPanel.add(Inputs.button(CarbonIcons.ADD, "Add parameter...", "Add a new parameter to this datalog",
-                this::addParameter));
 
-        graphContainer.add(addPanel,
-                Layout.gridBagConstraints(
-                        GridBagConstraints.NORTHWEST, GridBagConstraints.HORIZONTAL,
-                        0, activeParameters.size(),
-                        1, 1));
     }
 
     public EditorForm getEditor() {
@@ -122,8 +143,8 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
     }
 
     public void addParameter(MemoryParameter parameter) {
-        if (addPanel != null) {
-            graphContainer.remove(addPanel);
+        if (footerPanel != null) {
+            graphContainer.remove(footerPanel);
         }
 
         graphContainer.add(initParameterPanel(parameter),
@@ -134,16 +155,15 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
 
         activeParameters.add(parameter);
 
-        initAddPanel();
+        initFooterPanel();
     }
 
     public void addParameter() {
-
         Object[] options = getMissingParameters().toArray();
 
         MemoryParameter selected = (MemoryParameter) JOptionPane.showInputDialog(
                 getEditor(),
-                "Select a parameter to add",
+                "Select a parameter to record",
                 "Select Parameter",
                 JOptionPane.PLAIN_MESSAGE,
                 null,
@@ -153,13 +173,14 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
 
         if (selected != null) {
             addParameter(selected);
+            initFooterPanel();
         }
     }
 
     public void initComponent() {
         graphContainer = new JPanel(new GridBagLayout());
 
-        initAddPanel();
+        initFooterPanel();
 
         scrollPane = new JScrollPane(graphContainer) {
             @Override
@@ -237,7 +258,9 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
     }
 
     private void select() {
-        setPaused(true);
+        if (!isPaused()) {
+            return;
+        }
 
         Instant left = getTime(Math.min(drag_left, drag_right));
         Instant right = getTime(Math.max(drag_left, drag_right));
@@ -292,7 +315,8 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
                 drag_right = drag_left;
             }
         }
-        if (!dragging) {
+
+        if (!dragging && paused) {
             drag_right = e.getX();
             drag_left = e.getX();
             dragging = true;
@@ -334,9 +358,18 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         scrollPane.repaint();
     }
 
-    public void setPaused(boolean paused) {
+    public void setPaused(boolean paused, boolean override) {
         if (this.paused == paused) {
             return;
+        }
+
+        if (paused && !override) {
+            if (JOptionPane.showConfirmDialog(getParent(),
+                    "This action will stop the recording. Do you want to end this datalog recording?",
+                    "Recording",
+                    JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+                return;
+            }
         }
 
         this.paused = paused;
@@ -345,7 +378,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
             window.stopRecording();
         }
 
-        initAddPanel();
+        initFooterPanel();
         window.getToolbar().setPaused(paused);
     }
 
@@ -415,12 +448,12 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
     }
 
     public void moveLeft() {
-        setPaused(true);
+        setPaused(true, false);
         setCurrentInstant(currentInstant.minusMillis(windowWidthMillis / 4));
     }
 
     public void moveRight() {
-        setPaused(true);
+        setPaused(true, false);
         setCurrentInstant(currentInstant.plusMillis(windowWidthMillis / 4));
     }
 
@@ -441,12 +474,12 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         } else if (e.getKeyCode() == KeyEvent.VK_A) {
             fitToScreen();
         } else if (e.getKeyCode() == KeyEvent.VK_P) {
-            setPaused(true);
+            setPaused(true, true);
         } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-            setPaused(!this.isPaused());
+            setPaused(false, true);
         } else if (e.getKeyCode() >= KeyEvent.VK_0 || e.getKeyCode() <= KeyEvent.VK_9) {
             if (frames.size() > 1) {
-                setPaused(true);
+                setPaused(true, false);
 
                 int nth;
                 if (e.getKeyCode() == KeyEvent.VK_0) {

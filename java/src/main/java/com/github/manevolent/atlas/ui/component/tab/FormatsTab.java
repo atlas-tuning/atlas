@@ -83,7 +83,6 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         panel.add(component, BorderLayout.NORTH);
     }
 
-
     private JComponent createEntryRow(JPanel entryPanel, int row,
                                       String label, String helpText,
                                       JComponent input) {

@@ -33,7 +33,15 @@ public class FileMenu extends DatalogMenu {
         fileMenu.add(openDatalog);
 
         fileMenu.addSeparator();
-        JMenuItem exit = new JMenuItem("Close");
+
+        //TODO
+        JMenuItem close = new JMenuItem("Close");
+        close.addActionListener((e) -> {
+
+        });
+        //fileMenu.add(close);
+
+        JMenuItem exit = new JMenuItem("Exit");
         exit.addActionListener((e) -> getParent().getComponent().doDefaultCloseAction());
         fileMenu.add(exit);
     }

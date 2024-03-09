@@ -4,6 +4,7 @@ import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.window.DatalogPage;
 import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
+import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -11,6 +12,7 @@ import java.awt.*;
 public class DatalogToolbar extends Toolbar<DatalogWindow> {
     private JButton pauseButton;
     private JLabel tLabel;
+    private JButton addButton;
 
     public DatalogToolbar(DatalogWindow editor) {
         super(editor);
@@ -30,7 +32,14 @@ public class DatalogToolbar extends Toolbar<DatalogWindow> {
             getParent().toggleRecording();
         }));
 
+        toolbar.add(addButton = makeButton(CarbonIcons.ADD, "add", "Add parameter...", (e) -> {
+            DatalogPage activePage = getParent().getActivePage();
+            if (activePage != null && !activePage.isPaused()) {
+                activePage.addParameter();
+            }
+        }));
         toolbar.addSeparator();
+
         toolbar.add(makeButton(CarbonIcons.FIT_TO_SCREEN, "fit", "Fit to width", (e) -> {
             DatalogPage activePage = getParent().getActivePage();
             if (activePage != null) {
@@ -63,11 +72,6 @@ public class DatalogToolbar extends Toolbar<DatalogWindow> {
         }));
         toolbar.addSeparator();
 
-        toolbar.add(makeButton(CarbonIcons.ACCOUNT, "parameters", "Select parameters...", (e) -> {
-
-        }));
-
-        toolbar.addSeparator();
         toolbar.add(Box.createHorizontalGlue());
         toolbar.add(tLabel = Labels.text(CarbonIcons.ARROWS_HORIZONTAL, Fonts.VALUE_FONT, ""));
         tLabel.setVisible(false);
@@ -80,12 +84,22 @@ public class DatalogToolbar extends Toolbar<DatalogWindow> {
     }
 
     public void setPaused(boolean paused) {
-        if (paused) {
-            pauseButton.setIcon(Icons.get(CarbonIcons.RECORDING_FILLED, BUTTON_ICON_SIZE));
-            pauseButton.setToolTipText("Record new datalog");
-        } else {
+
+        boolean recording = getParent().isRecording();
+        if (recording) {
             pauseButton.setIcon(Icons.get(CarbonIcons.STOP_FILLED, BUTTON_ICON_SIZE));
+        } else {
+            pauseButton.setIcon(Icons.get(CarbonIcons.RECORDING_FILLED, BUTTON_ICON_SIZE));
+        }
+
+        if (paused) {
+            pauseButton.setToolTipText("Record new datalog");
+            addButton.setEnabled(false);
+            ((FontIcon)addButton.getIcon()).setIconColor(Fonts.getTextColor().darker());
+        } else {
             pauseButton.setToolTipText("Stop recording");
+            addButton.setEnabled(true);
+            ((FontIcon)addButton.getIcon()).setIconColor(Fonts.getTextColor());
         }
     }
 }

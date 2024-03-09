@@ -53,6 +53,7 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
     public abstract Icon getIcon();
 
     public void updateTitle() {
+        getComponent().setFrameIcon(getIcon());
         getComponent().setTitle(getTitle());
     }
 

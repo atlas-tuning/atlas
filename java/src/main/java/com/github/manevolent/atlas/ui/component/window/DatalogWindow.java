@@ -57,16 +57,26 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     }
 
     public void setRecordingPage(DatalogPage page) {
-        if (page != null) {
-            toolbar.setPaused(false);
-        } else {
-            toolbar.setPaused(true);
+        toolbar.setPaused(page == null);
+
+        if (page == null && this.recordingPage != null) {
+            // Recording stopped
+            int index = tabbedPane.indexOfComponent(this.recordingPage);
+            if (index >= 0) {
+                tabbedPane.setIconAt(index, Icons.get(CarbonIcons.CATALOG));
+            }
         }
 
         this.recordingPage = page;
 
         if (page != null) {
-            page.setPaused(false);
+            // Recording started
+            page.setPaused(false, false);
+
+            int index = tabbedPane.indexOfComponent(page);
+            if (index >= 0) {
+                tabbedPane.setIconAt(index, Icons.get(CarbonIcons.RECORDING_FILLED, Color.RED));
+            }
         }
 
         updateTitle();
@@ -98,10 +108,14 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     }
 
     private void addPage(DatalogPage page) {
-        tabbedPane.addTab(page.getTitle(), page);
+        tabbedPane.addTab(page.getTitle(), Icons.get(CarbonIcons.CATALOG), page);
         tabbedPane.setSelectedComponent(page);
         tabbedPane.revalidate();
         tabbedPane.repaint();
+    }
+
+    public void deletePage(DatalogPage datalogPage) {
+        //TODO stop running datalog?
     }
 
     public void toggleRecording() {
@@ -112,12 +126,18 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
             addPage(page);
             setRecordingPage(page);
         }
+
+        updateTitle();
     }
 
     public void stopRecording() {
         if (recordingPage != null) {
-            recordingPage.setPaused(true);
-            recordingPage = null;
+            DatalogPage page = recordingPage;
+            setRecordingPage(null);
+            tabbedPane.setSelectedComponent(page);
+            page.setPaused(true, true);
+
+            updateTitle();
         }
     }
 
@@ -150,7 +170,11 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
 
     @Override
     public Icon getIcon() {
-        return Icons.get(CarbonIcons.CHART_AVERAGE, getTextColor());
+        if (isRecording()) {
+            return Icons.get(CarbonIcons.RECORDING_FILLED, Color.RED);
+        } else {
+            return Icons.get(CarbonIcons.CHART_AVERAGE, getTextColor());
+        }
     }
 
     @Override
@@ -222,5 +246,9 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     @Override
     public void stateChanged(ChangeEvent e) {
         setActivePage((DatalogPage) tabbedPane.getSelectedComponent());
+    }
+
+    public boolean isRecording() {
+        return recordingPage != null;
     }
 }
