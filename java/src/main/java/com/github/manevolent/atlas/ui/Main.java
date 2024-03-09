@@ -28,13 +28,13 @@ public class Main {
         splashForm.setProgress(0.1f, "Loading theme...");
         FlatDarculaLaf.setup();
 
-        splashForm.setProgress(0.25f, "Loading ROM...");
+        splashForm.setProgress(0.2f, "Loading ROM data...");
         Rom rom;
         String lastOpenedProject = Settings.get(Setting.LAST_OPENED_PROJECT);
         if (lastOpenedProject != null) {
             File lastOpenedProjectFile = new File(lastOpenedProject);
             if (lastOpenedProjectFile.exists()) {
-                splashForm.setProgress(0.25f, "Loading " + lastOpenedProjectFile.getName() + "...");
+                splashForm.setProgress(0.4f, "Loading " + lastOpenedProjectFile.getName() + "...");
 
                 try {
                     rom = Rom.loadFromArchive(lastOpenedProjectFile);
