@@ -29,16 +29,18 @@ public class Main {
         FlatDarculaLaf.setup();
 
         splashForm.setProgress(0.25f, "Loading ROM...");
-        Rom rom = Rom.builder().build();
+        Rom rom;
         String lastOpenedProject = Settings.get(Setting.LAST_OPENED_PROJECT);
         if (lastOpenedProject != null) {
             File lastOpenedProjectFile = new File(lastOpenedProject);
             if (lastOpenedProjectFile.exists()) {
-                Log.ui().log(Level.INFO, "Reopened last project at " +
-                        lastOpenedProjectFile.getPath() + ".");
+                splashForm.setProgress(0.25f, "Loading " + lastOpenedProjectFile.getName() + "...");
 
                 try {
                     rom = Rom.loadFromArchive(lastOpenedProjectFile);
+
+                    Log.ui().log(Level.INFO, "Reopened last project at " +
+                            lastOpenedProjectFile.getPath() + ".");
                 } catch (Exception ex) {
                     Log.ui().log(Level.SEVERE, "Problem opening last project at " +
                             lastOpenedProjectFile.getPath(), ex);
@@ -46,12 +48,15 @@ public class Main {
                             "Failed to open project!\r\nSee console output for more details.",
                             "Open failed",
                             JOptionPane.ERROR_MESSAGE);
+                    rom = Rom.builder().build();
                 }
             } else {
+                rom = Rom.builder().build();
                 Log.ui().log(Level.WARNING, "Last opened project at " +
                         lastOpenedProjectFile.getPath() + " does not exist!");
             }
         } else {
+            rom = Rom.builder().build();
             Log.ui().log(Level.INFO, "Opened a new project.");
         }
 

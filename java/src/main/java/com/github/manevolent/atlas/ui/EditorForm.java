@@ -122,6 +122,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
                 rom.saveToArchive(file);
                 setDirty(false);
                 Log.ui().log(Level.INFO, "Project saved to " + file.getPath());
+                Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
             } catch (IOException e) {
                 JOptionPane.showMessageDialog(this, "Failed to save project!\r\nSee console output for more details.",
                         "Save failed",
@@ -138,7 +139,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         fileChooser.addChoosableFileFilter(def);
         fileChooser.setFileFilter(def);
         fileChooser.setDialogTitle("Open Project");
-        if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+        if (fileChooser.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             try {
                 openRom(Rom.loadFromArchive(file));
