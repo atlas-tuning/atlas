@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.ui.Icons;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -9,7 +9,7 @@ import javax.swing.*;
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
 public class HelpTab extends Tab {
-    public HelpTab(EditorForm editor) {
+    public HelpTab(Editor editor) {
         super(editor);
     }
 

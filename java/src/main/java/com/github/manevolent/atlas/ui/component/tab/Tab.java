@@ -1,12 +1,12 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.ui.component.EditorComponent;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 
 import javax.swing.*;
 
 public abstract class Tab extends EditorComponent<JPanel> {
-    protected Tab(EditorForm editor) {
+    protected Tab(Editor editor) {
         super(editor);
     }
 

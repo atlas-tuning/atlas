@@ -7,7 +7,7 @@ import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.MemoryAddressField;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -34,7 +34,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
     private JButton save, open, copy, reset;
 
-    public TableDefinitionEditor(EditorForm editor, Table table) {
+    public TableDefinitionEditor(Editor editor, Table table) {
         super(editor);
         this.realTable = table;
         this.workingTable = table.copy();

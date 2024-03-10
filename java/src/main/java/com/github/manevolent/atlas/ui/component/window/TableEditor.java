@@ -9,7 +9,7 @@ import com.github.manevolent.atlas.ui.component.RowNumberTable;
 import com.github.manevolent.atlas.ui.component.footer.TableEditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.table.*;
 import com.github.manevolent.atlas.ui.component.toolbar.TableEditorToolbar;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -64,7 +64,7 @@ public class TableEditor extends Window implements
 
     private final boolean readOnly;
 
-    public TableEditor(EditorForm editor, Table table, boolean readOnly) {
+    public TableEditor(Editor editor, Table table, boolean readOnly) {
         super(editor);
 
         this.readOnly = readOnly;
@@ -72,7 +72,7 @@ public class TableEditor extends Window implements
         this.table = table;
     }
 
-    public TableEditor(EditorForm editor, Table table) {
+    public TableEditor(Editor editor, Table table) {
         super(editor);
 
         this.readOnly = false;

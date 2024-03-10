@@ -1,27 +1,13 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
-import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.*;
-import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
-import com.github.manevolent.atlas.ui.component.toolbar.OperationsToolbar;
-import com.github.manevolent.atlas.ui.component.window.Window;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
-import javax.swing.event.ListSelectionEvent;
-import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.logging.Level;
-
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
-import static com.github.manevolent.atlas.ui.Layout.*;
 
 public class ProjectTab extends Tab {
     private JPanel center;
@@ -31,7 +17,7 @@ public class ProjectTab extends Tab {
     private JButton resetButton;
     private JButton saveButton;
 
-    public ProjectTab(EditorForm editor) {
+    public ProjectTab(Editor editor) {
         super(editor);
     }
 

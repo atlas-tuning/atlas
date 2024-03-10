@@ -12,6 +12,10 @@ public class Fonts {
         return new JLabel().getForeground();
     }
 
+    public static Font getTextFont() {
+        return new JLabel().getFont();
+    }
+
     public static FontMetrics getFontMetrics(Font font) {
         Canvas c = new Canvas();
         return c.getFontMetrics(font);

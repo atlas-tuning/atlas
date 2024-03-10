@@ -9,6 +9,8 @@ import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 
 import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -292,5 +294,17 @@ public class Inputs {
         );
 
         return entryPanel;
+    }
+
+    public static void bind(Component component, String key, Runnable action, KeyStroke... strokes) {
+        Arrays.asList(strokes).forEach(stroke -> {
+            ((JComponent)component).getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(stroke, action);
+        });
+        ((JComponent)component).getActionMap().put(action, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                action.run();
+            }
+        });
     }
 }

@@ -2,7 +2,7 @@ package com.github.manevolent.atlas.ui.component.window;
 
 import com.github.manevolent.atlas.connection.MemoryFrame;
 import com.github.manevolent.atlas.model.MemoryParameter;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.Inputs;
 import com.github.manevolent.atlas.ui.Labels;
 import com.github.manevolent.atlas.ui.Layout;
@@ -130,7 +130,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         }
     }
 
-    public EditorForm getEditor() {
+    public Editor getEditor() {
         return window.getParent();
     }
 
@@ -285,7 +285,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         add(scrollPane, BorderLayout.CENTER);
     }
 
-    private void addFrame(MemoryFrame frame) {
+    public void addFrame(MemoryFrame frame) {
         if (paused) {
             return;
         }

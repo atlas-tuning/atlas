@@ -1,5 +1,10 @@
 package com.github.manevolent.atlas.ui.component.window;
 
+import com.github.manevolent.atlas.connection.Connection;
+import com.github.manevolent.atlas.connection.ConnectionMode;
+import com.github.manevolent.atlas.connection.MemoryFrame;
+import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.model.MemoryParameter;
 import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.menu.datalog.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.datalog.ViewMenu;
@@ -17,22 +22,25 @@ import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
+import java.util.logging.Level;
 
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
 public class DatalogWindow extends Window implements InternalFrameListener, ChangeListener {
+    private JMenuBar menubar;
     private FileMenu fileMenu;
 
     private DatalogToolbar toolbar;
     private JTabbedPane tabbedPane;
 
-    private Timer timer;
+    private Timer paintTimer;
+    private Timer datalogTimer;
 
     private List<DatalogPage> pages = new ArrayList<>();
     private DatalogPage activePage;
     private DatalogPage recordingPage;
 
-    public DatalogWindow(EditorForm editor) {
+    public DatalogWindow(Editor editor) {
         super(editor);
     }
 
@@ -43,9 +51,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     }
 
     private JMenuBar initMenu() {
-        JMenuBar menuBar;
-
-        menuBar = new JMenuBar();
+        JMenuBar menuBar = new JMenuBar();
 
         menuBar.add((fileMenu = new FileMenu(this)).getComponent());
         menuBar.add(new ViewMenu(this).getComponent());
@@ -81,6 +87,21 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
         }
 
         updateTitle();
+    }
+
+    public Connection establishConnection() {
+        try {
+            Connection connection = getParent().getConnection();
+            connection.changeConnectionMode(ConnectionMode.READ_MEMORY);
+            return connection;
+        } catch (Exception ex) {
+            Log.can().log(Level.SEVERE, "Problem establishing datalog session with ECU", ex);
+            JOptionPane.showMessageDialog(getParent(), "Failed to establish datalog connection with ECU!\r\n" +
+                            "See console output for more details.",
+                    "Connection failed",
+                    JOptionPane.ERROR_MESSAGE);
+            return null;
+        }
     }
 
     public DatalogPage getActivePage() {
@@ -123,23 +144,53 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
         if (recordingPage != null) {
             stopRecording();
         } else {
-            String suggestedName = Instant.now().toString();
-            String newDatalogName = JOptionPane.showInputDialog(getParent(),
-                    "Specify a name for this recording", suggestedName);
-            if (newDatalogName == null || newDatalogName.isBlank()) {
-                newDatalogName = suggestedName;
-            }
-
-            DatalogPage page = new DatalogPage(this);
-            page.setName(newDatalogName);
-            addPage(page);
-            setRecordingPage(page);
+            startRecording();
         }
 
         updateTitle();
     }
 
+    public void startRecording() {
+        // Establish connection
+        if (establishConnection() == null) {
+            return;
+        }
+
+        String suggestedName = Instant.now().toString();
+        String newDatalogName = JOptionPane.showInputDialog(getParent(),
+                "Specify a name for this recording", suggestedName);
+        if (newDatalogName == null || newDatalogName.isBlank()) {
+            return;
+        }
+
+        DatalogPage page = new DatalogPage(this);
+        page.setName(newDatalogName);
+        addPage(page);
+        setRecordingPage(page);
+
+        datalogTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                DatalogPage recordingPage = getRecordingPage();
+                if (recordingPage == null || recordingPage.isPaused()) {
+                    return;
+                }
+
+                Collection<MemoryParameter> parameters = recordingPage.getActiveParameters();
+                MemoryFrame frame = establishConnection().readFrame(parameters);
+                if (frame != null) {
+                    recordingPage.addFrame(frame);
+                }
+            }
+        }, 1000L,1000 / 10L);
+    }
+
     public void stopRecording() {
+        if (datalogTimer != null) {
+            datalogTimer.cancel();
+            datalogTimer.purge();
+        }
+
         if (recordingPage != null) {
             DatalogPage page = recordingPage;
             setRecordingPage(null);
@@ -154,7 +205,8 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     protected void initComponent(JInternalFrame window) {
         window.setLayout(new BorderLayout());
         window.add((toolbar = new DatalogToolbar(this)).getComponent(), BorderLayout.NORTH);
-        window.setJMenuBar(initMenu());
+        window.setJMenuBar(menubar = initMenu());
+
 
         tabbedPane = new JTabbedPane();
         window.add(tabbedPane, BorderLayout.CENTER);
@@ -196,7 +248,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     }
 
     private void startTimer() {
-        if (timer == null) {
+        if (paintTimer == null) {
             Timer timer = new Timer("Update");
             timer.scheduleAtFixedRate(new TimerTask() {
                 @Override
@@ -210,10 +262,10 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     }
 
     private void stopTimer() {
-        if (timer != null) {
-            timer.cancel();
-            timer.purge();
-            timer = null;
+        if (paintTimer != null) {
+            paintTimer.cancel();
+            paintTimer.purge();
+            paintTimer = null;
         }
     }
 

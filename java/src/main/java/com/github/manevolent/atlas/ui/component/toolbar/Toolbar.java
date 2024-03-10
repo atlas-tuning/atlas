@@ -1,8 +1,10 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
+import com.github.manevolent.atlas.ui.Fonts;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.AtlasComponent;
 import org.kordamp.ikonli.Ikon;
+import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
 import java.awt.*;
@@ -25,13 +27,27 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
 
     protected JButton makeButton(Ikon ikon, int size, String actionCommand, String toolTipText,
                                  ActionListener listener) {
-        JButton add = new JButton(Icons.get(ikon, Color.WHITE.darker(), size));
-        add.setActionCommand(actionCommand);
-        add.setToolTipText(toolTipText);
+        Color enabledColor = Fonts.getTextColor();
+        Color disabledColor = Fonts.getTextColor().darker();
+        JButton button = new JButton(Icons.get(ikon, enabledColor)) {
+            @Override
+            public void setEnabled(boolean b) {
+                super.setEnabled(b);
+
+                if (b) {
+                    ((FontIcon)getIcon()).setIconColor(enabledColor);
+                } else {
+                    ((FontIcon)getIcon()).setIconColor(disabledColor);
+                }
+            }
+        };
+
+        button.setActionCommand(actionCommand);
+        button.setToolTipText(toolTipText);
         if (listener != null) {
-            add.addActionListener(listener);
+            button.addActionListener(listener);
         }
-        return add;
+        return button;
     }
 
     protected JButton makeButton(Ikon ikon, String actionCommand, String toolTipText,

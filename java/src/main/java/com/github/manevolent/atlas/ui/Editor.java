@@ -1,15 +1,21 @@
 package com.github.manevolent.atlas.ui;
 
+import com.github.manevolent.atlas.connection.Connection;
+import com.github.manevolent.atlas.connection.SubaruDITConnection;
 import com.github.manevolent.atlas.model.Rom;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
+import com.github.manevolent.atlas.ui.behavior.Edit;
+import com.github.manevolent.atlas.ui.behavior.EditHistory;
+import com.github.manevolent.atlas.ui.behavior.WindowAction;
+import com.github.manevolent.atlas.ui.behavior.WindowHistory;
 import com.github.manevolent.atlas.ui.component.footer.EditorFooter;
 import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
-import com.github.manevolent.atlas.ui.component.menu.editor.VehicleMenu;
 import com.github.manevolent.atlas.ui.component.menu.editor.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
+import com.github.manevolent.atlas.ui.component.toolbar.EditorToolbar;
 import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
 import com.github.manevolent.atlas.ui.component.window.TableDefinitionEditor;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
@@ -17,29 +23,37 @@ import com.github.manevolent.atlas.ui.component.window.Window;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
+import javax.swing.event.AncestorEvent;
+import javax.swing.event.AncestorListener;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
+import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 
-public class EditorForm extends JFrame implements InternalFrameListener {
+/**
+ *  This is the primary frame for the application
+ *  It is launched via Main.java in this package
+ */
+public class Editor extends JFrame implements InternalFrameListener, MouseMotionListener, KeyListener {
     private static final Color splitPaneBorderColor = Color.GRAY.darker();
 
     // Desktop
     private JDesktopPane desktop;
 
     // Menus
+    private JMenuBar menubar;
     private FileMenu fileMenu;
     private WindowMenu windowMenu;
-    private VehicleMenu vehicleMenu;
+    private EditorToolbar toolbar;
+    private EditorFooter footer;
 
     // Tabs
     private TablesTab tablesTab;
@@ -55,9 +69,15 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     private java.util.List<Window> openWindows = new ArrayList<>();
     private Map<Table, TableEditor> openedTables = new LinkedHashMap<>();
     private Map<Table, TableDefinitionEditor> openedTableDefs = new LinkedHashMap<>();
+    private EditHistory editHistory;
+    private WindowHistory windowHistory;
+    private Window lastDeactivatedWindow;
     private boolean dirty;
 
-    public EditorForm(Rom rom) {
+    // Vehicle connection
+    private Connection connection;
+
+    public Editor(Rom rom) {
         // Just to make sure it shows up in the taskbar/dock/etc.
         setType(Type.NORMAL);
 
@@ -71,6 +91,34 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         setExtendedState(java.awt.Frame.MAXIMIZED_BOTH);
         setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE);
         setLocationRelativeTo(null);
+        addKeyListener(this);
+
+        Inputs.bind(this.getRootPane(),
+                "left",
+                () -> {
+                    if (windowHistory.canUndo()) {
+                        windowHistory.undo();
+                        toolbar.update();
+                    }
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, InputEvent.META_DOWN_MASK), // OSX
+                KeyStroke.getKeyStroke(KeyEvent.VK_KP_LEFT, InputEvent.CTRL_DOWN_MASK));
+
+        Inputs.bind(this.getRootPane(),
+                "right",
+                () -> {
+                    if (windowHistory.canRedo()) {
+                        windowHistory.redo();
+                        toolbar.update();
+                    }
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, InputEvent.META_DOWN_MASK), // OSX
+                KeyStroke.getKeyStroke(KeyEvent.VK_KP_RIGHT, InputEvent.CTRL_DOWN_MASK));
+
+        editHistory = new EditHistory();
+        windowHistory = new WindowHistory();
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -82,6 +130,21 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     public Rom getActiveRom() {
         return rom;
+    }
+
+    public void postStatus(String status) {
+        if (footer != null) {
+            footer.setStatus(status);
+        }
+    }
+
+    public Connection getConnection() {
+        if (connection == null && getActiveRom() != null) {
+            //TODO other connections
+            connection = new SubaruDITConnection(getActiveRom());
+        }
+
+        return connection;
     }
 
     /**
@@ -133,11 +196,15 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         try {
             rom.saveToArchive(file);
             setDirty(false);
-            Log.ui().log(Level.INFO, "Project saved to " + file.getPath());
+            String message = "Project saved to " + file.getPath();
+            Log.ui().log(Level.INFO, message);
+            postStatus(message);
+
             Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
 
             return true;
         } catch (IOException e) {
+            postStatus("Project save failed; see console output for details.");
             JOptionPane.showMessageDialog(this, "Failed to save project!\r\nSee console output for more details.",
                     "Save failed",
                     JOptionPane.ERROR_MESSAGE);
@@ -147,6 +214,10 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     public void openRom() {
+        if (!closing()) {
+            return;
+        }
+
         JFileChooser fileChooser = new JFileChooser();
         FileNameExtensionFilter def = new FileNameExtensionFilter("Atlas project files (*.atlas)", "atlas");
         fileChooser.addChoosableFileFilter(def);
@@ -156,9 +227,12 @@ public class EditorForm extends JFrame implements InternalFrameListener {
             File file = fileChooser.getSelectedFile();
             try {
                 openRom(file, Rom.loadFromArchive(file));
-                Log.ui().log(Level.INFO, "Project opened from " + file.getPath());
+                String message = "Project opened from " + file.getPath();
+                Log.ui().log(Level.INFO, message);
+                postStatus(message);
                 Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
             } catch (IOException e) {
+                postStatus("Open project failed; see console output for details.");
                 JOptionPane.showMessageDialog(this, "Failed to open project!\r\nSee console output for more details.",
                         "Open failed",
                         JOptionPane.ERROR_MESSAGE);
@@ -167,8 +241,6 @@ public class EditorForm extends JFrame implements InternalFrameListener {
     }
 
     public void openRom(File file, Rom rom) {
-        closing();
-
         this.rom = rom;
         this.romFile = file;
 
@@ -227,7 +299,7 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     private void initComponents() {
         setIconImage(Icons.getImage(CarbonIcons.METER_ALT, Color.WHITE).getImage());
-        setJMenuBar(initMenu());
+        setJMenuBar(menubar = initMenu());
 
         setDefaultCloseOperation(WindowConstants.EXIT_ON_CLOSE);
         addWindowListener(new WindowAdapter() {
@@ -252,8 +324,14 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         );
 
         setLayout(new BorderLayout());
+
+        add((toolbar = new EditorToolbar(this)).getComponent(), BorderLayout.NORTH);
+
         add(northSouthSplitPane, BorderLayout.CENTER);
-        add(new EditorFooter(this).getComponent(), BorderLayout.SOUTH);
+
+        add((footer = new EditorFooter(this)).getComponent(), BorderLayout.SOUTH);
+
+        addMouseMotionListener(this);
     }
 
     private JMenuBar initMenu() {
@@ -282,9 +360,6 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
         }
 
-        vehicleMenu = new VehicleMenu(this);
-        menuBar.add(vehicleMenu.getComponent());
-
         windowMenu = new WindowMenu(this);
         menuBar.add(windowMenu.getComponent());
 
@@ -295,6 +370,10 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         }
 
         return menuBar;
+    }
+
+    public boolean hasWindow(Window window) {
+        return openWindows.contains(window);
     }
 
     public Collection<Window> getOpenWindows() {
@@ -311,12 +390,12 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         window.getComponent().addInternalFrameListener(this);
         window.getComponent().setFocusable(true);
         window.getComponent().setVisible(true);
-        window.getComponent().addInternalFrameListener(this);
 
         openWindows.add(window);
         desktop.add(window.getComponent());
         windowMenu.update();
 
+        postStatus("Opened " + window.getTitle());
         Log.ui().log(Level.FINER, "Opened window \"" + window.getTitle() + "\" [" + window.getClass() + "].");
         return window;
     }
@@ -461,6 +540,14 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         return withWindowComponent(internalFrame, w -> true, action);
     }
 
+    public EditHistory getEditHistory() {
+        return editHistory;
+    }
+
+    public WindowHistory getWindowHistory() {
+        return windowHistory;
+    }
+
     @Override
     public void internalFrameOpened(InternalFrameEvent e) {
 
@@ -485,6 +572,11 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         });
     }
 
+    public void rememberEdit(Edit edit) {
+        editHistory.remember(edit);
+        toolbar.update();
+    }
+
     @Override
     public void internalFrameIconified(InternalFrameEvent e) {
 
@@ -497,15 +589,25 @@ public class EditorForm extends JFrame implements InternalFrameListener {
 
     @Override
     public void internalFrameActivated(InternalFrameEvent e) {
+        Window window = getWindowByComponent(e.getInternalFrame());
+
+        if (window != null && lastDeactivatedWindow != window && windowHistory.isRemembering()) {
+            windowHistory.remember(new WindowAction(this, lastDeactivatedWindow, window));
+            toolbar.update();
+        }
+
         getWindowMenu().update();
 
-        withWindowComponent(e.getInternalFrame(), TableEditor.class, (window) -> {
-            tableFocused(window.getTable());
+        withWindowComponent(e.getInternalFrame(), TableEditor.class, (w) -> {
+            tableFocused(w.getTable());
         });
     }
 
     @Override
     public void internalFrameDeactivated(InternalFrameEvent e) {
+        if (windowHistory.isRemembering()) {
+            lastDeactivatedWindow = getWindowByComponent(e.getInternalFrame());
+        }
         getWindowMenu().update();
     }
 
@@ -544,5 +646,40 @@ public class EditorForm extends JFrame implements InternalFrameListener {
         }
 
         dataLoggingWindow.focus();
+    }
+
+    @Override
+    public void mouseDragged(MouseEvent e) {
+
+    }
+
+    @Override
+    public void mouseMoved(MouseEvent e) {
+
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_LEFT) {
+            if (windowHistory.canUndo()) {
+                windowHistory.undo();
+                toolbar.update();
+            }
+        } else if (e.isControlDown() && e.getKeyCode() == KeyEvent.VK_RIGHT) {
+            if (windowHistory.canRedo()) {
+                windowHistory.redo();
+                toolbar.update();
+            }
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+
     }
 }

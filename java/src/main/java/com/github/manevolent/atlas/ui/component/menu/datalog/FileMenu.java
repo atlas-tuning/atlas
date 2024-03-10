@@ -1,8 +1,5 @@
 package com.github.manevolent.atlas.ui.component.menu.datalog;
 
-import com.github.manevolent.atlas.ui.EditorForm;
-import com.github.manevolent.atlas.ui.NewRomForm;
-import com.github.manevolent.atlas.ui.component.menu.editor.EditorMenu;
 import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
 
 import javax.swing.*;
@@ -18,6 +15,7 @@ public class FileMenu extends DatalogMenu {
 
         JMenuItem saveDatalog = new JMenuItem("Save Datalog...");
         saveDatalog.addActionListener(e -> {
+
         });
         fileMenu.add(saveDatalog);
 

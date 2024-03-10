@@ -1,12 +1,12 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.ui.component.EditorComponent;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 
 import javax.swing.*;
 
 public class TabbedPane extends EditorComponent<JTabbedPane> {
-    public TabbedPane(EditorForm editor, Tab... tabs) {
+    public TabbedPane(Editor editor, Tab... tabs) {
         super(editor);
     }
 

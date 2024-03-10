@@ -4,7 +4,7 @@ import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Fonts;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.component.toolbar.ConsoleTabToolbar;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -44,7 +44,7 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
     private int lines = 0;
     private ConsoleTabToolbar toolbar;
 
-    public ConsoleTab(EditorForm editor) {
+    public ConsoleTab(Editor editor) {
         super(editor);
     }
 

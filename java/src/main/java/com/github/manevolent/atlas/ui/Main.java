@@ -64,7 +64,7 @@ public class Main {
 
 
         splashForm.setProgress(0.5f, "Initializing UI...");
-        EditorForm editorForm = new EditorForm(rom);
+        Editor editorForm = new Editor(rom);
 
         splashForm.setProgress(0.75f, "Opening ROM...");
         editorForm.openRom(romFile, rom);

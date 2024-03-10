@@ -1,8 +1,10 @@
 package com.github.manevolent.atlas.ui;
 
 import org.kordamp.ikonli.Ikon;
+import org.kordamp.ikonli.swing.FontIcon;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.event.ActionListener;
 
 public class Menus {

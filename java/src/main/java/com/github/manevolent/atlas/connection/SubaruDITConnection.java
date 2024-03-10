@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.connection;
 
+import com.github.manevolent.atlas.model.MemoryParameter;
 import com.github.manevolent.atlas.model.Rom;
 import com.github.manevolent.atlas.model.RomProperty;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
@@ -17,17 +18,30 @@ import com.github.manevolent.atlas.protocol.uds.command.UDSSecurityAccessCommand
 import com.github.manevolent.atlas.protocol.uds.request.*;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 
 import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.*;
 import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.CENTRAL_GATEWAY;
 
 public class SubaruDITConnection extends UDSConnection {
+    private static final int DEFAULT_DID = 0xF300 + 0xA1;
+    private final Set<MemoryParameter> activeParameters = new LinkedHashSet<>();
     private final Rom rom;
+
+    private final int did;
 
     public SubaruDITConnection(Rom rom) {
         this.rom = rom;
+
+        if (rom.hasProperty("subaru.dit.datalog.did")) {
+            //TODO custom dids
+        }
+
+        did = DEFAULT_DID;
     }
 
     @Override
@@ -138,4 +152,35 @@ public class SubaruDITConnection extends UDSConnection {
         return SubaruProtocols.DIT;
     }
 
+    @Override
+    public MemoryFrame readFrame(Collection<MemoryParameter> parameters) {
+        boolean changed = parameters.size() != activeParameters.size() ||
+                parameters.stream().anyMatch(x -> !activeParameters.contains(x)) ||
+                activeParameters.stream().anyMatch(parameters::contains);
+
+        if (changed) {
+            ByteBuffer buffer = ByteBuffer.allocate(parameters.size() * 6);
+
+            for (MemoryParameter parameter : parameters) {
+                buffer.putInt((int) (parameter.getAddress().getOffset() & 0xFFFFFF));
+                buffer.put((byte) (parameter.getScale().getFormat().getSize() & 0xFF));
+            }
+
+            UDSDefineDataIdentifierRequest request = new UDSDefineDataIdentifierRequest(
+                0x2, did, buffer.array());
+
+            try {
+                getSession().request(ENGINE_1.getSendAddress(), request);
+            } catch (IOException | TimeoutException e) {
+                throw new RuntimeException(e);
+            }
+
+            this.activeParameters.clear();
+            this.activeParameters.addAll(new LinkedHashSet<>(parameters));
+        }
+
+
+
+        return null;
+    }
 }

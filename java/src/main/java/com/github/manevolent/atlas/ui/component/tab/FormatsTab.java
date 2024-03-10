@@ -6,7 +6,7 @@ import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
 import com.github.manevolent.atlas.ui.component.toolbar.OperationsToolbar;
 import com.github.manevolent.atlas.ui.component.window.Window;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -35,7 +35,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     private JButton saveButton;
     private JPanel informationContent;
 
-    public FormatsTab(EditorForm editor) {
+    public FormatsTab(Editor editor) {
         super(editor);
     }
 

@@ -1,12 +1,12 @@
 package com.github.manevolent.atlas.ui.component.menu.editor;
 
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.NewRomForm;
 
 import javax.swing.*;
 
 public class FileMenu extends EditorMenu {
-    public FileMenu(EditorForm editor) {
+    public FileMenu(Editor editor) {
         super(editor);
     }
 

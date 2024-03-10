@@ -82,31 +82,6 @@ public abstract class UDSConnection implements Connection {
 
     protected abstract void change(ConnectionMode newMode) throws IOException, TimeoutException;
 
-    @Override
-    public Set<MemoryParameter> getParameters() {
-        return parameters;
-    }
-
-    @Override
-    public void addParameter(MemoryParameter parameter) {
-        parameters.add(parameter);
-    }
-
-    @Override
-    public void removeParameter(MemoryParameter parameter) {
-        parameters.remove(parameter);
-    }
-
-    @Override
-    public void addMemoryFrameListener(Consumer<MemoryFrame> listener) {
-        this.listeners.add(listener);
-    }
-
-    @Override
-    public void removeMemoryFrameListener(Consumer<MemoryFrame> listener) {
-        this.listeners.remove(listener);
-    }
-
     private class TesterPresentThread extends Thread {
         @Override
         public void run() {

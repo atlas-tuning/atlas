@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas.ui.component.window;
 
 import com.github.manevolent.atlas.ui.component.EditorComponent;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 
 import javax.swing.*;
 import javax.swing.event.InternalFrameAdapter;
@@ -12,7 +12,7 @@ import java.beans.PropertyVetoException;
 public abstract class Window extends EditorComponent<JInternalFrame> {
     private boolean iconified = false;
 
-    protected Window(EditorForm editor) {
+    protected Window(Editor editor) {
         super(editor);
     }
 
@@ -119,5 +119,10 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
         } catch (PropertyVetoException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public String toString() {
+        return getTitle();
     }
 }

@@ -4,7 +4,7 @@ import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.Icons;
 import com.github.manevolent.atlas.ui.Menus;
-import com.github.manevolent.atlas.ui.EditorForm;
+import com.github.manevolent.atlas.ui.Editor;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -31,7 +31,7 @@ public class TablesTab
     private Collection<TreePath> lastExpansions = new ArrayList<>();
     private DefaultTreeModel defaultModel;
 
-    public TablesTab(EditorForm form) {
+    public TablesTab(Editor form) {
         super(form);
     }
 
