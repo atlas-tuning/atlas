@@ -22,6 +22,7 @@ import java.util.logging.Level;
 
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 import static com.github.manevolent.atlas.ui.Layout.*;
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class FormatsTab extends Tab implements ListSelectionListener {
     private JList<Scale> list;
@@ -519,8 +520,9 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     }
 
     public void newFormat() {
-
-        String newScaleName = JOptionPane.showInputDialog(getParent(), "Specify a name", "New Format");
+        String newScaleName = (String) JOptionPane.showInputDialog(getParent().getParent(),
+                "Specify a name", "New Format",
+                QUESTION_MESSAGE, null, null, "New Format");
         if (newScaleName == null || newScaleName.isBlank()) {
             return;
         }

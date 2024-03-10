@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.logging.Level;
 
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class TablesTab
         extends Tab
@@ -189,6 +190,10 @@ public class TablesTab
             open(getPath(lastSelected));
         }));
         popupMenu.addSeparator();
+        popupMenu.add(Menus.item(CarbonIcons.DATA_TABLE_REFERENCE, "New Table...", e -> {
+            getParent().newTable();
+        }));
+        popupMenu.addSeparator();
         popupMenu.add(Menus.item(CarbonIcons.CHART_CUSTOM, "Edit Definition", e -> {
             TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
             define(getPath(lastSelected));
@@ -313,12 +318,13 @@ public class TablesTab
             Table table = ((TableNode)last).table;
             table = table.copy();
 
-            String newScaleName = JOptionPane.showInputDialog(getParent(), "Specify a name",
-                    table.getName() + " (Copy)");
-            if (newScaleName == null || newScaleName.isBlank()) {
+            String newTableName = (String) JOptionPane.showInputDialog(getParent().getParent(),
+                    "Specify a name", table.getName() + " (Copy)",
+                    QUESTION_MESSAGE, null, null, "New Table");
+            if (newTableName == null || newTableName.isBlank()) {
                 return;
             }
-            table.setName(newScaleName);
+            table.setName(newTableName);
             getParent().openTableDefinition(table);
         }
     }

@@ -24,6 +24,7 @@ import java.util.stream.Stream;
 
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 import static com.github.manevolent.atlas.ui.Layout.*;
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class ParametersTab extends Tab implements ListSelectionListener {
     private JList<MemoryParameter> list;
@@ -457,7 +458,9 @@ public class ParametersTab extends Tab implements ListSelectionListener {
             return;
         }
 
-        String newParameterName = JOptionPane.showInputDialog(getParent(), "Specify a name", "New Parameter");
+        String newParameterName = (String) JOptionPane.showInputDialog(getParent().getParent(),
+                "Specify a name", "New Parameter",
+                QUESTION_MESSAGE, null, null, "New Parameter");
         if (newParameterName == null || newParameterName.isBlank()) {
             return;
         }

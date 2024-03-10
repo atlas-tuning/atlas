@@ -22,6 +22,7 @@ import static com.github.manevolent.atlas.model.Axis.X;
 import static com.github.manevolent.atlas.model.Axis.Y;
 import static com.github.manevolent.atlas.ui.Fonts.bold;
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class TableDefinitionEditor extends Window implements InternalFrameListener {
     private final Table realTable;
@@ -75,8 +76,8 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         panel.add(save = Inputs.nofocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save)));
 
         panel.add(copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this definition into a new table", () -> {
-            String newTableName = JOptionPane.showInputDialog(getParent(), "Specify a name",
-                    workingTable.getName() + " (Copy)");
+            String newTableName = (String) JOptionPane.showInputDialog(getParent(), "Specify a name", "New Table",
+                    QUESTION_MESSAGE, null, null, "New Table");
             if (newTableName == null || newTableName.isBlank()) {
                 return;
             }

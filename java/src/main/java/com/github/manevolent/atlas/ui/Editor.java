@@ -41,6 +41,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.logging.Level;
 
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
+
 /**
  *  This is the primary frame for the application
  *  It is launched via Main.java in this package
@@ -468,7 +470,8 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     }
 
     public void newTable() {
-        String newTableName = JOptionPane.showInputDialog(getParent(), "Specify a name", "New Table");
+        String newTableName = (String) JOptionPane.showInputDialog(getParent(), "Specify a name", "New Table",
+                QUESTION_MESSAGE, null, null, "New Table");
         if (newTableName == null || newTableName.isBlank()) {
             return;
         }
@@ -480,6 +483,8 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                         .withLength(1)
                         .withScale(Scale.NONE))
                 .build();
+
+        tablesTab.focus();
 
         openTableDefinition(table);
     }

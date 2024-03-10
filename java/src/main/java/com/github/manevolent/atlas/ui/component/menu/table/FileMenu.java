@@ -5,6 +5,8 @@ import com.github.manevolent.atlas.ui.component.window.TableEditor;
 
 import javax.swing.*;
 
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
+
 public class FileMenu extends TableEditorMenu {
     public FileMenu(TableEditor editor) {
         super(editor);
@@ -41,8 +43,9 @@ public class FileMenu extends TableEditorMenu {
         JMenuItem copyTable = new JMenuItem("Copy Table Definition...");
         copyTable.addActionListener(e -> {
             Table table =  getParent().getTable();
-            String newTableName = JOptionPane.showInputDialog(getParent().getParent(), "Specify a name",
-                    table.getName() + " (Copy)");
+            String newTableName = (String) JOptionPane.showInputDialog(getParent().getParent(),
+                    "Specify a name", "New Table",
+                    QUESTION_MESSAGE, null, null, table.getName() + " (Copy)");
 
             if (newTableName == null || newTableName.isBlank()) {
                 return;
