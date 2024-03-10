@@ -74,8 +74,8 @@ public class FlashTest {
     @Test
     @Disabled
     public void test_WriteCsvs() throws IOException {
-        Rom rom = newRom();
-        for (Table table : rom.getTables()) {
+        Project project = newRom();
+        for (Table table : project.getTables()) {
             table.writeCsv(new FileOutputStream("tables/" + testRomName + "/" + table.getName() + ".csv"), 2);
         }
     }

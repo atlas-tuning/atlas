@@ -36,6 +36,16 @@ public final class Settings {
         return getAll().getValue(setting);
     }
 
+    public static <V, R extends SettingValue<V>, T extends Setting<R>> V get(T setting, V defaultValue) {
+        V value = getAll().getValue(setting);
+        if (value == null) {
+            return defaultValue;
+        } else {
+            return value;
+        }
+    }
+
+
     public static <V, R extends SettingValue<V>, T extends Setting<R>> void set(T setting, V value) {
         getAll().setValue(setting, value);
     }

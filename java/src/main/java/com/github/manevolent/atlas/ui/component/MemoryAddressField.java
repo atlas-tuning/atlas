@@ -13,15 +13,15 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 
 public class MemoryAddressField extends JPanel {
-    private final Rom rom;
+    private final Project project;
 
     private JTextField textField;
     private JButton selectButton;
 
     private MemoryAddress address;
 
-    public MemoryAddressField(Rom rom, MemoryAddress existing, boolean localOnly, Consumer<MemoryAddress> changed) {
-        this.rom = rom;
+    public MemoryAddressField(Project project, MemoryAddress existing, boolean localOnly, Consumer<MemoryAddress> changed) {
+        this.project = project;
 
         Supplier<String> defaultValue = () -> address.toString();
 
@@ -42,7 +42,7 @@ public class MemoryAddressField extends JPanel {
 
         Runnable set = () -> MemoryAddressDialog.show(
                 null,
-                rom,
+                project,
                 existing,
                 localOnly,
                 (newValue) -> {
@@ -85,7 +85,7 @@ public class MemoryAddressField extends JPanel {
     }
 
     public MemoryAddress getDefaultAddress() {
-        MemorySection section = rom.getSections().getFirst();
+        MemorySection section = project.getSections().getFirst();
         return MemoryAddress.builder()
                 .withSection(section) // First region available
                 .withOffset(section.getBaseAddress())

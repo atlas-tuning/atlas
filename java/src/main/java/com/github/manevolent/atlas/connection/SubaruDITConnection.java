@@ -1,25 +1,26 @@
 package com.github.manevolent.atlas.connection;
 
 import com.github.manevolent.atlas.model.MemoryParameter;
-import com.github.manevolent.atlas.model.Rom;
-import com.github.manevolent.atlas.model.RomProperty;
+import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
 import com.github.manevolent.atlas.protocol.j2534.ISOTPDevice;
 import com.github.manevolent.atlas.protocol.j2534.J2534Device;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
 import com.github.manevolent.atlas.protocol.j2534.serial.SerialTatrixOpenPortFactory;
 import com.github.manevolent.atlas.protocol.j2534.tactrix.SerialTactrixOpenPort;
-import com.github.manevolent.atlas.protocol.subaru.SubaruDITCommands;
 import com.github.manevolent.atlas.protocol.subaru.SubaruProtocols;
 import com.github.manevolent.atlas.protocol.subaru.SubaruSecurityAccessCommandAES;
 import com.github.manevolent.atlas.protocol.subaru.uds.request.SubaruStatus1Request;
 import com.github.manevolent.atlas.protocol.uds.*;
-import com.github.manevolent.atlas.protocol.uds.command.UDSSecurityAccessCommand;
 import com.github.manevolent.atlas.protocol.uds.request.*;
+import com.github.manevolent.atlas.protocol.uds.response.UDSReadDataByIDResponse;
 
+import java.io.ByteArrayInputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.TimeoutException;
@@ -28,16 +29,16 @@ import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.*;
 import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.CENTRAL_GATEWAY;
 
 public class SubaruDITConnection extends UDSConnection {
-    private static final int DEFAULT_DID = 0xF300 + 0xA1;
+    private static final int DEFAULT_DID = 0xF300;
     private final Set<MemoryParameter> activeParameters = new LinkedHashSet<>();
-    private final Rom rom;
+    private final Project project;
 
     private final int did;
 
-    public SubaruDITConnection(Rom rom) {
-        this.rom = rom;
+    public SubaruDITConnection(Project project) {
+        this.project = project;
 
-        if (rom.hasProperty("subaru.dit.datalog.did")) {
+        if (project.hasProperty("subaru.dit.datalog.did")) {
             //TODO custom dids
         }
 
@@ -72,9 +73,9 @@ public class SubaruDITConnection extends UDSConnection {
     @Override
     protected void change(ConnectionMode newMode) throws IOException, TimeoutException {
         // Select AES key for the gateway
-        String propertyFormat = "subaru.dit.aeskey.%s";
+        String propertyFormat = "subaru.dit.securityaccess.%s";
         SecurityAccessProperty cgwAccessProperty;
-        cgwAccessProperty = rom.getProperty(String.format(propertyFormat, "gateway"), SecurityAccessProperty.class);
+        cgwAccessProperty = project.getProperty(String.format(propertyFormat, "gateway"), SecurityAccessProperty.class);
 
         // Set AES key for the ECU
         String propertyName;
@@ -85,7 +86,7 @@ public class SubaruDITConnection extends UDSConnection {
             default -> throw new UnsupportedOperationException(newMode.name());
         }
         SecurityAccessProperty engineAccessProperty;
-        engineAccessProperty = rom.getProperty(propertyName, SecurityAccessProperty.class);
+        engineAccessProperty = project.getProperty(propertyName, SecurityAccessProperty.class);
         if (engineAccessProperty == null) {
             throw new IllegalArgumentException("Missing security access property for " + newMode);
         }
@@ -138,6 +139,8 @@ public class SubaruDITConnection extends UDSConnection {
                 engineAccessProperty.getKey()
         ).execute(session);
 
+        session.request(ENGINE_1.getSendAddress(), new UDSTesterPresentRequest(new byte[] { (byte) 0x80 }));
+
         // If we need to enter a programming session...
         if (newMode == ConnectionMode.FLASH_ROM) {
             session.request(
@@ -148,39 +151,100 @@ public class SubaruDITConnection extends UDSConnection {
     }
 
     @Override
+    protected void keepAlive() throws IOException, TimeoutException {
+        //getSession().request(BROADCAST.getSendAddress(), new UDSTesterPresentRequest(new byte[] { (byte) 0x80 }));
+
+    }
+
+    @Override
     protected UDSProtocol getProtocol() {
         return SubaruProtocols.DIT;
     }
 
+    private void invert(byte[] array) {
+        for (int i = 0; i < array.length / 2; i++) {
+            byte temp = array[i];
+            array[i] = array[array.length - 1 - i];
+            array[array.length - 1 - i] = temp;
+        }
+    }
+
     @Override
     public MemoryFrame readFrame(Collection<MemoryParameter> parameters) {
-        boolean changed = parameters.size() != activeParameters.size() ||
-                parameters.stream().anyMatch(x -> !activeParameters.contains(x)) ||
-                activeParameters.stream().anyMatch(parameters::contains);
-
-        if (changed) {
-            ByteBuffer buffer = ByteBuffer.allocate(parameters.size() * 6);
-
-            for (MemoryParameter parameter : parameters) {
-                buffer.putInt((int) (parameter.getAddress().getOffset() & 0xFFFFFF));
-                buffer.put((byte) (parameter.getScale().getFormat().getSize() & 0xFF));
-            }
-
-            UDSDefineDataIdentifierRequest request = new UDSDefineDataIdentifierRequest(
-                0x2, did, buffer.array());
-
+        if (parameters.isEmpty()) {
             try {
-                getSession().request(ENGINE_1.getSendAddress(), request);
-            } catch (IOException | TimeoutException e) {
+                getSession().request(ENGINE_1.getSendAddress(), new UDSTesterPresentRequest(new byte[] { (byte) 0x80 }));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            } catch (TimeoutException e) {
                 throw new RuntimeException(e);
             }
 
+            return null;
+        }
+
+        boolean changed = parameters.size() != activeParameters.size() ||
+                parameters.stream().anyMatch(x -> !activeParameters.contains(x)) ||
+                activeParameters.stream().anyMatch(x -> !parameters.contains(x));
+
+        if (changed) {
+            // Delete any prior DID
+            try (var transaction = getSession().request(ENGINE_1.getSendAddress(),
+                    new UDSDefineDataIdentifierRequest(0x3, did))) {
+                // Do nothing
+                transaction.get();
+            } catch (Exception e) {
+                // Ignore
+                e.printStackTrace();
+            }
+
+            ByteBuffer buffer = ByteBuffer.allocate(1 + (parameters.size() * 5));
+
+            // Length and data length
+            // 0x1 - data length, length (i.e. 0xFF = 255 bytes at address)
+            // 0x4 - address length (i.e. 32 bit memory address / 0xFFFFFFFF)
+            buffer.put((byte) 0x14);
+
+            // Watch out - the order switches here from data length and memory to vice versa:
+            for (MemoryParameter parameter : parameters) {
+                buffer.putInt((int) (parameter.getAddress().getOffset() & 0xFFFFFFFFL));
+                buffer.put((byte) (parameter.getScale().getFormat().getSize() & 0xFF));
+            }
+
+            // Set up new DID
+            try (var transaction = getSession().request(ENGINE_1.getSendAddress(), new UDSDefineDataIdentifierRequest(
+                    0x2, did, buffer.array()))) {
+                // Do nothing
+                transaction.get();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+
+            // Ensure the order is preserved
             this.activeParameters.clear();
             this.activeParameters.addAll(new LinkedHashSet<>(parameters));
         }
 
+        try (UDSTransaction<UDSReadDataByIDResponse> transaction =
+                     getSession().request(ENGINE_1.getSendAddress(), new UDSReadDataByIDRequest(did))) {
+            UDSReadDataByIDResponse response = transaction.get();
 
+            MemoryFrame frame = new MemoryFrame();
 
-        return null;
+            ByteArrayInputStream bais = new ByteArrayInputStream(response.getData());
+
+            for (MemoryParameter parameter : activeParameters) {
+                byte[] data = new byte[parameter.getScale().getFormat().getSize()];
+                if (bais.read(data) != data.length) {
+                    throw new EOFException("Unexpected end of data");
+                }
+                invert(data);
+                frame.setData(parameter, data);
+            }
+
+            return frame;
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }

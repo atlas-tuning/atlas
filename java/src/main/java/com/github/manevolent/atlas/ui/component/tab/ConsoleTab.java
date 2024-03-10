@@ -39,7 +39,6 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
     private static final String logFormat = "[%s] [%s] [%s] %s" + eol;
     private JTextPane console;
 
-
     private static final int MAXIMUM_LINES = 1000;
     private int lines = 0;
     private ConsoleTabToolbar toolbar;
@@ -63,7 +62,7 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
         console = new JTextPane();
 
         //TODO doubt we want all the messages in production
-        Log.get().setLevel(Level.ALL);
+        Log.get().setLevel(Level.INFO);
         Log.get().addHandler(new LogHandler());
 
         console.addFocusListener(this);
@@ -112,9 +111,13 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
             console.setEditable(true);
             action.run();
         } finally {
-            console.setEditable(false);
-            console.getCaret().setVisible(true);
-            console.getCaret().setSelectionVisible(true);
+            try {
+                console.setEditable(false);
+                console.getCaret().setVisible(true);
+                console.getCaret().setSelectionVisible(true);
+            } catch (Exception ex) {
+                ex.printStackTrace();
+            }
         }
     }
 

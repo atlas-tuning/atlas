@@ -13,14 +13,15 @@ public class FileMenu extends DatalogMenu {
     protected void initComponent(JMenu fileMenu) {
         fileMenu.setText("File");
 
-        JMenuItem saveDatalog = new JMenuItem("Save Datalog...");
+        JMenuItem saveDatalog = new JMenuItem("Export Datalog...");
         saveDatalog.addActionListener(e -> {
-
+            getParent().saveDatalog(true);
         });
         fileMenu.add(saveDatalog);
 
-        JMenuItem saveVisible = new JMenuItem("Save Visible...");
+        JMenuItem saveVisible = new JMenuItem("Export Visible...");
         saveVisible.addActionListener(e -> {
+            getParent().saveDatalog(false);
         });
         fileMenu.add(saveVisible);
         fileMenu.addSeparator();

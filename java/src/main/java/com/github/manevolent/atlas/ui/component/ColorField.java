@@ -1,12 +1,9 @@
 package com.github.manevolent.atlas.ui.component;
 
 import com.github.manevolent.atlas.model.Color;
-import com.github.manevolent.atlas.model.MemoryAddress;
-import com.github.manevolent.atlas.model.MemorySection;
-import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.ui.Inputs;
 import com.github.manevolent.atlas.ui.Layout;
-import com.github.manevolent.atlas.ui.MemoryAddressDialog;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -14,18 +11,17 @@ import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 
 public class ColorField extends JPanel {
-    private final Rom rom;
+    private final Project project;
 
     private JPanel colorPanel;
     private JButton selectButton;
 
     private Color color;
 
-    public ColorField(Rom rom, Color existing, Consumer<Color> changed) {
-        this.rom = rom;
+    public ColorField(Project project, Color existing, Consumer<Color> changed) {
+        this.project = project;
         this.color = existing != null ? existing : Color.fromAwtColor(java.awt.Color.WHITE);
 
         setLayout(new BorderLayout());

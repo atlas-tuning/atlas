@@ -1,6 +1,6 @@
 package com.github.manevolent.atlas.model;
 
-public class KeyProperty extends RomProperty {
+public class KeyProperty extends ProjectProperty {
     private byte[] key;
 
     public KeyProperty() {

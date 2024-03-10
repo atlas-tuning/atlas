@@ -390,6 +390,9 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         MemoryParameter selectedFormat = list.getSelectedValue();
         list.setModel(getParameterListModel());
         list.setSelectedValue(selectedFormat, true);
+
+        list.revalidate();
+        list.repaint();
     }
 
     public void update() {

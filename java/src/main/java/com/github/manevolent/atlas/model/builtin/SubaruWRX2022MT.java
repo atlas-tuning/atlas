@@ -478,7 +478,7 @@ public class SubaruWRX2022MT {
                 );
     }
 
-    public static Rom newRom() throws IOException {
+    public static Project newRom() throws IOException {
         byte[] rom = SubaruWRX2022MT.class.getResourceAsStream(romResource).readAllBytes();
 
         MemorySection code = MemorySection.builder()
@@ -500,7 +500,7 @@ public class SubaruWRX2022MT {
                 .withSource(new VehicleSource())
                 .build();
 
-        return Rom.builder()
+        return Project.builder()
                 .withProperty("subaru.dit.flashkey", new KeyProperty(
                         Crypto.toByteArray("b74042daa7ca5fb1")
                 ))

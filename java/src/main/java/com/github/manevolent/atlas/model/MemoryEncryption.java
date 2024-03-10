@@ -10,7 +10,7 @@ public interface MemoryEncryption {
 
     int getBlockSize();
 
-    void setEncryptionKeys(Rom rom);
+    void setEncryptionKeys(Project project);
 
     default int read(MemorySource source, long flashOffs, byte[] dst, int offs, int len) throws IOException {
         int blockStart = (int) Math.floor((double)flashOffs / (double)getBlockSize());

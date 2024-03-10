@@ -44,17 +44,20 @@ public class SerialTactrixOpenPort implements J2534Device {
 
     private void preconnect() throws IOException {
         // Empty the buffer
-        while (is.available() > 0) {
+        int read;
+        while (is.available() > 0 && (read = is.read()) >= 0) {
             //noinspection ResultOfMethodCallIgnored
-            is.read();
         }
 
-        os.write("\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
-        os.write("ati\r\n".getBytes(StandardCharsets.US_ASCII));
-        os.flush();
-        String versionInformation = readLine();
-        if (!versionInformation.startsWith("ari")) {
-            throw new IllegalStateException("Unexpected response: " + versionInformation);
+        while (true) {
+            os.write("\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
+            os.write("ati\r\n".getBytes(StandardCharsets.US_ASCII));
+            os.flush();
+
+            String versionInformation = readLine();
+            if (versionInformation.startsWith("ari")) {
+                break;
+            }
         }
 
         os.write("ata\r\n".getBytes(StandardCharsets.US_ASCII));

@@ -82,13 +82,15 @@ public abstract class UDSConnection implements Connection {
 
     protected abstract void change(ConnectionMode newMode) throws IOException, TimeoutException;
 
+    protected abstract void keepAlive() throws IOException, TimeoutException;
+
     private class TesterPresentThread extends Thread {
         @Override
         public void run() {
             synchronized (stateObject) {
                 while (connectionMode != ConnectionMode.DISCONNECTED && session != null) {
                     try {
-                        session.request(getECUComponent().getSendAddress(), new UDSTesterPresentRequest());
+                        keepAlive();
                     } catch (IOException | TimeoutException e) {
                         Log.can().log(Level.WARNING, "Failed to send tester present message", e);
                     }

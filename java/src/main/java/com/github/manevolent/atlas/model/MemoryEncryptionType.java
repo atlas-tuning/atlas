@@ -26,9 +26,9 @@ public enum MemoryEncryptionType {
         return name;
     }
 
-    public MemoryEncryption create(Rom rom) {
+    public MemoryEncryption create(Project project) {
         MemoryEncryption memoryEncryption = instanceSupplier.get();
-        memoryEncryption.setEncryptionKeys(rom);
+        memoryEncryption.setEncryptionKeys(project);
         return memoryEncryption;
     }
 }

@@ -10,7 +10,6 @@ import javax.swing.event.DocumentListener;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.KeyEvent;
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -120,20 +119,20 @@ public class Inputs {
         return textField(null, changed);
     }
 
-    public static MemoryAddressField memoryAddressField(Rom rom, MemoryAddress existing, boolean localOnly,
+    public static MemoryAddressField memoryAddressField(Project project, MemoryAddress existing, boolean localOnly,
                                                         Consumer<MemoryAddress> changed) {
-        return new MemoryAddressField(rom, existing, localOnly, changed);
+        return new MemoryAddressField(project, existing, localOnly, changed);
     }
 
-    public static JComboBox<MemorySection> memorySectionField(Rom rom, MemorySection value,
+    public static JComboBox<MemorySection> memorySectionField(Project project, MemorySection value,
                                                               Predicate<MemorySection> predicate,
                                                               Consumer<MemorySection> changed) {
         JComboBox<MemorySection> comboBox = new JComboBox<>(
-                rom.getSections().stream()
+                project.getSections().stream()
                         .filter(predicate)
                         .toList().toArray(new MemorySection[0])
         );
-        MemorySection intended = value == null ? rom.getSections().getFirst() : value;
+        MemorySection intended = value == null ? project.getSections().getFirst() : value;
         comboBox.setSelectedItem(intended);
         comboBox.addItemListener(e -> {
             if (e.getStateChange() != SELECTED) {
@@ -155,9 +154,9 @@ public class Inputs {
         return spinner;
     }
 
-    public static JComboBox<Scale> scaleField(Rom rom, Scale existing,
+    public static JComboBox<Scale> scaleField(Project project, Scale existing,
                                               String toolTip, Consumer<Scale> valueChanged) {
-        JComboBox<Scale> comboBox = new JComboBox<>(rom.getScales().toArray(new Scale[0]));
+        JComboBox<Scale> comboBox = new JComboBox<>(project.getScales().toArray(new Scale[0]));
         comboBox.setSelectedItem(existing);
         comboBox.addItemListener(e -> {
             if (e.getStateChange() != SELECTED) {

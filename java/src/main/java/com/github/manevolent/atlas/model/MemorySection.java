@@ -71,12 +71,12 @@ public class MemorySection {
 
     /**
      * Sets up this memory section when a ROM/project is loaded
-     * @param rom ROM loaded
+     * @param project ROM loaded
      * @param data data for this section
      */
-    public void setup(Rom rom, byte[] data) {
+    public void setup(Project project, byte[] data) {
         if (encryptionType != null && encryptionType != MemoryEncryptionType.NONE) {
-            encryption = encryptionType.create(rom);
+            encryption = encryptionType.create(project);
         } else {
             encryption = null;
         }

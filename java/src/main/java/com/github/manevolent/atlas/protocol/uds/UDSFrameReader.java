@@ -35,7 +35,7 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
             throw new IOException("Problem reading frame " + frame.toHexString(), ex);
         }
 
-        Log.can().log(Level.INFO, udsFrame.toString());
+        Log.can().log(Level.FINER, udsFrame.toString());
 
         return udsFrame;
     }

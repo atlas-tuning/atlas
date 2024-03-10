@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.model;
 
 import com.github.manevolent.atlas.model.source.VehicleSource;
+import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
 import org.yaml.snakeyaml.inspector.TagInspector;
@@ -8,20 +9,21 @@ import org.yaml.snakeyaml.inspector.TagInspector;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
-public class Rom {
+public class Project {
     private static final Set<String> acceptableClassNames = Collections.unmodifiableSet(Stream.of(
-            Rom.class, VehicleSource.class, Scale.class, ScalingOperation.class,
+            Project.class, VehicleSource.class, Scale.class, ScalingOperation.class,
             Series.class, Table.class, Unit.class, UnitClass.class,
             Vehicle.class, Precision.class, MemorySection.class, MemoryParameter.class,
             MemoryByteOrder.class, MemoryAddress.class, DataFormat.class,
             Axis.class, ArithmeticOperation.class, MemoryEncryptionType.class, KeyProperty.class,
-            Color.class
+            Color.class, SecurityAccessProperty.class
     ).map(Class::getName).collect(Collectors.toSet()));
 
     private Vehicle vehicle;
@@ -30,9 +32,9 @@ public class Rom {
     private List<Table> tables;
     private Set<Scale> scales;
     private Set<MemoryParameter> parameters;
-    private Map<String, RomProperty> properties;
+    private Map<String, ProjectProperty> properties;
 
-    public Rom() {
+    public Project() {
 
     }
 
@@ -123,11 +125,11 @@ public class Rom {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends RomProperty> T getProperty(String name, Class<T> clazz) {
+    public <T extends ProjectProperty> T getProperty(String name, Class<T> clazz) {
         return (T) properties.get(name);
     }
 
-    public Map<String, RomProperty> getProperties() {
+    public Map<String, ProjectProperty> getProperties() {
         return properties;
     }
 
@@ -135,7 +137,7 @@ public class Rom {
         return parameters.contains(parameter);
     }
 
-    public void addProperty(String name, RomProperty property) {
+    public void addProperty(String name, ProjectProperty property) {
         properties.put(name, property);
     }
 
@@ -147,11 +149,11 @@ public class Rom {
         return properties.keySet();
     }
 
-    public Collection<RomProperty> getPropertyValues() {
+    public Collection<ProjectProperty> getPropertyValues() {
         return properties.values();
     }
 
-    public void setProperties(Map<String, RomProperty> map) {
+    public void setProperties(Map<String, ProjectProperty> map) {
         this.properties = map;
     }
 
@@ -159,7 +161,7 @@ public class Rom {
         return properties.containsKey(name);
     }
 
-    public boolean hasProperty(RomProperty property) {
+    public boolean hasProperty(ProjectProperty property) {
         return properties.containsValue(property);
     }
 
@@ -196,26 +198,26 @@ public class Rom {
     }
 
     public static class Builder {
-        private final Rom rom = new Rom();
+        private final Project project = new Project();
 
         public Builder() {
-            rom.setTables(new ArrayList<>());
-            rom.setSections(new ArrayList<>());
-            rom.setScales(new LinkedHashSet<>());
-            rom.setParameters(new LinkedHashSet<>());
-            rom.setProperties(new LinkedHashMap<>());
-            rom.setVehicle(new Vehicle());
+            project.setTables(new ArrayList<>());
+            project.setSections(new ArrayList<>());
+            project.setScales(new LinkedHashSet<>());
+            project.setParameters(new LinkedHashSet<>());
+            project.setProperties(new LinkedHashMap<>());
+            project.setVehicle(new Vehicle());
 
             withScales(Scale.NONE);
         }
 
         public Builder withScales(Scale.Builder... scales) {
-            rom.scales.addAll(Arrays.stream(scales).map(Scale.Builder::build).toList());
+            project.scales.addAll(Arrays.stream(scales).map(Scale.Builder::build).toList());
             return this;
         }
 
         public Builder withScales(Scale... scales) {
-            rom.scales.addAll(Arrays.asList(scales));
+            project.scales.addAll(Arrays.asList(scales));
             return this;
         }
 
@@ -230,7 +232,7 @@ public class Rom {
         }
 
         public Builder withFlashMethod(FlashMethod method) {
-            this.rom.setFlashMethod(method);
+            this.project.setFlashMethod(method);
             return this;
         }
 
@@ -239,10 +241,10 @@ public class Rom {
             Set<Scale> unknownScales = new HashSet<>(table.getAxes().keySet().stream()
                     .map(table::getSeries)
                     .map(Series::getScale)
-                    .filter(scale -> !this.rom.scales.contains(scale))
+                    .filter(scale -> !this.project.scales.contains(scale))
                     .toList());
 
-            if (!this.rom.scales.contains(table.getData().getScale())) {
+            if (!this.project.scales.contains(table.getData().getScale())) {
                 unknownScales.add(table.getData().getScale());
             }
 
@@ -254,7 +256,7 @@ public class Rom {
                 );
             }
 
-            rom.getTables().add(table);
+            project.getTables().add(table);
             return this;
         }
 
@@ -263,12 +265,12 @@ public class Rom {
         }
 
         public Builder withSections(MemorySection... sections) {
-            rom.getSections().addAll(Arrays.asList(sections));
+            project.getSections().addAll(Arrays.asList(sections));
             return this;
         }
 
         public Builder withSection(MemorySection section) {
-            rom.getSections().add(section);
+            project.getSections().add(section);
             return this;
         }
 
@@ -281,12 +283,12 @@ public class Rom {
         }
 
         public Builder withVehicle(Vehicle vehicle) {
-            rom.setVehicle(vehicle);
+            project.setVehicle(vehicle);
             return this;
         }
 
         public Builder withParameter(MemoryParameter parameter) {
-            rom.addParameter(parameter);
+            project.addParameter(parameter);
             return this;
         }
 
@@ -294,27 +296,27 @@ public class Rom {
             return withParameter(parameter.build());
         }
 
-        public Builder withProperty(String name, RomProperty property) {
-            rom.addProperty(name, property);
+        public Builder withProperty(String name, ProjectProperty property) {
+            project.addProperty(name, property);
             return this;
         }
 
-        public Rom build() {
-            rom.sections.forEach(x -> {
-                x.setup(rom, null);
+        public Project build() {
+            project.sections.forEach(x -> {
+                x.setup(project, null);
             });
 
-            return rom;
+            return project;
         }
     }
 
-    public static Rom loadFromArchive(File file) throws IOException {
+    public static Project loadFromArchive(File file) throws IOException {
         try (FileInputStream fis = new FileInputStream(file)) {
             return loadFromArchive(fis);
         }
     }
 
-    public static Rom loadFromArchive(InputStream inputStream) throws IOException {
+    public static Project loadFromArchive(InputStream inputStream) throws IOException {
         ZipInputStream zis = new ZipInputStream(inputStream);
         String yamlString = null;
         Map<String, byte[]> sections = new HashMap<>();
@@ -337,14 +339,17 @@ public class Rom {
         loaderOptions.setNestingDepthLimit(1024);
         loaderOptions.setTagInspector(taginspector);
         Yaml yaml = new Yaml(loaderOptions);
-        Rom rom = yaml.load(yamlString);
 
-        for (MemorySection section : rom.getSections()) {
+        yamlString = yamlString.replaceAll(Pattern.quote("com.github.manevolent.atlas.model.Rom"),
+                Project.class.getName());
+        Project project = yaml.load(yamlString);
+
+        for (MemorySection section : project.getSections()) {
             byte[] data = sections.get(section.getName() + ".bin");
-            section.setup(rom, data);
+            section.setup(project, data);
         }
 
-        return rom;
+        return project;
     }
 
 }

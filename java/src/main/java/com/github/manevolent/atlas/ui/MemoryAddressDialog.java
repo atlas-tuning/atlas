@@ -3,7 +3,7 @@ package com.github.manevolent.atlas.ui;
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemorySection;
 import com.github.manevolent.atlas.model.MemoryType;
-import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.Project;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -18,7 +18,7 @@ import java.util.function.Predicate;
 import static com.github.manevolent.atlas.ui.Inputs.memorySectionField;
 
 public class MemoryAddressDialog extends JDialog {
-    private final Rom rom;
+    private final Project project;
     private final Consumer<MemoryAddress> valueChanged;
     private MemorySection section;
     private long offset;
@@ -30,13 +30,13 @@ public class MemoryAddressDialog extends JDialog {
     private JComboBox<MemorySection> sectionField;
     private final Predicate<MemorySection> predicate;
 
-    public MemoryAddressDialog(Rom rom, MemoryAddress address, Frame parent,
+    public MemoryAddressDialog(Project project, MemoryAddress address, Frame parent,
                                boolean localOnly, Consumer<MemoryAddress> valueChanged) {
         super(parent, "Enter Address", true);
 
         this.predicate = x -> !localOnly || x.getMemoryType() != MemoryType.RAM;
 
-        this.rom = rom;
+        this.project = project;
         this.valueChanged = valueChanged;
 
         this.section = address != null ? address.getSection() : getDefaultSection();
@@ -52,11 +52,11 @@ public class MemoryAddressDialog extends JDialog {
     }
 
     private MemorySection getDefaultSection() {
-        return rom.getSections().getFirst();
+        return project.getSections().getFirst();
     }
 
     private MemorySection getMemorySection(long offset) {
-        return rom.getSections().stream()
+        return project.getSections().stream()
                 .filter(predicate)
                 .filter(section -> section.getBaseAddress() <= offset &&
                 section.getBaseAddress() + section.getDataLength() >= offset)
@@ -200,7 +200,7 @@ public class MemoryAddressDialog extends JDialog {
                 addressField);
 
         Inputs.createEntryRow(content, 1, "Region", "The ROM section this address will reside in",
-                sectionField = memorySectionField(rom, section, predicate, (newSection) -> {
+                sectionField = memorySectionField(project, section, predicate, (newSection) -> {
                     this.section = newSection;
                     if (this.offset < newSection.getBaseAddress() ||
                             this.offset > newSection.getBaseAddress() + newSection.getDataLength()) {
@@ -222,9 +222,9 @@ public class MemoryAddressDialog extends JDialog {
                 .build();
     }
 
-    public static void show(Frame parent, Rom rom, MemoryAddress current,
+    public static void show(Frame parent, Project project, MemoryAddress current,
                             boolean localOnly, Consumer<MemoryAddress> changed) {
-        MemoryAddressDialog dialog = new MemoryAddressDialog(rom, current, parent, localOnly, changed);
+        MemoryAddressDialog dialog = new MemoryAddressDialog(project, current, parent, localOnly, changed);
         dialog.setVisible(true);
     }
 }

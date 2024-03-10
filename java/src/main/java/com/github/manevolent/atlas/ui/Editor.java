@@ -2,7 +2,7 @@ package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.connection.Connection;
 import com.github.manevolent.atlas.connection.SubaruDITConnection;
-import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.Scale;
 import com.github.manevolent.atlas.model.Series;
 import com.github.manevolent.atlas.model.Table;
@@ -25,8 +25,6 @@ import com.github.manevolent.atlas.ui.component.window.Window;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
@@ -35,7 +33,6 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
-import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -70,7 +67,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
 
     // State variables (open windows, etc.)
     private File romFile;
-    private Rom rom;
+    private Project project;
     private java.util.List<Window> openWindows = new ArrayList<>();
     private Map<Table, TableEditor> openedTables = new LinkedHashMap<>();
     private Map<Table, TableDefinitionEditor> openedTableDefs = new LinkedHashMap<>();
@@ -82,11 +79,11 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     // Vehicle connection
     private Connection connection;
 
-    public Editor(Rom rom) {
+    public Editor(Project project) {
         // Just to make sure it shows up in the taskbar/dock/etc.
         setType(Type.NORMAL);
 
-        openRom(null, rom);
+        openRom(null, project);
 
         initComponents();
 
@@ -189,8 +186,8 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         getTablesTab().focusSearch();
     }
 
-    public Rom getActiveRom() {
-        return rom;
+    public Project getActiveRom() {
+        return project;
     }
 
     public void postStatus(String status) {
@@ -285,7 +282,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
             }
 
             try {
-                rom.saveToArchive(file);
+                project.saveToArchive(file);
                 setDirty(false);
                 String message = "Project saved to " + file.getPath();
                 Log.ui().log(Level.INFO, message);
@@ -318,7 +315,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         if (fileChooser.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
             try {
-                openRom(file, Rom.loadFromArchive(file));
+                openRom(file, Project.loadFromArchive(file));
                 String message = "Project opened from " + file.getPath();
                 Log.ui().log(Level.INFO, message);
                 postStatus(message);
@@ -332,8 +329,8 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         }
     }
 
-    public void openRom(File file, Rom rom) {
-        this.rom = rom;
+    public void openRom(File file, Project project) {
+        this.project = project;
         this.romFile = file;
 
         updateTitle();
@@ -353,10 +350,10 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
 
     public void updateTitle() {
         String title;
-        if (rom.getVehicle() == null) {
+        if (project.getVehicle() == null) {
             title = ("Atlas - Empty Project");
         } else {
-            title = ("Atlas - " + rom.getVehicle().toString());
+            title = ("Atlas - " + project.getVehicle().toString());
         }
 
         if (dirty) {

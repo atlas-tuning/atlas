@@ -28,7 +28,7 @@ public class OpenPort2CANFrameWriter implements CANFrameWriter, AutoCloseable {
     }
 
     @Override
-    public void write(Address address, CANFrame frame) throws IOException {
+    public synchronized void write(Address address, CANFrame frame) throws IOException {
         if (frame.getLength() > 8) {
             throw new IllegalArgumentException("Unexpected CAN frame length: " + frame.getLength() + " > 8");
         }

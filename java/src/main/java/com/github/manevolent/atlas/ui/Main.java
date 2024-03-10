@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas.ui;
 
 import com.formdev.flatlaf.FlatDarculaLaf;
-import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
@@ -13,7 +13,10 @@ import java.util.logging.Level;
 public class Main {
 
     public static void main(String[] args) throws Exception {
+
         System.setProperty("sun.awt.exception.handler", AwtExceptionHandler.class.getName());
+
+        Log.get().setLevel(Level.FINE);
 
         SplashForm splashForm = new SplashForm();
         java.awt.EventQueue.invokeLater(() -> {
@@ -29,7 +32,7 @@ public class Main {
         FlatDarculaLaf.setup();
 
         splashForm.setProgress(0.2f, "Loading ROM data...");
-        Rom rom;
+        Project project;
         String lastOpenedProject = Settings.get(Setting.LAST_OPENED_PROJECT);
         File romFile = null;
         if (lastOpenedProject != null) {
@@ -38,7 +41,7 @@ public class Main {
                 splashForm.setProgress(0.4f, "Loading " + lastOpenedProjectFile.getName() + "...");
 
                 try {
-                    rom = Rom.loadFromArchive(lastOpenedProjectFile);
+                    project = Project.loadFromArchive(lastOpenedProjectFile);
                     romFile = lastOpenedProjectFile;
 
                     Log.ui().log(Level.INFO, "Reopened last project at " +
@@ -50,24 +53,24 @@ public class Main {
                             "Failed to open project!\r\nSee console output for more details.",
                             "Open failed",
                             JOptionPane.ERROR_MESSAGE);
-                    rom = Rom.builder().build();
+                    project = Project.builder().build();
                 }
             } else {
-                rom = Rom.builder().build();
+                project = Project.builder().build();
                 Log.ui().log(Level.WARNING, "Last opened project at " +
                         lastOpenedProjectFile.getPath() + " does not exist!");
             }
         } else {
-            rom = Rom.builder().build();
+            project = Project.builder().build();
             Log.ui().log(Level.INFO, "Opened a new project.");
         }
 
 
         splashForm.setProgress(0.5f, "Initializing UI...");
-        Editor editorForm = new Editor(rom);
+        Editor editorForm = new Editor(project);
 
         splashForm.setProgress(0.75f, "Opening ROM...");
-        editorForm.openRom(romFile, rom);
+        editorForm.openRom(romFile, project);
 
         splashForm.setProgress(1.0f, "Opening Atlas...");
         Thread.sleep(500L);

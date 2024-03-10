@@ -2,7 +2,7 @@ package com.github.manevolent.atlas;
 
 import com.github.manevolent.atlas.connection.ConnectionMode;
 import com.github.manevolent.atlas.connection.SubaruDITConnection;
-import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.builtin.SubaruWRX2022MT;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -19,8 +19,8 @@ public class SubaruDITConnectionTest {
     @Disabled
     @Test
     public void test_ReadMemory() throws IOException, TimeoutException {
-        Rom rom = SubaruWRX2022MT.newRom();
-        SubaruDITConnection connection = new SubaruDITConnection(rom);
+        Project project = SubaruWRX2022MT.newRom();
+        SubaruDITConnection connection = new SubaruDITConnection(project);
         connection.changeConnectionMode(ConnectionMode.READ_MEMORY);
     }
 

@@ -2,7 +2,7 @@ package com.github.manevolent.atlas.model.subaru;
 
 import com.github.manevolent.atlas.model.MemoryEncryption;
 import com.github.manevolent.atlas.model.KeyProperty;
-import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.Project;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -17,8 +17,8 @@ public class SubaruDITMemoryEncryption implements MemoryEncryption {
     }
 
     @Override
-    public void setEncryptionKeys(Rom rom) {
-        KeyProperty property = rom.getProperty("subaru.dit.flashkey", KeyProperty.class);
+    public void setEncryptionKeys(Project project) {
+        KeyProperty property = project.getProperty("subaru.dit.flashkey", KeyProperty.class);
         if (property == null) {
             throw new IllegalArgumentException("Missing key");
         } else if (property.getKey().length != 8) {

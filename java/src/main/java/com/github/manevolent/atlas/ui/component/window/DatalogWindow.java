@@ -5,10 +5,13 @@ import com.github.manevolent.atlas.connection.ConnectionMode;
 import com.github.manevolent.atlas.connection.MemoryFrame;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.MemoryParameter;
+import com.github.manevolent.atlas.settings.Setting;
+import com.github.manevolent.atlas.settings.Settings;
 import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.menu.datalog.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.datalog.ViewMenu;
 import com.github.manevolent.atlas.ui.component.toolbar.DatalogToolbar;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -16,15 +19,22 @@ import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 import java.awt.*;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.Writer;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
+import java.util.function.Consumer;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
@@ -194,7 +204,9 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     }
 
     public void deletePage(DatalogPage datalogPage) {
-        //TODO stop running datalog?
+        if (recordingPage != null && !recordingPage.isPaused()) {
+            stopRecording();
+        }
     }
 
     public void toggleRecording() {
@@ -225,6 +237,12 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
         addPage(page);
         setRecordingPage(page);
 
+        long frequency = Settings.get(Setting.DATALOG_FREQUENCY, 10);
+
+        if (datalogTimer == null) { // Which it SHOULD be
+            datalogTimer = new Timer("Datalog");
+        }
+
         datalogTimer.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
@@ -234,18 +252,24 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
                 }
 
                 Collection<MemoryParameter> parameters = recordingPage.getActiveParameters();
-                MemoryFrame frame = establishConnection().readFrame(parameters);
-                if (frame != null) {
-                    recordingPage.addFrame(frame);
+
+                try {
+                    MemoryFrame frame = establishConnection().readFrame(parameters);
+                    if (frame != null) {
+                        recordingPage.addFrame(frame);
+                    }
+                } catch (Exception ex) {
+                    Log.ui().log(Level.SEVERE, "Problem getting datalog frame", ex);
                 }
             }
-        }, 1000L,1000 / 10L);
+        }, 1000L,1000 / frequency);
     }
 
     public void stopRecording() {
         if (datalogTimer != null) {
             datalogTimer.cancel();
             datalogTimer.purge();
+            datalogTimer = null;
         }
 
         if (recordingPage != null) {
@@ -368,5 +392,67 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
 
     public boolean isRecording() {
         return recordingPage != null;
+    }
+
+    private static void writeCell(String value, Writer writer) throws IOException {
+        String escaped = StringEscapeUtils.escapeCsv(value);
+        writer.write("\"" +escaped + "\",");
+    }
+
+    private static void writeRow(Writer writer, String... cells) throws IOException {
+        for (String string : cells) {
+            writeCell(string, writer);
+        }
+        writer.write("\r\n");
+    }
+
+    public void saveDatalog(boolean includeAll) {
+        DatalogPage page = getActivePage();
+        if (page == null) {
+            return;
+        }
+
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter def = new FileNameExtensionFilter("Comma-separated value file (*.csv)", "csv");
+        fileChooser.addChoosableFileFilter(def);
+        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Text files (*.txt)", "txt"));
+        fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Log files (*.log)", "log"));
+        fileChooser.setFileFilter(def);
+        fileChooser.setDialogTitle("Export Datalog");
+        if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+            File file = fileChooser.getSelectedFile();
+
+            try (FileWriter writer = new FileWriter(file)) {
+                writeCell("Time", writer);
+                for (MemoryParameter parameter : page.getActiveParameters()) {
+                    writeCell(parameter.getName(), writer);
+                }
+                writer.write("\r\n");
+
+                for (MemoryFrame frame : page.getFrames()) {
+                    boolean inView = frame.getInstant().isAfter(page.getLeft()) &&
+                            frame.getInstant().isBefore(page.getRight());
+
+                    if (!inView && !includeAll) {
+                        continue;
+                    }
+
+                    writeCell(frame.getInstant().toString(), writer);
+                    for (MemoryParameter parameter : page.getActiveParameters()) {
+                        byte[] data = frame.getData(parameter);
+                        if (data != null) {
+                            writeCell(String.format("%.2f", parameter.getValue(data)), writer);
+                        } else {
+                            writeCell("", writer);
+                        }
+                    }
+                    writer.write("\r\n");
+                }
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+
+            Log.ui().log(Level.INFO, "Datalog exported to " + file.getPath());
+        }
     }
 }
