@@ -31,8 +31,8 @@ public class TablesTab
     private Collection<TreePath> lastExpansions = new ArrayList<>();
     private DefaultTreeModel defaultModel;
 
-    public TablesTab(Editor form) {
-        super(form);
+    public TablesTab(Editor form, JTabbedPane tabbedPane) {
+        super(form, tabbedPane);
     }
 
     @Override
@@ -357,6 +357,10 @@ public class TablesTab
     @Override
     public void mouseExited(MouseEvent e) {
 
+    }
+
+    public void focusSearch() {
+        searchField.grabFocus();
     }
 
     private class TableNode implements MutableTreeNode {

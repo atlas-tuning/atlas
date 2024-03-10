@@ -6,8 +6,20 @@ import com.github.manevolent.atlas.ui.Editor;
 import javax.swing.*;
 
 public abstract class Tab extends EditorComponent<JPanel> {
-    protected Tab(Editor editor) {
+    private JTabbedPane pane;
+
+    protected Tab(Editor editor, JTabbedPane pane) {
         super(editor);
+
+        this.pane = pane;
+    }
+
+    protected JTabbedPane getPane() {
+        return pane;
+    }
+
+    public void focus() {
+        pane.setSelectedComponent(getComponent());
     }
 
     @Override

@@ -104,7 +104,10 @@ public class Rom {
     }
 
     public MemoryAddress getDefaultMemoryAddress() {
-        return MemoryAddress.builder().withSection(sections.getFirst()).withOffset(0x00000000L).build();
+        MemorySection first = sections.getFirst();
+        return MemoryAddress.builder()
+                .withSection(first)
+                .withOffset(first.getBaseAddress()).build();
     }
 
     public void removeParameter(MemoryParameter parameter) {

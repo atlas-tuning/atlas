@@ -9,8 +9,8 @@ import javax.swing.*;
 import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
 
 public class HelpTab extends Tab {
-    public HelpTab(Editor editor) {
-        super(editor);
+    public HelpTab(Editor editor, JTabbedPane tabbedPane) {
+        super(editor, tabbedPane);
     }
 
     @Override

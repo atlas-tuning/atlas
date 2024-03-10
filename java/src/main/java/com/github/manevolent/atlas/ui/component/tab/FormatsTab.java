@@ -35,8 +35,8 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     private JButton saveButton;
     private JPanel informationContent;
 
-    public FormatsTab(Editor editor) {
-        super(editor);
+    public FormatsTab(Editor editor, JTabbedPane tabbedPane) {
+        super(editor, tabbedPane);
     }
 
     private ListModel<ScalingOperation> getOperationsModel() {

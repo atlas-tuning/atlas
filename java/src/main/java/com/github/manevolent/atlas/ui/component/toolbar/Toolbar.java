@@ -15,6 +15,7 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
         super(editor);
     }
 
+    public static int LARGE_BUTTON_ICON_SIZE = 22;
     public static int BUTTON_ICON_SIZE = 18;
     public static int BUTTON_SMALL_ICON_SIZE = 14;
 
@@ -29,7 +30,7 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
                                  ActionListener listener) {
         Color enabledColor = Fonts.getTextColor();
         Color disabledColor = Fonts.getTextColor().darker();
-        JButton button = new JButton(Icons.get(ikon, enabledColor)) {
+        JButton button = new JButton(Icons.get(ikon, enabledColor, size)) {
             @Override
             public void setEnabled(boolean b) {
                 super.setEnabled(b);
@@ -48,6 +49,11 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
             button.addActionListener(listener);
         }
         return button;
+    }
+
+    protected JButton makeLargeButton(Ikon ikon, String actionCommand, String toolTipText,
+                                 ActionListener listener) {
+        return makeButton(ikon, LARGE_BUTTON_ICON_SIZE, actionCommand, toolTipText, listener);
     }
 
     protected JButton makeButton(Ikon ikon, String actionCommand, String toolTipText,

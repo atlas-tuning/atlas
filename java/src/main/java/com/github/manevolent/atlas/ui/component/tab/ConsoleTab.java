@@ -44,8 +44,8 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
     private int lines = 0;
     private ConsoleTabToolbar toolbar;
 
-    public ConsoleTab(Editor editor) {
-        super(editor);
+    public ConsoleTab(Editor editor, JTabbedPane tabbedPane) {
+        super(editor, tabbedPane);
     }
 
     @Override

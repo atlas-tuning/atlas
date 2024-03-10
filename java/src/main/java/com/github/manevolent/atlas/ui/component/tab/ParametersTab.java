@@ -36,8 +36,8 @@ public class ParametersTab extends Tab implements ListSelectionListener {
     private JButton saveButton;
     private JPanel informationContent;
 
-    public ParametersTab(Editor editor) {
-        super(editor);
+    public ParametersTab(Editor editor, JTabbedPane tabbedPane) {
+        super(editor, tabbedPane);
     }
 
     private ListModel<MemoryParameter> getParameterListModel() {

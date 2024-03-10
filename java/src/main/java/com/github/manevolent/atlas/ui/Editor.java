@@ -3,6 +3,8 @@ package com.github.manevolent.atlas.ui;
 import com.github.manevolent.atlas.connection.Connection;
 import com.github.manevolent.atlas.connection.SubaruDITConnection;
 import com.github.manevolent.atlas.model.Rom;
+import com.github.manevolent.atlas.model.Scale;
+import com.github.manevolent.atlas.model.Series;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.settings.Setting;
@@ -36,6 +38,7 @@ import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 
 /**
@@ -94,7 +97,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         addKeyListener(this);
 
         Inputs.bind(this.getRootPane(),
-                "left",
+                "left_keybind",
                 () -> {
                     if (windowHistory.canUndo()) {
                         windowHistory.undo();
@@ -104,9 +107,8 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, InputEvent.CTRL_DOWN_MASK),
                 KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, InputEvent.META_DOWN_MASK), // OSX
                 KeyStroke.getKeyStroke(KeyEvent.VK_KP_LEFT, InputEvent.CTRL_DOWN_MASK));
-
         Inputs.bind(this.getRootPane(),
-                "right",
+                "right_keybind",
                 () -> {
                     if (windowHistory.canRedo()) {
                         windowHistory.redo();
@@ -116,6 +118,31 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, InputEvent.CTRL_DOWN_MASK),
                 KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, InputEvent.META_DOWN_MASK), // OSX
                 KeyStroke.getKeyStroke(KeyEvent.VK_KP_RIGHT, InputEvent.CTRL_DOWN_MASK));
+        Inputs.bind(this.getRootPane(),
+                "newtable_keybind",
+                this::newTable,
+                KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_T, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getRootPane(),
+                "datalogging_keybind",
+                this::openDataLogging,
+                KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_D, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getRootPane(),
+                "search_keybind",
+                this::focusSearch,
+                KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_F, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getRootPane(),
+                "send_to_back",
+                this::hideWindow,
+                KeyStroke.getKeyStroke(KeyEvent.VK_H, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_H, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getRootPane(),
+                "save",
+                this::saveRom,
+                KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.META_DOWN_MASK)); // OSX
 
         editHistory = new EditHistory();
         windowHistory = new WindowHistory();
@@ -128,6 +155,15 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         });
     }
 
+    private void hideWindow() {
+        desktop.moveToBack(desktop.getSelectedFrame());
+    }
+
+    private void focusSearch() {
+        getTablesTab().focus();
+        getTablesTab().focusSearch();
+    }
+
     public Rom getActiveRom() {
         return rom;
     }
@@ -135,6 +171,8 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     public void postStatus(String status) {
         if (footer != null) {
             footer.setStatus(status);
+            footer.getComponent().revalidate();
+            footer.getComponent().repaint();
         }
     }
 
@@ -176,41 +214,70 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         return getOpenWindows().isEmpty();
     }
 
+    @Override
+    public void setCursor(Cursor cursor) {
+        super.setCursor(cursor);
+        getContentPane().setCursor(cursor);
+        openWindows.forEach(w -> w.getComponent().getContentPane().setCursor(cursor));
+    }
+
+    public void withWaitCursor(Runnable runnable) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        try {
+            runnable.run();
+        } finally {
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+    }
+
+    public <R> R withWaitCursor(Supplier<R> runnable) {
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        try {
+            return runnable.get();
+        } finally {
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
+    }
+
     public boolean saveRom() {
-        File file;
-        if (this.romFile == null || !romFile.exists()) {
-            JFileChooser fileChooser = new JFileChooser();
-            FileNameExtensionFilter def = new FileNameExtensionFilter("Atlas project files", "atlas");
-            fileChooser.addChoosableFileFilter(def);
-            fileChooser.setFileFilter(def);
-            fileChooser.setDialogTitle("Save Project");
-            if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
-                file = fileChooser.getSelectedFile();
+        postStatus("Saving project...");
+
+        return withWaitCursor(() -> {
+            File file;
+            if (this.romFile == null || !romFile.exists()) {
+                JFileChooser fileChooser = new JFileChooser();
+                FileNameExtensionFilter def = new FileNameExtensionFilter("Atlas project files", "atlas");
+                fileChooser.addChoosableFileFilter(def);
+                fileChooser.setFileFilter(def);
+                fileChooser.setDialogTitle("Save Project");
+                if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
+                    file = fileChooser.getSelectedFile();
+                } else {
+                    return false;
+                }
             } else {
+                file = this.romFile;
+            }
+
+            try {
+                rom.saveToArchive(file);
+                setDirty(false);
+                String message = "Project saved to " + file.getPath();
+                Log.ui().log(Level.INFO, message);
+                postStatus(message);
+
+                Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
+
+                return true;
+            } catch (IOException e) {
+                postStatus("Project save failed; see console output for details.");
+                JOptionPane.showMessageDialog(this, "Failed to save project!\r\nSee console output for more details.",
+                        "Save failed",
+                        JOptionPane.ERROR_MESSAGE);
+
                 return false;
             }
-        } else {
-            file = this.romFile;
-        }
-
-        try {
-            rom.saveToArchive(file);
-            setDirty(false);
-            String message = "Project saved to " + file.getPath();
-            Log.ui().log(Level.INFO, message);
-            postStatus(message);
-
-            Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
-
-            return true;
-        } catch (IOException e) {
-            postStatus("Project save failed; see console output for details.");
-            JOptionPane.showMessageDialog(this, "Failed to save project!\r\nSee console output for more details.",
-                    "Save failed",
-                    JOptionPane.ERROR_MESSAGE);
-
-            return false;
-        }
+        });
     }
 
     public void openRom() {
@@ -400,6 +467,23 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         return window;
     }
 
+    public void newTable() {
+        String newTableName = JOptionPane.showInputDialog(getParent(), "Specify a name", "New Table");
+        if (newTableName == null || newTableName.isBlank()) {
+            return;
+        }
+
+        Table table = Table.builder()
+                .withName(newTableName)
+                .withData(Series.builder()
+                        .withAddress(getActiveRom().getDefaultMemoryAddress())
+                        .withLength(1)
+                        .withScale(Scale.NONE))
+                .build();
+
+        openTableDefinition(table);
+    }
+
     public void openTable(Table table) {
         TableEditor opened;
 
@@ -441,20 +525,20 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         leftPane.setBorder(BorderFactory.createMatteBorder(0, 0, 0, 1,
                 splitPaneBorderColor));
 
-        TabbedPane tabbedPane = new TabbedPane(this);
-        tabbedPane.addTab(initProjectTab());
-        tabbedPane.addTab(initTablesTab());
-        leftPane.add(tabbedPane.getComponent());
+        TabbedPane leftTabs = new TabbedPane(this);
+        leftTabs.addTab(initProjectTab(leftTabs.getComponent()));
+        leftTabs.addTab(initTablesTab(leftTabs.getComponent()));
+        leftPane.add(leftTabs.getComponent());
 
         return leftPane;
     }
 
-    private Tab initTablesTab() {
-        return (tablesTab = new TablesTab(this));
+    private Tab initTablesTab(JTabbedPane tabbedPane) {
+        return (tablesTab = new TablesTab(this, tabbedPane));
     }
 
-    private Tab initProjectTab() {
-        return (projectTab = new ProjectTab(this));
+    private Tab initProjectTab(JTabbedPane tabbedPane) {
+        return (projectTab = new ProjectTab(this, tabbedPane));
     }
 
     private JPanel initBottomPane() {
@@ -464,29 +548,29 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         bottomPane.setLayout(new BoxLayout(bottomPane, BoxLayout.Y_AXIS));
 
         TabbedPane tabbedPane = new TabbedPane(this);
-        tabbedPane.addTab(initLoggingTab());
-        tabbedPane.addTab(initFormatsTab());
-        tabbedPane.addTab(initConsoleTab());
-        tabbedPane.addTab(initHelpTab());
+        tabbedPane.addTab(initLoggingTab(tabbedPane.getComponent()));
+        tabbedPane.addTab(initFormatsTab(tabbedPane.getComponent()));
+        tabbedPane.addTab(initConsoleTab(tabbedPane.getComponent()));
+        tabbedPane.addTab(initHelpTab(tabbedPane.getComponent()));
         bottomPane.add(tabbedPane.getComponent());
 
         return bottomPane;
     }
 
-    private Tab initConsoleTab() {
-       return (consoleTab = new ConsoleTab(this));
+    private Tab initConsoleTab(JTabbedPane tabbedPane) {
+       return (consoleTab = new ConsoleTab(this, tabbedPane));
     }
 
-    private Tab initLoggingTab() {
-        return (parametersTab = new ParametersTab(this));
+    private Tab initLoggingTab(JTabbedPane tabbedPane) {
+        return (parametersTab = new ParametersTab(this, tabbedPane));
     }
 
-    private Tab initFormatsTab() {
-        return (formatsTab = new FormatsTab(this));
+    private Tab initFormatsTab(JTabbedPane tabbedPane) {
+        return (formatsTab = new FormatsTab(this, tabbedPane));
     }
 
-    private Tab initHelpTab() {
-        return (helpTab = new HelpTab(this));
+    private Tab initHelpTab(JTabbedPane tabbedPane) {
+        return (helpTab = new HelpTab(this, tabbedPane));
     }
 
     @Override

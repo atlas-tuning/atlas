@@ -1,10 +1,14 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
+import com.github.manevolent.atlas.model.Scale;
+import com.github.manevolent.atlas.model.Series;
+import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.behavior.EditHistory;
 import com.github.manevolent.atlas.ui.behavior.WindowHistory;
 import com.github.manevolent.atlas.ui.component.window.Window;
 
+import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
@@ -48,6 +52,16 @@ public class EditorToolbar extends Toolbar<Editor> {
         toolbar.add(redo = makeSmallButton(FontAwesomeSolid.REDO, "redo", "Redo", _ -> {
             getParent().getEditHistory().redo();
             update();
+        }));
+
+        toolbar.addSeparator();
+
+        toolbar.add(makeButton(CarbonIcons.DATA_TABLE_REFERENCE, "newtable", "New Table...", _ -> {
+            getParent().newTable();
+        }));
+
+        toolbar.add(makeButton(CarbonIcons.CHART_AVERAGE, "datalogging", "Open Data Logging", _ -> {
+            getParent().openDataLogging();
         }));
 
         update();

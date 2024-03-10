@@ -17,8 +17,8 @@ public class ProjectTab extends Tab {
     private JButton resetButton;
     private JButton saveButton;
 
-    public ProjectTab(Editor editor) {
-        super(editor);
+    public ProjectTab(Editor editor, JTabbedPane tabbedPane) {
+        super(editor, tabbedPane);
     }
 
     @Override
