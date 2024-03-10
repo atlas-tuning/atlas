@@ -34,7 +34,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
 
     private String name;
 
-    private final Set<MemoryParameter> activeParameters = new LinkedHashSet<>();
+    private final LinkedHashSet<MemoryParameter> activeParameters = new LinkedHashSet<>();
     private final Map<MemoryParameter, DatalogParameterPanel> panelMap = new LinkedHashMap<>();
     private final List<MemoryFrame> frames = new CopyOnWriteArrayList<>();
 
@@ -85,7 +85,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         return drag_right;
     }
 
-    private JPanel initParameterPanel(MemoryParameter parameter) {
+    private DatalogParameterPanel initParameterPanel(MemoryParameter parameter) {
         return new DatalogParameterPanel(this, parameter);
     }
 
@@ -128,8 +128,6 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
                             0, activeParameters.size(),
                             1, 1));
         }
-
-
     }
 
     public EditorForm getEditor() {
@@ -146,18 +144,53 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         return activeParameters;
     }
 
-    public void addParameter(MemoryParameter parameter) {
-        if (footerPanel != null) {
-            graphContainer.remove(footerPanel);
+    public int indexOf(MemoryParameter parameter) {
+        return new ArrayList<>(activeParameters).indexOf(parameter);
+    }
+
+    public void moveUp(MemoryParameter parameter) {
+        ArrayList<MemoryParameter> parameters = new ArrayList<>(activeParameters);
+        int index = parameters.indexOf(parameter);
+        if (index <= 0) {
+            return;
         }
 
-        graphContainer.add(initParameterPanel(parameter),
+        parameters.remove(parameter);
+        parameters.add(index - 1, parameter);
+
+        activeParameters.clear();
+        activeParameters.addAll(parameters);
+
+        reload();
+    }
+
+    public void moveDown(MemoryParameter parameter) {
+        ArrayList<MemoryParameter> parameters = new ArrayList<>(activeParameters);
+        int index = parameters.indexOf(parameter);
+        if (index >= parameters.size() - 1) {
+            return;
+        }
+
+        parameters.remove(parameter);
+        parameters.add(index + 1, parameter);
+
+        activeParameters.clear();
+        activeParameters.addAll(parameters);
+
+        reload();
+    }
+
+    public void addParameter(MemoryParameter parameter) {
+        activeParameters.add(parameter);
+
+        DatalogParameterPanel panel = initParameterPanel(parameter);
+        graphContainer.add(panel,
                 Layout.gridBagConstraints(
                         GridBagConstraints.NORTHWEST, GridBagConstraints.BOTH,
-                        0, activeParameters.size(),
+                        0, indexOf(parameter),
                         1, 1));
 
-        activeParameters.add(parameter);
+        panelMap.put(parameter, panel);
 
         initFooterPanel();
     }
@@ -181,10 +214,26 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         }
     }
 
+    public void removeParameter(MemoryParameter memoryParameter) {
+        activeParameters.remove(memoryParameter);
+        panelMap.remove(memoryParameter);
+        reload();
+    }
+
+    public void reload() {
+        graphContainer.removeAll();
+
+        for (MemoryParameter parameter : activeParameters) {
+            addParameter(parameter);
+        }
+
+        initFooterPanel();
+    }
+
     public void initComponent() {
         graphContainer = new JPanel(new GridBagLayout());
 
-        initFooterPanel();
+        reload();
 
         scrollPane = new JScrollPane(graphContainer) {
             @Override

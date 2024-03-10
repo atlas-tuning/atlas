@@ -18,6 +18,12 @@ import static java.awt.event.ItemEvent.SELECTED;
 
 public class Inputs {
 
+    public static JButton button(Ikon icon, Runnable clicked) {
+        JButton button = new JButton(Icons.get(icon, Fonts.getTextColor()));
+        button.addActionListener(e -> clicked.run());
+        return button;
+    }
+
     public static JButton button(Ikon icon, java.awt.Color color, Runnable clicked) {
         JButton button = new JButton(Icons.get(icon, color));
         button.addActionListener(e -> clicked.run());

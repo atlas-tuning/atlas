@@ -5,6 +5,9 @@ import com.github.manevolent.atlas.model.MemoryParameter;
 import com.github.manevolent.atlas.ui.Colors;
 import com.github.manevolent.atlas.ui.Fonts;
 
+import com.github.manevolent.atlas.ui.Inputs;
+import org.kordamp.ikonli.carbonicons.CarbonIcons;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.Path2D;
@@ -51,6 +54,7 @@ public class DatalogParameterPanel extends JPanel {
     private final DatalogPage page;
     private final MemoryParameter parameter;
     private final Color textColor;
+    private JButton delete, moveUp, moveDown;
 
     public DatalogParameterPanel(DatalogPage page, MemoryParameter parameter) {
         this.page = page;
@@ -69,6 +73,29 @@ public class DatalogParameterPanel extends JPanel {
     }
 
     private void initComponent() {
+        add(delete = Inputs.nofocus(Inputs.button(CarbonIcons.TRASH_CAN, null, "Delete this parameter", () -> {
+            if (JOptionPane.showConfirmDialog(getParent(),
+                    "Are you sure you want to delete " + parameter.getName() + "?",
+                    "Delete Parameter",
+                    JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            page.removeParameter(parameter);
+        })));
+
+        add(moveUp = Inputs.nofocus(Inputs.button(CarbonIcons.ARROW_UP, null, "Move up", () -> {
+            page.moveUp(parameter);
+        })));
+
+        add(moveDown = Inputs.nofocus(Inputs.button(CarbonIcons.ARROW_DOWN, null, "Move down", () -> {
+            page.moveDown(parameter);
+        })));
+
+        delete.setBackground(Colors.withAlpha(delete.getBackground(), 180));
+        moveUp.setBackground(Colors.withAlpha(moveUp.getBackground(), 180));
+        moveDown.setBackground(Colors.withAlpha(moveDown.getBackground(), 180));
+
         setMinimumSize(new Dimension(256, 100));
         setPreferredSize(new Dimension(256, 100));
         setBackground(getBackground().darker());
@@ -77,6 +104,7 @@ public class DatalogParameterPanel extends JPanel {
     @Override
     public void paint(Graphics g) {
         super.paint(g);
+
         setFont(Fonts.VALUE_FONT);
 
         java.util.List<MemoryFrame> frames = page.getFrames();
@@ -219,14 +247,32 @@ public class DatalogParameterPanel extends JPanel {
         }
 
         g.setColor(getBackground().brighter());
-        g2d.setStroke(breakStroke);
-        g.drawLine(0, bounds.height, bounds.width, bounds.height);
+
+        if (page.getActiveParameters().size() > 1) {
+            g2d.setStroke(breakStroke);
+            g.drawLine(0, bounds.height, bounds.width, bounds.height);
+        }
 
         g2d.setStroke(graphStroke);
-
         g.setColor(lineColor);
         if (page.getCursorX() != null) {
             g.drawLine(page.getCursorX(), 0, page.getCursorX(), bounds.height);
+        }
+
+        if (mousePosition != null) {
+            delete.setLocation(5, (int) (getBounds().getHeight() - delete.getHeight() - 5));
+            g2d.translate(delete.getX(), delete.getY());
+            delete.paint(g2d);
+
+            moveUp.setLocation(5 + delete.getWidth() + 5,
+                    (int) (getBounds().getHeight() - moveUp.getHeight() - 5));
+            g2d.translate(delete.getWidth() + 5, 0);
+            moveUp.paint(g2d);
+
+            moveDown.setLocation(5 + delete.getWidth() + 5 + moveUp.getWidth() + 5,
+                    (int) (getBounds().getHeight() - moveDown.getHeight() - 5));
+            g2d.translate(5 + moveUp.getWidth() , 0);
+            moveDown.paint(g2d);
         }
     }
 }
