@@ -145,6 +145,21 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 this::saveRom,
                 KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK),
                 KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getRootPane(),
+                "newFormat",
+                this::newFormat,
+                KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getRootPane(),
+                "newParameter",
+                this::newParameter,
+                KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_P, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getRootPane(),
+                "console",
+                () -> consoleTab.focus(),
+                KeyStroke.getKeyStroke(KeyEvent.VK_F12, 0),
+                KeyStroke.getKeyStroke(KeyEvent.VK_F12, 0)); // OSX
 
         editHistory = new EditHistory();
         windowHistory = new WindowHistory();
@@ -155,6 +170,14 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 exit();
             }
         });
+    }
+
+    private void newParameter() {
+        parametersTab.newParameter();
+    }
+
+    private void newFormat() {
+        formatsTab.newFormat();
     }
 
     private void hideWindow() {

@@ -18,6 +18,8 @@ import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 
 import java.awt.*;
+import java.awt.event.InputEvent;
+import java.awt.event.KeyEvent;
 import java.time.Instant;
 import java.util.*;
 import java.util.List;
@@ -48,6 +50,60 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
     protected void preInitComponent(JInternalFrame window) {
         super.preInitComponent(window);
         window.addInternalFrameListener(this);
+
+        Inputs.bind(this.getComponent().getRootPane(),
+                "record",
+                this::toggleRecording,
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_R, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getComponent().getRootPane(),
+                "maximize",
+                () -> {
+                    DatalogPage page = getActivePage();
+                    if (page != null) {
+                        page.fitToScreen();
+                    }
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_W, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_W, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getComponent().getRootPane(),
+                "zoomOut",
+                () -> {
+                    DatalogPage page = getActivePage();
+                    if (page != null) {
+                        page.zoomOut();
+                    }
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_O, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getComponent().getRootPane(),
+                "zoomIn",
+                () -> {
+                    DatalogPage page = getActivePage();
+                    if (page != null) {
+                        page.zoomIn();
+                    }
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.CTRL_DOWN_MASK),
+                KeyStroke.getKeyStroke(KeyEvent.VK_I, InputEvent.META_DOWN_MASK)); // OSX
+        Inputs.bind(this.getComponent().getRootPane(),
+                "left",
+                () -> {
+                    DatalogPage page = getActivePage();
+                    if (page != null) {
+                        page.moveLeft();
+                    }
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0)); // OSX
+        Inputs.bind(this.getComponent().getRootPane(),
+                "right",
+                () -> {
+                    DatalogPage page = getActivePage();
+                    if (page != null) {
+                        page.moveRight();
+                    }
+                },
+                KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0)); // OSX
     }
 
     private JMenuBar initMenu() {
@@ -97,6 +153,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
         } catch (Exception ex) {
             Log.can().log(Level.SEVERE, "Problem establishing datalog session with ECU", ex);
             JOptionPane.showMessageDialog(getParent(), "Failed to establish datalog connection with ECU!\r\n" +
+                    ex.getMessage() + "\r\n" +
                             "See console output for more details.",
                     "Connection failed",
                     JOptionPane.ERROR_MESSAGE);

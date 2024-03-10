@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.ui.component.footer;
 
+import com.github.manevolent.atlas.ApplicationMetadata;
 import com.github.manevolent.atlas.ui.Fonts;
 import com.github.manevolent.atlas.ui.Labels;
 import com.github.manevolent.atlas.ui.Editor;
@@ -37,10 +38,17 @@ public class EditorFooter extends Footer<Editor> {
      */
     @Override
     protected void initComponent(JPanel footerBar) {
-        JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        footerBar.add(left, BorderLayout.WEST);
+        Font smallFont = Fonts.getTextFont().deriveFont(11f);
+        Color color = Fonts.getTextColor().darker();
 
-        left.add(statusLabel = Labels.text("", Fonts.getTextFont().deriveFont(11f)));
+        JPanel left = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        footerBar.add(left, BorderLayout.WEST);
+        left.add(statusLabel = Labels.text("", color, smallFont));
+
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        footerBar.add(right, BorderLayout.EAST);
+        String applicationName = ApplicationMetadata.getName() + " " + ApplicationMetadata.getVersion();
+        right.add(Labels.text(applicationName, color, smallFont));
     }
 
     @Override
@@ -61,9 +69,7 @@ public class EditorFooter extends Footer<Editor> {
         Instant now = Instant.now();
         long minutes = ChronoUnit.MINUTES.between(statusInstant, now);
         long seconds = ChronoUnit.SECONDS.between(statusInstant, now);
-        if (seconds < 10) {
-            timeString = null;
-        } else if (minutes == 1) {
+        if (minutes == 1) {
             timeString = "a minute ago";
         } else if (minutes > 1) {
             timeString = minutes + " minutes ago";
@@ -71,13 +77,7 @@ public class EditorFooter extends Footer<Editor> {
             timeString = "moments ago";
         }
 
-        if (timeString != null) {
-            statusLabel.setForeground(Fonts.getTextColor().darker());
-            statusLabel.setText(statusString + " (" + timeString + ")");
-        } else {
-            statusLabel.setForeground(Fonts.getTextColor());
-            statusLabel.setText(statusString);
-        }
+        statusLabel.setText(statusString + " (" + timeString + ")");
     }
 
     public void setStatus(String status) {

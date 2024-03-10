@@ -5,7 +5,7 @@ import java.util.List;
 
 public abstract class History<T extends Action> {
     private final List<Action> actions = new ArrayList<>();
-    private int maximumActions = 10;
+    private int maximumActions = 20;
     private int position = -1;
 
     private boolean remembering = true;

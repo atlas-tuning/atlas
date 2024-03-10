@@ -75,6 +75,8 @@ public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExc
             }
         });
 
+        console.setCursor(Cursor.getPredefinedCursor(Cursor.TEXT_CURSOR));
+
         // Handle uncaught exceptions
         Thread.setDefaultUncaughtExceptionHandler(this);
         SwingUtilities.invokeLater(() -> {
