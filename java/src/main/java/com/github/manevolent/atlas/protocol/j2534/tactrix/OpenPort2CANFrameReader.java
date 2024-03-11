@@ -2,24 +2,26 @@ package com.github.manevolent.atlas.protocol.j2534.tactrix;
 
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.Frame;
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.protocol.can.CANFrame;
 import com.github.manevolent.atlas.protocol.can.CANFrameReader;
 import com.github.manevolent.atlas.protocol.j2534.J2534Error;
 
 import java.io.EOFException;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.logging.Level;
 
 // Much appreciation for https://github.com/brandonros/rust-tactrix-openport/blob/master/src/lib.rs
 public class OpenPort2CANFrameReader implements CANFrameReader, AutoCloseable {
     /**
-     * "ar5" in ASCII
+     * "ar" in ASCII
      */
     private static final byte[] READ_DATA_HEADER = new byte[] {
             0x61,
-            0x72,
-            0x35
+            0x72
     };
 
     /**
@@ -60,6 +62,11 @@ public class OpenPort2CANFrameReader implements CANFrameReader, AutoCloseable {
             }
         } catch (EOFException eof) {
             return null;
+        }
+
+        char protocol = (char) (inputStream.read() & 0xFF);
+        if (protocol != '5') {
+            throw new IllegalArgumentException("Unexpected protocol " + protocol);
         }
 
         if (Arrays.equals(tactrixHeader, READ_DATA_HEADER)) {

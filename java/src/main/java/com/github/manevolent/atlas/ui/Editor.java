@@ -202,8 +202,8 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     public Connection getConnection() {
         if (connection == null && getProject() != null) {
             //TODO other connections
-            connection = new DebugConnection();
-            //connection = new SubaruDIConnection(getProject());
+            //connection = new DebugConnection();
+            connection = new SubaruDIConnection(getProject());
         }
 
         return connection;

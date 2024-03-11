@@ -139,7 +139,7 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
             Log.can().log(Level.SEVERE, "Problem establishing connection with ECU", ex);
             JOptionPane.showMessageDialog(getParent(), "Problem establishing connection with ECU!\r\n" +
                     ex.getMessage() + "\r\n" + "See console output (F12) for more details.",
-                    "Connection failed",
+                    "Connection Failed",
                     JOptionPane.ERROR_MESSAGE);
             return null;
         }
@@ -181,6 +181,25 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
         }
     }
 
+    public void toggleSpy() {
+        if (recordingPage != null) {
+            return;
+        }
+
+        try {
+            getParent().getConnection().spy();
+        } catch (Exception e) {
+            Log.can().log(Level.SEVERE, "Problem establishing spy session with ECU", e);
+            JOptionPane.showMessageDialog(getParent(), "Problem establishing spy session  with ECU!\r\n" +
+                            e.getMessage() + "\r\n" + "See console output (F12) for more details.",
+                    "Spy Connection Failed",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        toggleRecording();
+    }
+
     public void toggleRecording() {
         if (recordingPage != null) {
             stopRecording();
@@ -219,6 +238,14 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
                 connection.getSession().removeListener(this);
             } catch (IOException | TimeoutException e) {
                 Log.ui().log(Level.WARNING, "Problem removing listener from connection", e);
+            }
+
+            if (connection.isSpying()) {
+                try {
+                    connection.disconnect();
+                } catch (IOException | TimeoutException e) {
+                    Log.ui().log(Level.WARNING, "Problem disconnecting spy session", e);
+                }
             }
         }
 

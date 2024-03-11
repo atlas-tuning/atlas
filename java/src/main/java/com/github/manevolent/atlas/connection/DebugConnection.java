@@ -70,6 +70,11 @@ public class DebugConnection extends UDSConnection {
     }
 
     @Override
+    public UDSSession spy() throws IOException, TimeoutException {
+        return connect();
+    }
+
+    @Override
     public byte[] readMemory(MemoryAddress address, int length) throws IOException, TimeoutException {
         try {
             Thread.sleep(1);

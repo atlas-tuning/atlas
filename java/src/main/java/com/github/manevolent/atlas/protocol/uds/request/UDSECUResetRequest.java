@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.protocol.uds.request;
 
 import com.github.manevolent.atlas.BitReader;
+import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.protocol.uds.ECUResetMode;
 import com.github.manevolent.atlas.protocol.uds.RoutineControlSubFunction;
 import com.github.manevolent.atlas.protocol.uds.UDSRequest;
@@ -22,6 +23,11 @@ public class UDSECUResetRequest extends UDSRequest<UDSECUResetResponse> {
 
     public UDSECUResetRequest(ECUResetMode mode) {
         this.resetMode = mode.getCode();
+    }
+
+    @Override
+    public void write(BitWriter writer) throws IOException {
+        writer.write(resetMode & 0xFF);
     }
 
     @Override

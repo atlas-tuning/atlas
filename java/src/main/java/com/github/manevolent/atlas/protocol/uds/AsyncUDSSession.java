@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.protocol.uds;
 import com.github.manevolent.atlas.Address;
 import com.github.manevolent.atlas.FrameReader;
 import com.github.manevolent.atlas.FrameWriter;
+import com.github.manevolent.atlas.protocol.isotp.ISOTPSpyDevice;
 import com.github.manevolent.atlas.protocol.j2534.ISOTPDevice;
 import com.github.manevolent.atlas.protocol.uds.response.UDSNegativeResponse;
 
@@ -205,8 +206,14 @@ public class AsyncUDSSession extends AbstractUDSSession implements UDSSession {
     }
 
     @Override
+    public boolean isSpying() {
+        return device instanceof ISOTPSpyDevice;
+    }
+
+    @Override
     public void close() throws IOException {
         try {
+            readThread.interrupt();
             reader.close();
             device.close();
             activeTransactions.clear();

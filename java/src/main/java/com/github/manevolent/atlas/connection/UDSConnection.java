@@ -94,6 +94,7 @@ public abstract class UDSConnection implements Connection, UDSListener {
             } else if (newMode == ConnectionMode.DISCONNECTED) {
                 if (session != null) {
                     session.close();
+                    session = null;
                 }
                 connectionMode = ConnectionMode.DISCONNECTED;
                 stateObject.notifyAll();
@@ -112,7 +113,25 @@ public abstract class UDSConnection implements Connection, UDSListener {
         }
     }
 
-    public abstract UDSSession connect() throws IOException;
+    protected void setSession(UDSSession session) throws IOException {
+        if (this.session != null) {
+            this.session.close();
+        }
+
+        this.session = session;
+    }
+
+    public abstract UDSSession connect() throws IOException, TimeoutException;
+
+    @Override
+    public boolean isSpying() {
+        return session != null && session.isSpying();
+    }
+
+    @Override
+    public void disconnect() throws IOException, TimeoutException {
+        changeConnectionMode(ConnectionMode.DISCONNECTED);
+    }
 
     protected abstract void change(ConnectionMode newMode) throws IOException, TimeoutException;
 

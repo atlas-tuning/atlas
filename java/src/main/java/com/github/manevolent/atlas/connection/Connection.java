@@ -26,6 +26,8 @@ public interface Connection {
 
     UDSSession connect() throws IOException, TimeoutException;
 
+    UDSSession spy() throws IOException, TimeoutException;
+
     void clearDTC() throws IOException, TimeoutException;
 
     /**
@@ -72,4 +74,7 @@ public interface Connection {
      */
     byte[] readDID(short did) throws IOException, TimeoutException;
 
+    boolean isSpying();
+
+    void disconnect() throws IOException, TimeoutException;
 }

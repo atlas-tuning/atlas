@@ -52,6 +52,11 @@ public abstract class UDSTransaction<Q extends UDSRequest<T>, T extends UDSRespo
             }
 
             if (exception != null) {
+                if (exception.getResponseCode() == NegativeResponseCode.SECURITY_ACCESS_DENIED) {
+                    throw new SecurityException(exception.getResponseCode().name());
+                } else if (exception.getResponseCode() == NegativeResponseCode.INVALID_KEY) {
+                    throw new SecurityException(exception.getResponseCode().name());
+                }
                 throw new IOException(exception.getResponseCode().name());
             }
 

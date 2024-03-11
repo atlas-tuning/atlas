@@ -12,6 +12,7 @@ import java.awt.*;
 
 public class CANDebugToolbar extends Toolbar<CANDebugWindow> {
     private JButton pauseButton;
+    private JButton spyButton;
     private JButton downButton;
     private JButton clearButton;
     private JButton saveButton;
@@ -41,6 +42,10 @@ public class CANDebugToolbar extends Toolbar<CANDebugWindow> {
     protected void initComponent(JToolBar toolbar) {
         toolbar.add(pauseButton = makeButton(CarbonIcons.RECORDING_FILLED, "record", "Record CAN session", (e) -> {
             getParent().toggleRecording();
+        }));
+
+        toolbar.add(spyButton = makeButton(FontAwesomeSolid.EYE, "spy", "Spy CAN session", (e) -> {
+            getParent().toggleSpy();
         }));
 
         toolbar.add(saveButton = makeButton(FontAwesomeSolid.SAVE, "save", "Export session...", (e) -> {
@@ -120,6 +125,7 @@ public class CANDebugToolbar extends Toolbar<CANDebugWindow> {
         saveButton.setEnabled(activePage != null);
         downButton.setEnabled(activePage != null);
         extractRom.setEnabled(activePage != null && recordingPage != activePage);
+        spyButton.setEnabled(recordingPage == null);
 
         boolean isRecordingPageFocused = activePage != null && recordingPage == activePage;
         clearButton.setEnabled(isRecordingPageFocused);

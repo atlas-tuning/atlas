@@ -17,4 +17,6 @@ public interface UDSSession extends Closeable {
 
     boolean hasListener(UDSListener listener);
 
+    boolean isSpying();
+
 }
