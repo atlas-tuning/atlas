@@ -18,7 +18,10 @@ public class CANDebugToolbar extends Toolbar<CANDebugWindow> {
     private JButton authButton;
     private JButton clearDTCButton;
     private JButton readDTCButton;
+    private JButton readDIDButton;
     private JButton readMemoryButton;
+    private JButton resetButton;
+    private JButton extractRom;
 
     private JLabel statusLabel;
 
@@ -56,6 +59,10 @@ public class CANDebugToolbar extends Toolbar<CANDebugWindow> {
 
         toolbar.addSeparator();
 
+        toolbar.add(resetButton = makeButton(FontAwesomeSolid.POWER_OFF, "reset", "Reset ECU...", (e) -> {
+            getParent().resetECU();
+        }));
+
         toolbar.add(authButton = makeButton(FontAwesomeSolid.HANDSHAKE, "mode", "Change mode...", (e) -> {
             getParent().changeMode();
         }));
@@ -68,11 +75,19 @@ public class CANDebugToolbar extends Toolbar<CANDebugWindow> {
             getParent().readDTC();
         }));
 
+        toolbar.add(readDIDButton = makeButton(FontAwesomeSolid.SUBSCRIPT, "readDID", "Read DID...", (e) -> {
+            getParent().readDID();
+        }));
+
+        toolbar.addSeparator();
+
         toolbar.add(readMemoryButton = makeButton(FontAwesomeSolid.MICROCHIP, "readMemory", "Read Memory...", (e) -> {
             getParent().readMemory();
         }));
 
-        toolbar.addSeparator();
+        toolbar.add(extractRom = makeButton(FontAwesomeSolid.FILE_DOWNLOAD, "extract", "Extract ROM...", (e) -> {
+            getParent().extractRom();
+        }));
 
         toolbar.add(Box.createHorizontalGlue());
 
@@ -104,13 +119,16 @@ public class CANDebugToolbar extends Toolbar<CANDebugWindow> {
                 recordingPage = getParent().getRecordingPage();
         saveButton.setEnabled(activePage != null);
         downButton.setEnabled(activePage != null);
+        extractRom.setEnabled(activePage != null && recordingPage != activePage);
 
         boolean isRecordingPageFocused = activePage != null && recordingPage == activePage;
         clearButton.setEnabled(isRecordingPageFocused);
         authButton.setEnabled(isRecordingPageFocused);
         clearDTCButton.setEnabled(isRecordingPageFocused);
         readDTCButton.setEnabled(isRecordingPageFocused);
+        readDIDButton.setEnabled(isRecordingPageFocused);
         readMemoryButton.setEnabled(isRecordingPageFocused);
+        resetButton.setEnabled(isRecordingPageFocused);
 
         if (isRecordingPageFocused) {
             statusLabel.setVisible(true);

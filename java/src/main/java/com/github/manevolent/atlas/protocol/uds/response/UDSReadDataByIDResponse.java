@@ -11,6 +11,16 @@ public class UDSReadDataByIDResponse extends UDSResponse implements Frame {
     private int did;
     private byte[] value;
 
+    public UDSReadDataByIDResponse() {
+        this.did = 0;
+        this.value = new byte[0];
+    }
+
+    public UDSReadDataByIDResponse(int did, byte[] value) {
+        this.did = did;
+        this.value = value;
+    }
+
     @Override
     public void read(BitReader reader) throws IOException {
         did = reader.readShort() & 0xFFFF;

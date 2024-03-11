@@ -11,6 +11,8 @@ import javax.swing.event.DocumentListener;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -124,15 +126,11 @@ public class Inputs {
         return new MemoryAddressField(project, existing, localOnly, changed);
     }
 
-    public static JComboBox<MemorySection> memorySectionField(Project project, MemorySection value,
-                                                              Predicate<MemorySection> predicate,
+    public static JComboBox<MemorySection> memorySectionField(List<MemorySection> sections,
+                                                              MemorySection value,
                                                               Consumer<MemorySection> changed) {
-        JComboBox<MemorySection> comboBox = new JComboBox<>(
-                project.getSections().stream()
-                        .filter(predicate)
-                        .toList().toArray(new MemorySection[0])
-        );
-        MemorySection intended = value == null ? project.getSections().getFirst() : value;
+        JComboBox<MemorySection> comboBox = new JComboBox<>(sections.toArray(new MemorySection[0]));
+        MemorySection intended = value == null ? sections.getFirst() : value;
         comboBox.setSelectedItem(intended);
         comboBox.addItemListener(e -> {
             if (e.getStateChange() != SELECTED) {
@@ -142,6 +140,15 @@ public class Inputs {
             changed.accept((MemorySection)e.getItem());
         });
         return comboBox;
+    }
+
+    public static JComboBox<MemorySection> memorySectionField(Project project, MemorySection value,
+                                                              Predicate<MemorySection> predicate,
+                                                              Consumer<MemorySection> changed) {
+        return memorySectionField(
+                project.getSections().stream().filter(predicate).toList(),
+                value,
+                changed);
     }
 
     public static JSpinner memoryLengthField(Series series, Consumer<Integer> valueChanged) {

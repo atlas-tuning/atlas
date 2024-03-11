@@ -3,7 +3,6 @@ package com.github.manevolent.atlas.ui;
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemorySection;
 import com.github.manevolent.atlas.model.MemoryType;
-import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.ui.util.Fonts;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
@@ -13,6 +12,8 @@ import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 import java.util.HexFormat;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -20,7 +21,7 @@ import java.util.function.Predicate;
 import static com.github.manevolent.atlas.ui.util.Inputs.memorySectionField;
 
 public class MemoryAddressDialog extends JDialog {
-    private final Project project;
+    private final java.util.List<MemorySection> sections;
     private final Consumer<MemoryAddress> valueChanged;
     private MemorySection section;
     private long offset;
@@ -30,36 +31,42 @@ public class MemoryAddressDialog extends JDialog {
     private JTextField memoryAddressField;
 
     private JComboBox<MemorySection> sectionField;
-    private final Predicate<MemorySection> predicate;
+    private boolean canceled = false;
 
-    public MemoryAddressDialog(Project project, MemoryAddress address, Frame parent,
-                               boolean localOnly, Consumer<MemoryAddress> valueChanged) {
+    public MemoryAddressDialog(java.util.List<MemorySection> sections, MemoryAddress address, Frame parent,
+                               Consumer<MemoryAddress> valueChanged) {
         super(parent, "Enter Address", true);
 
-        this.predicate = x -> !localOnly || x.getMemoryType() != MemoryType.RAM;
-
-        this.project = project;
+        this.sections = sections;
         this.valueChanged = valueChanged;
 
         this.section = address != null ? address.getSection() : getDefaultSection();
         this.offset = address != null ? address.getOffset() : section.getBaseAddress();
 
+        addWindowListener(new WindowAdapter() {
+            @Override
+            public void windowClosing(WindowEvent e) {
+                canceled = true;
+
+                super.windowClosing(e);
+            }
+        });
         setType(Type.POPUP);
         initComponent();
         pack();
         setLocationRelativeTo(parent);
         setResizable(false);
+        setModal(true);
         setMinimumSize(new Dimension(300, getMinimumSize().height));
         memoryAddressField.grabFocus();
     }
 
     private MemorySection getDefaultSection() {
-        return project.getSections().getFirst();
+        return sections.getFirst();
     }
 
     private MemorySection getMemorySection(long offset) {
-        return project.getSections().stream()
-                .filter(predicate)
+        return sections.stream()
                 .filter(section -> section.getBaseAddress() <= offset &&
                 section.getBaseAddress() + section.getDataLength() >= offset)
                 .findFirst()
@@ -186,9 +193,11 @@ public class MemoryAddressDialog extends JDialog {
         MemoryAddress address = MemoryAddress.builder().withOffset(offset).withSection(section).build();
         valueChanged.accept(address);
         dispose();
+        canceled = false;
     }
 
     private void cancel() {
+        canceled = true;
         dispose();
     }
 
@@ -196,13 +205,12 @@ public class MemoryAddressDialog extends JDialog {
         JPanel content = Inputs.createEntryPanel();
         JButton ok = Inputs.button(CarbonIcons.CHECKMARK, "OK", null, this::accept);
 
-
         JTextField addressField = createMemoryAddressField(ok::setEnabled, this::accept);
-        Inputs.createEntryRow(content, 2, "Address", "The memory address relative to the selected ROM region",
+        Inputs.createEntryRow(content, 2, "Address", "The address relative to the selected region",
                 addressField);
 
-        Inputs.createEntryRow(content, 1, "Region", "The ROM section this address will reside in",
-                sectionField = memorySectionField(project, section, predicate, (newSection) -> {
+        Inputs.createEntryRow(content, 1, "Region", "The section this address resides in",
+                sectionField = memorySectionField(sections, section, (newSection) -> {
                     this.section = newSection;
                     if (this.offset < newSection.getBaseAddress() ||
                             this.offset > newSection.getBaseAddress() + newSection.getDataLength()) {
@@ -219,14 +227,42 @@ public class MemoryAddressDialog extends JDialog {
     }
 
     public MemoryAddress getAddress() {
-        return MemoryAddress.builder()
-                .withSection(section)
-                .build();
+        if (!canceled) {
+            return MemoryAddress.builder()
+                    .withSection(section)
+                    .withOffset(offset)
+                    .build();
+        } else {
+            return null;
+        }
     }
 
-    public static void show(Frame parent, Project project, MemoryAddress current,
-                            boolean localOnly, Consumer<MemoryAddress> changed) {
-        MemoryAddressDialog dialog = new MemoryAddressDialog(project, current, parent, localOnly, changed);
+    public static MemoryAddress show(Frame parent, java.util.List<MemorySection> sections, MemoryAddress current) {
+        MemoryAddressDialog dialog = new MemoryAddressDialog(sections, current, parent, (ignored) -> { });
         dialog.setVisible(true);
+        return dialog.getAddress();
+    }
+
+    public static MemoryAddress show(Frame parent, java.util.List<MemorySection> sections, MemoryAddress current,
+                            Consumer<MemoryAddress> changed) {
+        MemoryAddressDialog dialog = new MemoryAddressDialog(sections, current, parent, changed);
+        dialog.setVisible(true);
+        return dialog.getAddress();
+    }
+
+    public static MemoryAddress show(Frame parent, java.util.List<MemorySection> sections,
+                            Predicate<MemorySection> predicate,
+                            MemoryAddress current,
+                            Consumer<MemoryAddress> changed) {
+        sections = sections.stream().filter(predicate).toList();
+        return show(parent, sections, predicate, current, changed);
+    }
+
+    public static MemoryAddress show(Frame parent, java.util.List<MemorySection> sections,
+                            boolean localOnly,
+                            MemoryAddress current,
+                            Consumer<MemoryAddress> changed) {
+        return show(parent, sections, section -> !localOnly || section.getMemoryType() != MemoryType.RAM,
+                current, changed);
     }
 }

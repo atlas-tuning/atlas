@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.connection;
 
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemoryParameter;
+import com.github.manevolent.atlas.protocol.uds.ECUResetMode;
 import com.github.manevolent.atlas.protocol.uds.UDSSession;
 
 import java.io.IOException;
@@ -57,4 +58,18 @@ public interface Connection {
     default byte[] readMemory(MemoryAddress address) throws IOException, TimeoutException {
         return readMemory(address, getMaximumReadSize());
     }
+
+    /**
+     * Resets the ECU
+     * @param mode reset mode to perform.
+     */
+    void resetECU(ECUResetMode mode) throws IOException, TimeoutException;
+
+    /**
+     * Reads a single DID from the ECU
+     * @param did DID to read
+     * @return data from the did
+     */
+    byte[] readDID(short did) throws IOException, TimeoutException;
+
 }

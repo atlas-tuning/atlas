@@ -11,10 +11,9 @@ import com.github.manevolent.atlas.protocol.uds.*;
 
 import com.github.manevolent.atlas.protocol.uds.request.UDSClearDTCInformationRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSDefineDataIdentifierRequest;
+import com.github.manevolent.atlas.protocol.uds.request.UDSECUResetRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSReadDataByIDRequest;
-import com.github.manevolent.atlas.protocol.uds.response.UDSClearDTCInformationResponse;
-import com.github.manevolent.atlas.protocol.uds.response.UDSDefineDataIdentifierResponse;
-import com.github.manevolent.atlas.protocol.uds.response.UDSNegativeResponse;
+import com.github.manevolent.atlas.protocol.uds.response.*;
 
 import java.io.IOException;
 import java.util.concurrent.BlockingDeque;
@@ -116,6 +115,13 @@ public class DebugUDSSession extends AsyncUDSSession
             replyQueue.add(new UDSDefineDataIdentifierResponse());
         } else if (frame instanceof UDSClearDTCInformationRequest) {
             replyQueue.add(new UDSClearDTCInformationResponse());
+        } else if (frame instanceof UDSECUResetRequest) {
+            replyQueue.add(new UDSECUResetResponse());
+        } else if (frame instanceof UDSReadDataByIDRequest) {
+            replyQueue.add(new UDSReadDataByIDResponse(
+                    0x1234,
+                    new byte[] { 0x12, 0x34 }
+            ));
         }
     }
 }

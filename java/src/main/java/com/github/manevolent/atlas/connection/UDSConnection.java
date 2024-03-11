@@ -5,7 +5,9 @@ import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.MemoryParameter;
 import com.github.manevolent.atlas.protocol.uds.*;
 import com.github.manevolent.atlas.protocol.uds.request.UDSClearDTCInformationRequest;
+import com.github.manevolent.atlas.protocol.uds.request.UDSECUResetRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSReadDTCRequest;
+import com.github.manevolent.atlas.protocol.uds.request.UDSReadDataByIDRequest;
 import com.github.manevolent.atlas.protocol.uds.response.UDSReadDTCResponse;
 import net.codecrete.usb.linux.IO;
 
@@ -140,7 +142,6 @@ public abstract class UDSConnection implements Connection, UDSListener {
         }
     }
 
-
     @Override
     public List<Integer> readDTC() throws IOException, TimeoutException {
         try {
@@ -159,6 +160,35 @@ public abstract class UDSConnection implements Connection, UDSListener {
                 }
                 return dtc;
 
+            }
+        } catch (IOException | TimeoutException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public void resetECU(ECUResetMode mode) throws IOException, TimeoutException {
+        try {
+            try (var transaction = getSession().request(getECUComponent().getSendAddress(),
+                    new UDSECUResetRequest(mode))) {
+                transaction.join();
+            }
+        } catch (IOException | TimeoutException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IOException(e);
+        }
+    }
+
+    @Override
+    public byte[] readDID(short did) throws IOException, TimeoutException {
+        try {
+            try (var transaction = getSession().request(getECUComponent().getSendAddress(),
+                    new UDSReadDataByIDRequest(did))) {
+                var response = transaction.get();
+                return response.getData();
             }
         } catch (IOException | TimeoutException e) {
             throw e;

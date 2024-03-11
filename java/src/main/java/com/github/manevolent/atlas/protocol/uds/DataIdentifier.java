@@ -1,6 +1,11 @@
 package com.github.manevolent.atlas.protocol.uds;
 
+import com.github.manevolent.atlas.model.MemoryEncryptionType;
+import com.github.manevolent.atlas.model.MemorySection;
+import com.github.manevolent.atlas.model.MemoryType;
+
 import java.util.Arrays;
+import java.util.List;
 
 public enum DataIdentifier {
 
@@ -93,6 +98,19 @@ public enum DataIdentifier {
                 })
                 .findFirst()
                 .orElseThrow(() -> new UnsupportedOperationException(String.format("Unknown DID %04X", did)));
+    }
+
+    public static List<MemorySection> toSections() {
+        return Arrays.stream(values())
+                .map(range -> MemorySection.builder().withType(MemoryType.RAM)
+                        .withBaseAddress(range.begin & 0xFFFF)
+                        .withEndAddress(range.end & 0xFFFF)
+                        .withEncryptionType(MemoryEncryptionType.NONE)
+                        .withSource(null)
+                        .withByteOrder(null)
+                        .withName(range.text())
+                        .build())
+                .toList();
     }
 
     public String text() {

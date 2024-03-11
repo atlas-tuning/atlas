@@ -137,8 +137,12 @@ public class MemorySection {
 
     @Override
     public String toString() {
-        return name + " [0x" + HexFormat.of().toHexDigits((int) baseAddress).toUpperCase() + "-" +
-                "0x" + HexFormat.of().toHexDigits((int) (baseAddress + dataLength - 1)).toUpperCase() + "]";
+        if (dataLength == 0) {
+            return name + " [0x" + HexFormat.of().toHexDigits((int) baseAddress).toUpperCase() + "]";
+        } else {
+            return name + " [0x" + HexFormat.of().toHexDigits((int) baseAddress).toUpperCase() + "-" +
+                    "0x" + HexFormat.of().toHexDigits((int) (baseAddress + dataLength)).toUpperCase() + "]";
+        }
     }
 
     public static Builder builder() {

@@ -42,9 +42,9 @@ public class MemoryAddressField extends JPanel {
 
         Runnable set = () -> MemoryAddressDialog.show(
                 null,
-                project,
-                existing,
+                project.getSections(),
                 localOnly,
+                existing,
                 (newValue) -> {
                     textField.setText(newValue.toString());
                     changed.accept(newValue);

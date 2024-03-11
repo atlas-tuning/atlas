@@ -3,30 +3,30 @@ package com.github.manevolent.atlas.ui.component.window;
 import com.github.manevolent.atlas.connection.Connection;
 import com.github.manevolent.atlas.connection.ConnectionMode;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.model.MemoryAddress;
-import com.github.manevolent.atlas.model.MemorySection;
-import com.github.manevolent.atlas.protocol.uds.UDSFrame;
-import com.github.manevolent.atlas.protocol.uds.UDSListener;
-import com.github.manevolent.atlas.protocol.uds.UDSSession;
+import com.github.manevolent.atlas.model.*;
+import com.github.manevolent.atlas.protocol.uds.*;
+import com.github.manevolent.atlas.protocol.uds.request.UDSTransferRequest;
 import com.github.manevolent.atlas.ui.Editor;
+import com.github.manevolent.atlas.ui.MemoryAddressDialog;
 import com.github.manevolent.atlas.ui.util.*;
 import com.github.manevolent.atlas.ui.component.menu.canlog.FileMenu;
 import com.github.manevolent.atlas.ui.component.toolbar.CANDebugToolbar;
-import org.apache.commons.lang.StringEscapeUtils;
-import org.checkerframework.checker.units.qual.A;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
-import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.awt.Color;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
+import java.math.BigInteger;
+import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.text.NumberFormat;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
@@ -34,6 +34,7 @@ import java.util.List;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -273,6 +274,11 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
         Job.fork(() -> {
             try {
                 connection.changeConnectionMode(selected);
+
+                JOptionPane.showMessageDialog(getParent(),
+                        "Connection mode changed to " + selected.getName() + " successfully.",
+                        "Connection Mode Changed",
+                        JOptionPane.INFORMATION_MESSAGE);
             } catch (Exception e) {
                 Log.can().log(Level.SEVERE, "Problem changing connection mode with ECU", e);
                 JOptionPane.showMessageDialog(getParent(), "Problem changing connection mode with ECU!\r\n" +
@@ -284,7 +290,7 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
     }
 
     public void clearDTC() {
-        if (JOptionPane.showConfirmDialog(getComponent(),
+        if (JOptionPane.showConfirmDialog(getParent(),
                 "Are you sure you want to clear diagnostic trouble codes?",
                 "Clear DTC",
                 JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
@@ -309,7 +315,7 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
                 return;
             }
 
-            JOptionPane.showMessageDialog(getComponent(),
+            JOptionPane.showMessageDialog(getParent(),
                     "Cleared diagnostic trouble codes successfully.",
                     "Clear DTC",
                     JOptionPane.INFORMATION_MESSAGE);
@@ -549,20 +555,290 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
             }
 
             if (dtc.isEmpty()) {
-                JOptionPane.showMessageDialog(getComponent(),
+                JOptionPane.showMessageDialog(getParent(),
                         "No DTC was found.",
                         "Read DTC",
                         JOptionPane.INFORMATION_MESSAGE);
             } else {
                 String dtcString = dtc.stream().map(i -> String.format("0x%03X", i))
                         .collect(Collectors.joining(", "));
-                JOptionPane.showMessageDialog(getComponent(),
+                JOptionPane.showMessageDialog(getParent(),
                         "Found " + dtc.size() + " DTC:\r\n" +
                         dtcString,
                         "Read DTC",
                         JOptionPane.WARNING_MESSAGE);
             }
         });
+    }
+
+    public void resetECU() {
+        CANDebugPage page = getRecordingPage();
+        if (page == null) {
+            return;
+        }
+
+        Connection connection = establishConnection();
+        if (connection == null) {
+            return;
+        }
+
+        Object[] options = ECUResetMode.values();
+        ECUResetMode selected = (ECUResetMode) JOptionPane.showInputDialog(
+                getParent(),
+                "Select a reset mode",
+                "Reset ECU",
+                JOptionPane.PLAIN_MESSAGE,
+                null,
+                options,
+                null
+        );
+
+        if (selected == null) {
+            return;
+        }
+
+        try {
+            connection.resetECU(selected);
+        } catch (IOException | TimeoutException e) {
+            Log.can().log(Level.SEVERE, "Problem resetting ECU", e);
+            JOptionPane.showMessageDialog(getParent(), "Problem reading ECU!\r\n" +
+                            e.getMessage() + "\r\n" + "See console output (F12) for more details.",
+                    "Reset failed",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        JOptionPane.showMessageDialog(getParent(),
+                "Reset successful.",
+                "ECU Reset",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public void readDID() {
+        MemoryAddress address = MemoryAddressDialog.show(getParent(), DataIdentifier.toSections(), null);
+        readDID((short) (address.getOffset() & 0xFFFF));
+    }
+
+    public void readDID(short did) {
+        CANDebugPage page = getRecordingPage();
+        if (page == null) {
+            return;
+        }
+
+        Connection connection = establishConnection();
+        if (connection == null) {
+            return;
+        }
+
+        byte[] data;
+        try {
+            data = connection.readDID(did);
+        } catch (IOException | TimeoutException e) {
+            Log.can().log(Level.SEVERE, "Problem reading DID", e);
+            JOptionPane.showMessageDialog(getParent(), "Problem reading DID!\r\n" +
+                            e.getMessage() + "\r\n" + "See console output (F12) for more details.",
+                    "Read DID failed",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (data.length == 0) {
+            JOptionPane.showMessageDialog(getParent(),
+                    "ECU answered with no data.",
+                    "Read DID",
+                    JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        SwingUtilities.invokeLater(() -> new DIDExplainer(
+                getParent(), getParent().getProject(), did, data).setVisible(true));
+    }
+
+    public void writeDID() {
+
+    }
+
+    public void extractRom() {
+        CANDebugPage page = getActivePage();
+        if (page == null) {
+            return;
+        }
+
+        if (!page.isPaused()) {
+            return;
+        }
+
+        List<UDSFrame> frames = page.getFrames();
+
+        boolean hasAnyRoms = frames.stream().anyMatch(frame -> frame.getBody() instanceof UDSTransferRequest);
+        if (!hasAnyRoms) {
+            JOptionPane.showMessageDialog(getComponent(),
+                    "No ROM transfers found in this log.",
+                    "Extract ROM",
+                    JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+
+        long lowestAddress = frames.stream().filter(x -> x.getBody() instanceof UDSTransferRequest)
+                .mapToLong(x -> ((UDSTransferRequest) x.getBody()).getAddress() & 0xFFFFFFFFL)
+                .min()
+                .orElse(0L);
+
+        long highestAddress = frames.stream().filter(x -> x.getBody() instanceof UDSTransferRequest)
+                .mapToLong(x -> (((UDSTransferRequest) x.getBody()).getAddress() & 0xFFFFFFFFL) + x.getLength())
+                .max()
+                .orElse(0L);
+
+        JFileChooser fileChooser = new JFileChooser();
+        FileNameExtensionFilter def = new FileNameExtensionFilter("Binary files", "bin");
+        fileChooser.addChoosableFileFilter(def);
+        fileChooser.setFileFilter(def);
+        fileChooser.setName(page.getName() + ".bin");
+        fileChooser.setDialogTitle("Save Extracted ROM");
+        if (fileChooser.showSaveDialog(getParent()) != JFileChooser.APPROVE_OPTION) {
+            return;
+        }
+
+        File file = fileChooser.getSelectedFile();
+        AtomicLong written = new AtomicLong();
+        try (RandomAccessFile raf = new RandomAccessFile(file, "rw")) {
+            frames.stream().filter(x -> x.getBody() instanceof UDSTransferRequest)
+                    .map(x -> (UDSTransferRequest) x.getBody())
+                    .forEach(x -> {
+                        long fileOffset = ((x.getAddress() & 0xFFFFFFFFL) - lowestAddress);
+                        try {
+                            raf.seek(fileOffset);
+                            raf.write(x.getData(), 0, x.getLength());
+                            written.addAndGet(x.getLength());
+                        } catch (IOException e) {
+                            Log.ui().log(Level.SEVERE, "Problem saving ROM block at offset " + fileOffset, e);
+                        }
+                    });
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        JOptionPane.showMessageDialog(getParent(),
+                "Rom extracted successfully.\r\n" +
+                        "Begin: " + Integer.toHexString((int)lowestAddress) + "\r\n" +
+                        "End: " + Integer.toHexString((int)highestAddress) + "\r\n" +
+                        "Total Data: " + written.get() + " bytes",
+                "Extract ROM",
+                JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private class DIDExplainer extends JDialog {
+        private final Project project;
+        private final short did;
+        private final byte[] data;
+
+        private DIDExplainer(Frame parent, Project project, short did, byte[] data) {
+            super(parent, "DID Value", true);
+            this.project = project;
+            this.did = did;
+            this.data = data;
+
+            initComponents();
+
+            setResizable(false);
+
+            pack();
+
+            setMinimumSize(new Dimension(getWidth() + 100, getPreferredSize().height));
+            setPreferredSize(new Dimension(getWidth() + 100, getPreferredSize().height));
+
+            setLocationRelativeTo(parent);
+        }
+
+        private void addRow(JPanel panel, int row, String name, String value) {
+            panel.add(Labels.darkerText(name), Layout.gridBagConstraints(
+                    GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, 0, row, 1, 1
+            ));
+
+            JTextPane f = new JTextPane();
+            f.setEditable(false);
+            f.setBackground(null);
+            f.setBorder(null);
+            f.setFont(Fonts.VALUE_FONT);
+            f.setAlignmentX(0f);
+            f.setText(value);
+
+            panel.add(f, Layout.gridBagConstraints(
+                    GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, 1, row, 1, 1
+            ));
+        }
+
+        private void initComponents() {
+            JPanel frame = new JPanel();
+            frame.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+            frame.setLayout(new GridBagLayout());
+
+            frame.add(Layout.emptyBorder(0, 0, 5, 0, Labels.boldText(String.format("DID 0x%02X"
+                            + " read successfully.", did))),
+                    Layout.gridBagConstraints(
+                            GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, 0, 0, 2, 1, 1, 1
+                    ));
+
+            if (data.length <= 4) {
+                addRow(frame, 1, "Decimal", new BigInteger(data).toString());
+            } else {
+                addRow(frame, 1, "Decimal", "N/A");
+            }
+
+            addRow(frame, 2, "Hexadecimal", "0x" + com.github.manevolent.atlas.Frame.toHexString(data));
+            addRow(frame, 3, "ASCII", "\"" + new String(data, StandardCharsets.US_ASCII) + "\"");
+
+            frame.add(new JSeparator(JSeparator.HORIZONTAL),
+                    Layout.gridBagConstraints(
+                            GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, 0, 4, 2, 1, 1, 1
+                    ));
+
+            List<Scale> candidateScales = project.getScales().stream()
+                    .sorted(Comparator.comparing(Scale::getName))
+                    .filter(scale -> scale.getFormat() != null && scale.getFormat().getSize() == data.length)
+                    .toList();
+
+            ByteOrder preferredOrder = project.getSections().stream()
+                    .filter(Objects::nonNull)
+                    .filter(x -> x.getMemoryType() == MemoryType.RAM)
+                    .map(MemorySection::getByteOrder)
+                    .filter(Objects::nonNull)
+                    .map(MemoryByteOrder::getByteOrder)
+                    .findFirst()
+                    .orElse(ByteOrder.nativeOrder());
+
+            int i;
+            for (i = 0; i < candidateScales.size(); i ++) {
+                try {
+                    Scale scale = candidateScales.get(i);
+                    float value = scale.forward(scale.getFormat().convertFromBytes(data, preferredOrder));
+                    addRow(frame, 5 + i, scale.getName(), String.format("%.2f", value));
+                } catch (Exception ex) {
+                    Log.ui().log(Level.FINE, "Problem applying format to DID", ex);
+                }
+            }
+
+            JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+            Layout.emptyBorder(5, 0, 0, 0, bottom);
+
+            bottom.add(Inputs.button("Read", this::reread));
+            bottom.add(Inputs.button("OK", this::dispose));
+
+            frame.add(bottom,
+                    Layout.gridBagConstraints(
+                            GridBagConstraints.SOUTHEAST, GridBagConstraints.NONE,
+                            0, 5 + i + 1,
+                            2, 1,
+                            1, 1
+                    ));
+
+            add(frame);
+        }
+
+        private void reread() {
+            dispose();
+            readDID(did);
+        }
     }
 
     private class MemoryReader extends JDialog {
@@ -598,7 +874,7 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
             NumberFormat numberFormat = NumberFormat.getNumberInstance(Locale.getDefault());
 
             frame.add(Layout.emptyBorder(0, 0, 10, 0,
-                    Labels.text("Reading " + section.getName() +
+                    Labels.boldText("Reading " + section.getName() +
                             " section (" + numberFormat.format(section.getDataLength()) + " bytes)...")));
 
             frame.add(Layout.emptyBorder(10, 0, 10, 0,
