@@ -672,7 +672,7 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
 
         boolean hasAnyRoms = frames.stream().anyMatch(frame -> frame.getBody() instanceof UDSTransferRequest);
         if (!hasAnyRoms) {
-            JOptionPane.showMessageDialog(getComponent(),
+            JOptionPane.showMessageDialog(getParent(),
                     "No ROM transfers found in this log.",
                     "Extract ROM",
                     JOptionPane.WARNING_MESSAGE);
