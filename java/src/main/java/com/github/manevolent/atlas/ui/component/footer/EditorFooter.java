@@ -1,8 +1,8 @@
 package com.github.manevolent.atlas.ui.component.footer;
 
 import com.github.manevolent.atlas.ApplicationMetadata;
-import com.github.manevolent.atlas.ui.Fonts;
-import com.github.manevolent.atlas.ui.Labels;
+import com.github.manevolent.atlas.ui.util.Fonts;
+import com.github.manevolent.atlas.ui.util.Labels;
 import com.github.manevolent.atlas.ui.Editor;
 
 import javax.swing.*;

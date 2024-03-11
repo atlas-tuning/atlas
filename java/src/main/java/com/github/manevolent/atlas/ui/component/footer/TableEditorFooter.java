@@ -4,9 +4,8 @@ import com.github.manevolent.atlas.model.Precision;
 import com.github.manevolent.atlas.model.Series;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.model.Unit;
-import com.github.manevolent.atlas.ui.Labels;
-import com.github.manevolent.atlas.ui.Separators;
-import com.github.manevolent.atlas.ui.component.footer.Footer;
+import com.github.manevolent.atlas.ui.util.Labels;
+import com.github.manevolent.atlas.ui.util.Separators;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 

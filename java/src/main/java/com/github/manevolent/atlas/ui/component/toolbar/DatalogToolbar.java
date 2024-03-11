@@ -1,8 +1,10 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
-import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.window.DatalogPage;
 import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
+import com.github.manevolent.atlas.ui.util.Fonts;
+import com.github.manevolent.atlas.ui.util.Icons;
+import com.github.manevolent.atlas.ui.util.Labels;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import org.kordamp.ikonli.swing.FontIcon;
 

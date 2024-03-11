@@ -11,10 +11,12 @@ import com.github.manevolent.atlas.protocol.uds.command.UDSSupplier;
 
 import java.util.Set;
 
+import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.ENGINE_1;
+
 public final class SubaruDITCommands {
 
     public static final UDSDataByIdSupplier<Boolean> IGNITION_ON =
-            new UDSDataByIdSupplier<>(SubaruDITComponent.ENGINE_1, 0x11C8) {
+            new UDSDataByIdSupplier<>(ENGINE_1, 0x11C8) {
                 @Override
                 public Boolean handle(byte[] data) {
                     return data.length == 1 && data[0] == (byte) 0xFF;
@@ -25,19 +27,19 @@ public final class SubaruDITCommands {
      * Allows for a programming session and for flash to be written to
      */
     public static final UDSSecurityAccessCommand SECURITY_ACCESS_LEVEL_1 =
-            new SubaruSecurityAccessCommandAES(0x1, SubaruDITComponent.ENGINE_1, Crypto.toByteArray("667E3078219976B4EDF3D43BD1D8FFC9"));
+            new SubaruSecurityAccessCommandAES(0x1, ENGINE_1, Crypto.toByteArray("667E3078219976B4EDF3D43BD1D8FFC9"));
 
     /**
      * Allows you to write parameters (DIDs) to ECU, such as VIN
      */
     public static final UDSSecurityAccessCommand SECURITY_ACCESS_LEVEL_3 =
-            new SubaruSecurityAccessCommandAES(0x3, SubaruDITComponent.ENGINE_1, Crypto.toByteArray("469A20AB308D5CA64BCD5BBE535BD85F"));
+            new SubaruSecurityAccessCommandAES(0x3, ENGINE_1, Crypto.toByteArray("469A20AB308D5CA64BCD5BBE535BD85F"));
 
     /**
      * Unknown purpose
      */
     public static final UDSSecurityAccessCommand SECURITY_ACCESS_LEVEL_5 =
-            new SubaruSecurityAccessCommandAES(0x5, SubaruDITComponent.ENGINE_1, Crypto.toByteArray("E8CC52D5D8F20706424813126FA7ABDD"));
+            new SubaruSecurityAccessCommandAES(0x5, ENGINE_1, Crypto.toByteArray("E8CC52D5D8F20706424813126FA7ABDD"));
 
     /**
      * Used on the CGW (Central Gateway) module

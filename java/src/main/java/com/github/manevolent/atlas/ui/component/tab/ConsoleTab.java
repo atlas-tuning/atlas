@@ -1,8 +1,8 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.Fonts;
-import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.util.Fonts;
+import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.component.toolbar.ConsoleTabToolbar;
 import com.github.manevolent.atlas.ui.Editor;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -31,7 +31,7 @@ import java.util.logging.Handler;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 
 public class ConsoleTab extends Tab implements FocusListener, Thread.UncaughtExceptionHandler {
     private static final String eol = "\r\n";

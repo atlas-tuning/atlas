@@ -1,15 +1,10 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
-import com.github.manevolent.atlas.ui.Icons;
-import com.github.manevolent.atlas.ui.Separators;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
-import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
-import org.kordamp.ikonli.fontawesome5.FontAwesomeBrands;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class TableEditorToolbar extends Toolbar<TableEditor> {
     public TableEditorToolbar(TableEditor editor) {

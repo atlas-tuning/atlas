@@ -2,8 +2,8 @@ package com.github.manevolent.atlas.ui.component.window;
 
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.Icons;
-import com.github.manevolent.atlas.ui.Fonts;
+import com.github.manevolent.atlas.ui.util.Icons;
+import com.github.manevolent.atlas.ui.util.Fonts;
 import com.github.manevolent.atlas.ui.component.JRotateLabel;
 import com.github.manevolent.atlas.ui.component.RowNumberTable;
 import com.github.manevolent.atlas.ui.component.footer.TableEditorFooter;
@@ -33,7 +33,7 @@ import java.util.stream.IntStream;
 
 import static com.github.manevolent.atlas.model.Axis.X;
 import static com.github.manevolent.atlas.model.Axis.Y;
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 
 public class TableEditor extends Window implements
         FocusListener,

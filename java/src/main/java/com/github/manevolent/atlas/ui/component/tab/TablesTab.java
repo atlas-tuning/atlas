@@ -2,8 +2,8 @@ package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.Icons;
-import com.github.manevolent.atlas.ui.Menus;
+import com.github.manevolent.atlas.ui.util.Icons;
+import com.github.manevolent.atlas.ui.util.Menus;
 import com.github.manevolent.atlas.ui.Editor;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -20,7 +20,7 @@ import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class TablesTab
@@ -71,7 +71,7 @@ public class TablesTab
 
     private DefaultMutableTreeNode buildModel(String search) {
         DefaultMutableTreeNode treeRoot = new DefaultMutableTreeNode();
-        for (Table table : getParent().getActiveRom().getTables()) {
+        for (Table table : getParent().getProject().getTables()) {
             if (search != null && !table.getName().toLowerCase().contains(search.toLowerCase())) {
                 continue;
             }
@@ -216,7 +216,7 @@ public class TablesTab
                 return;
             }
 
-            getParent().getActiveRom().removeTable(toDelete);
+            getParent().getProject().removeTable(toDelete);
 
             update();
         }));

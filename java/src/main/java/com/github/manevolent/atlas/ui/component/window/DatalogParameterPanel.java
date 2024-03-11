@@ -2,10 +2,10 @@ package com.github.manevolent.atlas.ui.component.window;
 
 import com.github.manevolent.atlas.connection.MemoryFrame;
 import com.github.manevolent.atlas.model.MemoryParameter;
-import com.github.manevolent.atlas.ui.Colors;
-import com.github.manevolent.atlas.ui.Fonts;
+import com.github.manevolent.atlas.ui.util.Colors;
+import com.github.manevolent.atlas.ui.util.Fonts;
 
-import com.github.manevolent.atlas.ui.Inputs;
+import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;

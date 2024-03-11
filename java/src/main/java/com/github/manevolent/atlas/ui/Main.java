@@ -69,7 +69,7 @@ public class Main {
         splashForm.setProgress(0.5f, "Initializing UI...");
         Editor editorForm = new Editor(project);
 
-        splashForm.setProgress(0.75f, "Opening ROM...");
+        splashForm.setProgress(0.75f, "Opening Project...");
         editorForm.openRom(romFile, project);
 
         splashForm.setProgress(1.0f, "Opening Atlas...");

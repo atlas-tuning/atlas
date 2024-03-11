@@ -49,6 +49,10 @@ public class MemorySection {
         return baseAddress;
     }
 
+    public MemoryAddress toBaseMemoryAddress() {
+        return MemoryAddress.builder().withSection(this).withOffset(baseAddress).build();
+    }
+
     public void setBaseAddress(long baseAddress) {
         this.baseAddress = baseAddress;
     }

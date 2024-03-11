@@ -4,6 +4,8 @@ import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemorySection;
 import com.github.manevolent.atlas.model.MemoryType;
 import com.github.manevolent.atlas.model.Project;
+import com.github.manevolent.atlas.ui.util.Fonts;
+import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -15,7 +17,7 @@ import java.util.HexFormat;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import static com.github.manevolent.atlas.ui.Inputs.memorySectionField;
+import static com.github.manevolent.atlas.ui.util.Inputs.memorySectionField;
 
 public class MemoryAddressDialog extends JDialog {
     private final Project project;

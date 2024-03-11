@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.*;
+import com.github.manevolent.atlas.ui.util.*;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -32,7 +33,7 @@ public class ProjectTab extends Tab {
     }
 
     public Vehicle getVehicle() {
-        return getParent().getActiveRom().getVehicle();
+        return getParent().getProject().getVehicle();
     }
 
     private void modelUpdated() {

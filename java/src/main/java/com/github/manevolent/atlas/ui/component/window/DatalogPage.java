@@ -3,9 +3,9 @@ package com.github.manevolent.atlas.ui.component.window;
 import com.github.manevolent.atlas.connection.MemoryFrame;
 import com.github.manevolent.atlas.model.MemoryParameter;
 import com.github.manevolent.atlas.ui.Editor;
-import com.github.manevolent.atlas.ui.Inputs;
-import com.github.manevolent.atlas.ui.Labels;
-import com.github.manevolent.atlas.ui.Layout;
+import com.github.manevolent.atlas.ui.util.Inputs;
+import com.github.manevolent.atlas.ui.util.Labels;
+import com.github.manevolent.atlas.ui.util.Layout;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -24,7 +24,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
     private JPanel footerPanel;
     private Integer cursorX;
     private long maximumHistoryMillis = 60_000L;
-    private long windowWidthMillis = 60_000L;
+    private long windowWidthMillis = 10_000L;
     private long timeOffset = 0L;
     private Instant currentInstant = Instant.now();
 
@@ -135,7 +135,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
     }
 
     public List<MemoryParameter> getMissingParameters() {
-        return getEditor().getActiveRom().getParameters().stream()
+        return getEditor().getProject().getParameters().stream()
                 .filter(p -> !activeParameters.contains(p))
                 .toList();
     }
@@ -239,7 +239,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
             @Override
             public void paint(Graphics g) {
                 if (!paused) {
-                    setWindowWidthMillis(windowWidthMillis);
+                    windowWidthMillis = setWindowWidthMillis(windowWidthMillis);
                     setCurrentInstant(Instant.now());
                 }
 
@@ -447,7 +447,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
         if (frames.size() > 1) {
             Instant latestInstant = frames.getFirst().getInstant();
             Instant earliestInstant = frames.getLast().getInstant();
-            return latestInstant.toEpochMilli() - earliestInstant.toEpochMilli();
+            return Math.max(10_000L, latestInstant.toEpochMilli() - earliestInstant.toEpochMilli());
         } else {
             return 10_000L;
         }

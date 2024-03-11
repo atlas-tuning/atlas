@@ -1,7 +1,8 @@
 package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.connection.Connection;
-import com.github.manevolent.atlas.connection.SubaruDITConnection;
+import com.github.manevolent.atlas.connection.DebugConnection;
+import com.github.manevolent.atlas.connection.SubaruDIConnection;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.Scale;
 import com.github.manevolent.atlas.model.Series;
@@ -18,10 +19,10 @@ import com.github.manevolent.atlas.ui.component.menu.editor.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.editor.WindowMenu;
 import com.github.manevolent.atlas.ui.component.tab.*;
 import com.github.manevolent.atlas.ui.component.toolbar.EditorToolbar;
-import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
-import com.github.manevolent.atlas.ui.component.window.TableDefinitionEditor;
-import com.github.manevolent.atlas.ui.component.window.TableEditor;
+import com.github.manevolent.atlas.ui.component.window.*;
 import com.github.manevolent.atlas.ui.component.window.Window;
+import com.github.manevolent.atlas.ui.util.Icons;
+import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -186,7 +187,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         getTablesTab().focusSearch();
     }
 
-    public Project getActiveRom() {
+    public Project getProject() {
         return project;
     }
 
@@ -199,9 +200,10 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     }
 
     public Connection getConnection() {
-        if (connection == null && getActiveRom() != null) {
+        if (connection == null && getProject() != null) {
             //TODO other connections
-            connection = new SubaruDITConnection(getActiveRom());
+            connection = new DebugConnection();
+            //connection = new SubaruDIConnection(getProject());
         }
 
         return connection;
@@ -499,7 +501,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         Table table = Table.builder()
                 .withName(newTableName)
                 .withData(Series.builder()
-                        .withAddress(getActiveRom().getDefaultMemoryAddress())
+                        .withAddress(getProject().getDefaultMemoryAddress())
                         .withLength(1)
                         .withScale(Scale.NONE))
                 .build();
@@ -755,6 +757,19 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         }
 
         dataLoggingWindow.focus();
+    }
+
+    public void openCanLogging() {
+        Window canLoggingWindow = getOpenWindows().stream()
+                .filter(w -> w instanceof CANDebugWindow)
+                .findFirst().orElse(null);
+
+        if (canLoggingWindow == null) {
+            canLoggingWindow = new CANDebugWindow(this);
+            openWindow(canLoggingWindow);
+        }
+
+        canLoggingWindow.focus();
     }
 
     @Override

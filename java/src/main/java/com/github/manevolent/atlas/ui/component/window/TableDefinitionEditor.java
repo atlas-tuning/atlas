@@ -5,9 +5,9 @@ import com.github.manevolent.atlas.model.Scale;
 import com.github.manevolent.atlas.model.Series;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.MemoryAddressField;
 import com.github.manevolent.atlas.ui.Editor;
+import com.github.manevolent.atlas.ui.util.*;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -20,8 +20,8 @@ import java.util.logging.Level;
 
 import static com.github.manevolent.atlas.model.Axis.X;
 import static com.github.manevolent.atlas.model.Axis.Y;
-import static com.github.manevolent.atlas.ui.Fonts.bold;
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+import static com.github.manevolent.atlas.ui.util.Fonts.bold;
+import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class TableDefinitionEditor extends Window implements InternalFrameListener {
@@ -49,7 +49,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         copy.setEnabled(!dirty);
         save.setEnabled(dirty);
         reset.setEnabled(dirty);
-        open.setEnabled(getParent().getActiveRom().getTables().contains(realTable));
+        open.setEnabled(getParent().getProject().getTables().contains(realTable));
         this.dirty = dirty;
     }
 
@@ -91,7 +91,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                     getParent().openTable(realTable);
                 })));
 
-        boolean isProjectTable = getParent().getActiveRom().getTables().contains(realTable);
+        boolean isProjectTable = getParent().getProject().getTables().contains(realTable);
         if (!isProjectTable) {
             setDirty(true);
             updateTitle();
@@ -116,8 +116,8 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         getParent().setDirty(true);
 
         // Make sure the table is a part of the project
-        if (!getParent().getActiveRom().hasTable(realTable)) {
-            getParent().getActiveRom().addTable(realTable);
+        if (!getParent().getProject().hasTable(realTable)) {
+            getParent().getProject().addTable(realTable);
             Log.ui().log(Level.INFO, "Added new table definition of \"" + workingTable.getName()
                     + "\" to project.");
         }
@@ -173,7 +173,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         JPanel panel = Inputs.createEntryPanel();
 
         MemoryAddressField memoryAddressField = Inputs.memoryAddressField(
-                getParent().getActiveRom(),
+                getParent().getProject(),
                 series != null ? series.getAddress() : null,
                 true,
                 (newAddress) -> {
@@ -191,7 +191,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         });
 
         JComboBox<Scale> scaleField = Inputs.scaleField(
-                getParent().getActiveRom(),
+                getParent().getProject(),
                 series != null ? series.getScale() : null,
                 "The data scale and format for this series",
                 (newScale) -> {
@@ -412,7 +412,7 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         if (dirty) {
             focus();
 
-            boolean isProjectTable = getParent().getActiveRom().hasTable(realTable);
+            boolean isProjectTable = getParent().getProject().hasTable(realTable);
 
             String message = isProjectTable ?
                 "You have unsaved changes to " + workingTable.getName() + " that will be lost. Save before closing?" :

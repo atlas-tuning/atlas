@@ -1,13 +1,13 @@
 package com.github.manevolent.atlas.model;
 
-import com.github.manevolent.atlas.model.subaru.SubaruDITMemoryEncryption;
+import com.github.manevolent.atlas.model.subaru.SubaruDIMemoryEncryption;
 
 import java.util.function.Supplier;
 
 public enum MemoryEncryptionType {
 
     NONE("None", () -> null),
-    SUBARU_DIT("Subaru DIT (2015+)", SubaruDITMemoryEncryption::new);
+    SUBARU_DIT("Subaru DI (2015+)", SubaruDIMemoryEncryption::new);
 
     private final Supplier<MemoryEncryption> instanceSupplier;
     private final String name;

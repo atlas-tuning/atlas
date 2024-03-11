@@ -2,11 +2,11 @@ package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
 import com.github.manevolent.atlas.ui.component.toolbar.OperationsToolbar;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.Editor;
+import com.github.manevolent.atlas.ui.util.*;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -20,8 +20,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
-import static com.github.manevolent.atlas.ui.Layout.*;
+import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
+import static com.github.manevolent.atlas.ui.util.Layout.*;
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class FormatsTab extends Tab implements ListSelectionListener {
@@ -61,7 +61,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     private ListModel<Scale> getFormatListModel() {
         DefaultListModel<Scale> model = new DefaultListModel<>();
 
-        getParent().getActiveRom().getScales().stream()
+        getParent().getProject().getScales().stream()
                 .sorted(Comparator.comparing(Scale::toString))
                 .forEach(model::addElement);
 
@@ -179,7 +179,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             Scale newScale = scale.copy();
             newScale.setName(newScaleName);
             workingCopies.put(newScale, newScale);
-            getParent().getActiveRom().getScales().add(newScale);
+            getParent().getProject().getScales().add(newScale);
             getParent().setDirty(true);
 
             update();
@@ -230,7 +230,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         if (realScale == workingScale) {
             // It's a new copy
-            getParent().getActiveRom().getScales().add(realScale);
+            getParent().getProject().getScales().add(realScale);
             workingCopies.put(realScale, realScale.copy());
         } else {
             realScale.apply(workingScale);
@@ -533,7 +533,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         newScale.setOperations(new ArrayList<>());
         newScale.setName(newScaleName);
         workingCopies.put(newScale, newScale);
-        getParent().getActiveRom().getScales().add(newScale);
+        getParent().getProject().getScales().add(newScale);
 
         update();
         updateListModel();
@@ -554,7 +554,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
 
-        boolean used = getParent().getActiveRom().getTables().stream()
+        boolean used = getParent().getProject().getTables().stream()
                 .anyMatch(table -> table.hasScale(scale));
         if (used) {
             JOptionPane.showMessageDialog(getParent(), scale.getName() +
@@ -570,7 +570,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
 
-        getParent().getActiveRom().getScales().remove(scale);
+        getParent().getProject().getScales().remove(scale);
 
         update();
         updateListModel();

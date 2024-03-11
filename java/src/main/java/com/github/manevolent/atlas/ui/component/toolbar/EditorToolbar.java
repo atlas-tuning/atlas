@@ -64,6 +64,10 @@ public class EditorToolbar extends Toolbar<Editor> {
             getParent().openDataLogging();
         }));
 
+        toolbar.add(makeButton(CarbonIcons.DEBUG, "canlogging", "Open CAN Debugging", _ -> {
+            getParent().openCanLogging();
+        }));
+
         update();
     }
 

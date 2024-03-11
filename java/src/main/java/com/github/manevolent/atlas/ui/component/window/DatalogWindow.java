@@ -11,6 +11,9 @@ import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.menu.datalog.FileMenu;
 import com.github.manevolent.atlas.ui.component.menu.datalog.ViewMenu;
 import com.github.manevolent.atlas.ui.component.toolbar.DatalogToolbar;
+import com.github.manevolent.atlas.ui.util.Icons;
+import com.github.manevolent.atlas.ui.util.Inputs;
+import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -32,11 +35,10 @@ import java.time.Instant;
 import java.util.*;
 import java.util.List;
 import java.util.Timer;
-import java.util.function.Consumer;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+import java.util.logging.Level;
+
+import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 
 public class DatalogWindow extends Window implements InternalFrameListener, ChangeListener {
     private JMenuBar menubar;
@@ -164,7 +166,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
             Log.can().log(Level.SEVERE, "Problem establishing datalog session with ECU", ex);
             JOptionPane.showMessageDialog(getParent(), "Failed to establish datalog connection with ECU!\r\n" +
                     ex.getMessage() + "\r\n" +
-                            "See console output for more details.",
+                            "See console output (F12) for more details.",
                     "Connection failed",
                     JOptionPane.ERROR_MESSAGE);
             return null;
@@ -418,6 +420,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Text files (*.txt)", "txt"));
         fileChooser.addChoosableFileFilter(new FileNameExtensionFilter("Log files (*.log)", "log"));
         fileChooser.setFileFilter(def);
+        fileChooser.setSelectedFile(new File(page.getName() + ".csv"));
         fileChooser.setDialogTitle("Export Datalog");
         if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
@@ -429,7 +432,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
                 }
                 writer.write("\r\n");
 
-                for (MemoryFrame frame : page.getFrames()) {
+                for (MemoryFrame frame : Lists.reverse(page.getFrames())) { // Reversed for time order (asc. desired)
                     boolean inView = frame.getInstant().isAfter(page.getLeft()) &&
                             frame.getInstant().isBefore(page.getRight());
 

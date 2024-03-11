@@ -11,6 +11,15 @@ public class UDSNegativeResponse extends UDSResponse {
     private byte rejectedSid;
     private NegativeResponseCode responseCode;
 
+    public UDSNegativeResponse() {
+
+    }
+
+    public UDSNegativeResponse(byte rejectedSid, NegativeResponseCode responseCode) {
+        this.rejectedSid = rejectedSid;
+        this.responseCode = responseCode;
+    }
+
     @Override
     public void read(BitReader reader) throws IOException {
         this.rejectedSid = reader.readByte();

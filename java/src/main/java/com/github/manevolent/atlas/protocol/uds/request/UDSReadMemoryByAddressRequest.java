@@ -42,6 +42,7 @@ public class UDSReadMemoryByAddressRequest extends UDSRequest<UDSReadMemoryByAdd
 
     @Override
     public String toString() {
-        return "address=" + address + " size=" + size;
+        return "sizeLength=" + sizeLength + " addressLength=" + addressLength
+                + " address=" + address + " size=" + size;
     }
 }

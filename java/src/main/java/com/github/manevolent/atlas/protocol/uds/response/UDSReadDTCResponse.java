@@ -5,6 +5,10 @@ import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.protocol.uds.UDSResponse;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class UDSReadDTCResponse extends UDSResponse implements Frame {
     private byte[] data;
@@ -17,10 +21,5 @@ public class UDSReadDTCResponse extends UDSResponse implements Frame {
     @Override
     public byte[] getData() {
         return data;
-    }
-
-    @Override
-    public String toString() {
-        return "data=" + toHexString();
     }
 }

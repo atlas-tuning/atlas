@@ -2,12 +2,12 @@ package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.*;
-import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.component.ColorField;
 import com.github.manevolent.atlas.ui.component.MemoryAddressField;
 import com.github.manevolent.atlas.ui.component.toolbar.ParametersTabToolbar;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.Editor;
+import com.github.manevolent.atlas.ui.util.*;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -22,8 +22,8 @@ import java.util.logging.Level;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
-import static com.github.manevolent.atlas.ui.Layout.*;
+import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
+import static com.github.manevolent.atlas.ui.util.Layout.*;
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class ParametersTab extends Tab implements ListSelectionListener {
@@ -45,7 +45,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         DefaultListModel<MemoryParameter> model = new DefaultListModel<>();
 
         Stream.concat(workingCopies.keySet().stream(),
-                        getParent().getActiveRom().getParameters().stream())
+                        getParent().getProject().getParameters().stream())
                 .collect(Collectors.toSet())
                 .stream()
                 .sorted(Comparator.comparing(MemoryParameter::toString))
@@ -166,7 +166,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
             MemoryParameter newParam = param.copy();
             newParam.setName(newParamName);
             workingCopies.put(newParam, newParam);
-            getParent().getActiveRom().addParameter(newParam);
+            getParent().getProject().addParameter(newParam);
             getParent().setDirty(true);
 
             update();
@@ -217,7 +217,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
 
         if (realParam == workingParam) {
             // It's a new copy
-            getParent().getActiveRom().addParameter(workingParam);
+            getParent().getProject().addParameter(workingParam);
             workingCopies.put(realParam, realParam.copy());
         } else {
             realParam.apply(workingParam);
@@ -247,7 +247,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         createEntryRow(inner, 0, "Name", "Name of the parameter", nameField);
 
         MemoryAddressField memoryAddressField = Inputs.memoryAddressField(
-                getParent().getActiveRom(),
+                getParent().getProject(),
                 parameter.getAddress(),
                 false, /* allow local and non-local */
                 (newAddress) -> {
@@ -256,14 +256,14 @@ public class ParametersTab extends Tab implements ListSelectionListener {
                 });
 
 
-        ColorField colorField = new ColorField(getParent().getActiveRom(),
+        ColorField colorField = new ColorField(getParent().getProject(),
                 parameter.getColor(), (newColor) -> {
             parameter.setColor(newColor);
             parameterChanged();
         });
 
         JComboBox<Scale> scaleField = Inputs.scaleField(
-                getParent().getActiveRom(),
+                getParent().getProject(),
                 parameter.getScale(),
                 "The data scale and format for this parameter",
                 (newScale) -> {
@@ -454,8 +454,8 @@ public class ParametersTab extends Tab implements ListSelectionListener {
     }
 
     public void newParameter() {
-        if (getParent().getActiveRom().getSections().stream().noneMatch(x -> x.getMemoryType() == MemoryType.RAM)) {
-            JOptionPane.showMessageDialog(getParent(), "Please define any RAM memory " +
+        if (getParent().getProject().getSections().stream().noneMatch(x -> x.getMemoryType() == MemoryType.RAM)) {
+            JOptionPane.showMessageDialog(getParent(), "Please define any RAM " +
                             "section before adding a parameter.",
                     "No sections", JOptionPane.ERROR_MESSAGE);
             return;
@@ -471,7 +471,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         MemoryParameter newParameter = new MemoryParameter();
         newParameter.setScale(Scale.NONE);
         newParameter.setName(newParameterName);
-        newParameter.setAddress(getParent().getActiveRom().getDefaultMemoryAddress());
+        newParameter.setAddress(getParent().getProject().getDefaultMemoryAddress());
         workingCopies.put(newParameter, newParameter);
 
         update();
@@ -496,7 +496,7 @@ public class ParametersTab extends Tab implements ListSelectionListener {
             return;
         }
 
-        getParent().getActiveRom().removeParameter(parameter);
+        getParent().getProject().removeParameter(parameter);
 
         update();
         updateListModel();

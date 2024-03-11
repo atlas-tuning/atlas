@@ -1,6 +1,6 @@
 package com.github.manevolent.atlas.ui.component.menu.datalog;
 
-import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.component.window.DatalogPage;
 import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;

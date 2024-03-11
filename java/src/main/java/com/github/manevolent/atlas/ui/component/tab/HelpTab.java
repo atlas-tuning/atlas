@@ -1,12 +1,12 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
-import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.Editor;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
 
-import static com.github.manevolent.atlas.ui.Fonts.getTextColor;
+import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 
 public class HelpTab extends Tab {
     public HelpTab(Editor editor, JTabbedPane tabbedPane) {

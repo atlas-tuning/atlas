@@ -8,9 +8,7 @@ import com.github.manevolent.atlas.protocol.uds.AsyncUDSSession;
 import com.github.manevolent.atlas.protocol.uds.DiagnosticSessionType;
 import com.github.manevolent.atlas.protocol.uds.RoutineControlSubFunction;
 import com.github.manevolent.atlas.protocol.uds.UDSProtocol;
-import com.github.manevolent.atlas.protocol.uds.request.UDSDiagSessionControlRequest;
-import com.github.manevolent.atlas.protocol.uds.request.UDSReadMemoryByAddressRequest;
-import com.github.manevolent.atlas.protocol.uds.request.UDSRoutineControlRequest;
+import com.github.manevolent.atlas.protocol.uds.request.*;
 import com.github.manevolent.atlas.protocol.subaru.SubaruDITCommands;
 import com.github.manevolent.atlas.protocol.subaru.SubaruProtocols;
 import com.github.manevolent.atlas.protocol.subaru.uds.request.SubaruStatus1Request;
@@ -84,7 +82,7 @@ public class MemoryDumper {
     }
 
     private static void fetchRegion(AsyncUDSSession session, String filename, long begin, long end) {
-        int maxReadSize = 0x40;
+        int maxReadSize = 0x10;
 
         int didoffs = 0;
         try (RandomAccessFile raf = new RandomAccessFile(filename, "rw")) {
@@ -116,27 +114,13 @@ public class MemoryDumper {
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 BitWriter bitWriter = new BitWriter(baos);
                 bitWriter.write(0x14);
-                bitWriter.writeInt((int) (offset & 0xFFFFFFFF));
+                bitWriter.writeInt((int) (offset & 0xFFFFFFFFL));
                 bitWriter.write((byte) Math.min(maxReadSize, end - offset));
 
-                long finalOffset = offset;
-                session.request(ENGINE_1, new UDSReadMemoryByAddressRequest(
-                                4, offset,
-                                1, (byte) Math.min(maxReadSize, end - offset)),
-                        (response) -> {
-                            System.out.println(response.toString());
-                            try {
-                               // System.in.read();
-                            } catch (Exception e) {
-                                throw new RuntimeException(e);
-                            }
-                        }, ex -> {
-                            System.out.println(finalOffset + ": " + ex.getMessage());
-                        });
-
-                /*try {
+                try {
                     session.request(ENGINE_1, new UDSDefineDataIdentifierRequest(2, 0xF300 + didoffs, baos.toByteArray()));
                 } catch (IOException ex) {
+                    ex.printStackTrace();
                     System.out.println("Out of range: " + offset);
                     continue;
                 }
@@ -156,7 +140,7 @@ public class MemoryDumper {
                     });
                 } catch (Exception ex) {
                     throw ex;
-                }*/
+                }
             }
         } catch (FileNotFoundException e) {
             throw new RuntimeException(e);
@@ -184,7 +168,7 @@ public class MemoryDumper {
         ), protocol);
         session.start();
 
-        for (int i = 0x14BEC0 - 32; i <= 0x14BEC0 + 100; i += 1) {
+        for (int i = 0x10000 - 32; i <= 0x10000 + 100; i += 1) {
             long regionStart = i;
             long regionEnd = regionStart + 1;
             System.out.println("Read " + Long.toHexString(regionStart));

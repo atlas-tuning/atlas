@@ -36,7 +36,7 @@ public abstract class UDSSecurityAccessCommand implements UDSCommand<UDSSecurity
     @Override
     public void handle(UDSSession session, UDSSecurityAccessResponse response) throws IOException {
         UDSSecurityAccessRequest answer = answer(response);
-        try (UDSTransaction<UDSSecurityAccessResponse> response2 =
+        try (UDSTransaction<UDSSecurityAccessRequest, UDSSecurityAccessResponse> response2 =
                      session.request(getComponent().getSendAddress(), answer)) {
             handle(response2.get());
         } catch (Exception e) {

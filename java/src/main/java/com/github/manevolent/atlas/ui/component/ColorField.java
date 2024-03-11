@@ -2,8 +2,8 @@ package com.github.manevolent.atlas.ui.component;
 
 import com.github.manevolent.atlas.model.Color;
 import com.github.manevolent.atlas.model.Project;
-import com.github.manevolent.atlas.ui.Inputs;
-import com.github.manevolent.atlas.ui.Layout;
+import com.github.manevolent.atlas.ui.util.Inputs;
+import com.github.manevolent.atlas.ui.util.Layout;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;

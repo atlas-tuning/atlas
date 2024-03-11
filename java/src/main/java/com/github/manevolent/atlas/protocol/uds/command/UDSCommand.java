@@ -17,7 +17,7 @@ public interface UDSCommand<R extends UDSRequest<S>, S extends UDSResponse> {
         UDSComponent component = getComponent();
         R request = newRequest();
         S response;
-        try (UDSTransaction<S> transaction = session.request(component.getSendAddress(), request)) {
+        try (UDSTransaction<R, S> transaction = session.request(component.getSendAddress(), request)) {
             response = transaction.get();
         } catch (Exception e) {
             throw new RuntimeException(e);

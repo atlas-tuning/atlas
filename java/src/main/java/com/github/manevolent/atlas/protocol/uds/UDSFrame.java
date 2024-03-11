@@ -8,6 +8,7 @@ public class UDSFrame implements Frame, Addressed {
     private final UDSProtocol protocol;
     private Address address;
     private UDSBody body;
+    private Direction direction = Direction.WRITE;
     private byte[] remaining;
 
     public UDSFrame(UDSProtocol protocol) {
@@ -38,6 +39,14 @@ public class UDSFrame implements Frame, Addressed {
 
     public void setBody(UDSBody body) {
         this.body = body;
+    }
+
+    public Direction getDirection() {
+        return direction;
+    };
+
+    public void setDirection(Direction direction) {
+        this.direction = direction;
     }
 
     public int getServiceId() {
@@ -125,5 +134,10 @@ public class UDSFrame implements Frame, Addressed {
         String fullyReadWarning = remaining != null ? " remaining=" + Frame.toHexString(remaining) : "";
         return getAddress().toString() + " " + sidString + " " + body.getClass().getSimpleName()
                 + " " + body.toString() + fullyReadWarning;
+    }
+
+    public enum Direction {
+        WRITE,
+        READ
     }
 }

@@ -1,7 +1,7 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
-import com.github.manevolent.atlas.ui.Fonts;
-import com.github.manevolent.atlas.ui.Icons;
+import com.github.manevolent.atlas.ui.util.Fonts;
+import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.component.AtlasComponent;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.swing.FontIcon;
@@ -30,6 +30,7 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
                                  ActionListener listener) {
         Color enabledColor = Fonts.getTextColor();
         Color disabledColor = Fonts.getTextColor().darker();
+
         JButton button = new JButton(Icons.get(ikon, enabledColor, size)) {
             @Override
             public void setEnabled(boolean b) {
@@ -43,11 +44,30 @@ public abstract class Toolbar<E> extends AtlasComponent<JToolBar, E> {
             }
         };
 
+        //noinspection SuspiciousNameCombination
+        button.setMinimumSize(new Dimension(
+                button.getPreferredSize().height,
+                button.getPreferredSize().height
+        ));
+
+        //noinspection SuspiciousNameCombination
+        button.setPreferredSize(new Dimension(
+                button.getPreferredSize().height,
+                button.getPreferredSize().height
+        ));
+
+        //noinspection SuspiciousNameCombination
+        button.setMaximumSize(new Dimension(
+                button.getPreferredSize().height,
+                button.getPreferredSize().height
+        ));
+
         button.setActionCommand(actionCommand);
         button.setToolTipText(toolTipText);
         if (listener != null) {
             button.addActionListener(listener);
         }
+
         return button;
     }
 

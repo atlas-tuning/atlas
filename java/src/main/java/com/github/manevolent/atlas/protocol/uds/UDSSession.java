@@ -7,5 +7,14 @@ import java.io.IOException;
 import java.util.concurrent.TimeoutException;
 
 public interface UDSSession extends Closeable {
-    <T extends UDSResponse> UDSTransaction<T> request(Address address, UDSRequest<T> request) throws IOException, TimeoutException;
+
+    <Q extends UDSRequest<T>, T extends UDSResponse>
+        UDSTransaction<Q, T> request(Address destination, Q request) throws IOException, TimeoutException;
+
+    void addListener(UDSListener listener);
+
+    boolean removeListener(UDSListener listener);
+
+    boolean hasListener(UDSListener listener);
+
 }

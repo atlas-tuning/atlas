@@ -7,14 +7,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 
-public abstract class UDSTransaction<T extends UDSResponse> implements AutoCloseable {
+public abstract class UDSTransaction<Q extends UDSRequest<T>, T extends UDSResponse> implements AutoCloseable {
     public static final int TIMEOUT_MILLIS = 2_000;
 
+    private final Class<Q> requestClass;
     private final boolean responseExpected;
     private List<T> responses = new ArrayList<>();
     private UDSNegativeResponse exception;
 
-    public UDSTransaction(boolean responseExpected) {
+    public UDSTransaction(Class<Q> requestClass, boolean responseExpected) {
+        this.requestClass = requestClass;
         this.responseExpected = responseExpected;
     }
 
@@ -45,7 +47,8 @@ public abstract class UDSTransaction<T extends UDSResponse> implements AutoClose
             }
 
             if (System.currentTimeMillis() - start >= TIMEOUT_MILLIS) {
-                throw new TimeoutException();
+                throw new TimeoutException("Timeout waiting for response to "
+                        + requestClass.getSimpleName());
             }
 
             if (exception != null) {
@@ -59,9 +62,7 @@ public abstract class UDSTransaction<T extends UDSResponse> implements AutoClose
     public void join() throws TimeoutException {
         try {
             get();
-        } catch (IOException e) {
-            // Ignore
-        } catch (InterruptedException e) {
+        } catch (IOException | InterruptedException e) {
             throw new RuntimeException(e);
         }
     }

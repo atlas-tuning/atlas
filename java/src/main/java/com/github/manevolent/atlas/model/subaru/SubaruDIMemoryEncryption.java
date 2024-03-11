@@ -9,11 +9,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 
-public class SubaruDITMemoryEncryption implements MemoryEncryption {
+public class SubaruDIMemoryEncryption implements MemoryEncryption {
     private short[] encryptKey;
     private short[] decryptKey;
 
-    public SubaruDITMemoryEncryption() {
+    public SubaruDIMemoryEncryption() {
     }
 
     @Override

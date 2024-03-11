@@ -17,6 +17,10 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
         this.protocol = protocol;
     }
 
+    protected void onFrameRead(UDSFrame frame) {
+
+    }
+
     @Override
     public UDSFrame read() throws IOException {
         Frame frame = transport.read();
@@ -25,6 +29,8 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
         }
 
         UDSFrame udsFrame = new UDSFrame(protocol);
+        udsFrame.setDirection(UDSFrame.Direction.READ);
+
         if (frame instanceof Addressed) {
             udsFrame.setAddress(((Addressed) frame).getAddress());
         }
@@ -36,6 +42,8 @@ public class UDSFrameReader implements FrameReader<UDSFrame> {
         }
 
         Log.can().log(Level.FINER, udsFrame.toString());
+
+        onFrameRead(udsFrame);
 
         return udsFrame;
     }

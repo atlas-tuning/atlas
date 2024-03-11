@@ -1,6 +1,8 @@
 package com.github.manevolent.atlas.protocol.uds;
 
 import com.github.manevolent.atlas.Address;
+import com.github.manevolent.atlas.FrameReader;
+import com.github.manevolent.atlas.FrameWriter;
 import com.github.manevolent.atlas.protocol.j2534.ISOTPDevice;
 import com.github.manevolent.atlas.protocol.uds.response.UDSNegativeResponse;
 
@@ -13,24 +15,23 @@ import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
-public class AsyncUDSSession extends Thread implements UDSSession {
+public class AsyncUDSSession extends AbstractUDSSession implements UDSSession {
     private final ISOTPDevice device;
     private final UDSProtocol protocol;
 
     @SuppressWarnings("rawtypes")
     private final Map<Integer, UDSTransaction> activeTransactions = new HashMap<>();
 
+    private final Reader readThread;
     private UDSFrameReader reader;
     private UDSFrameWriter writer;
 
     private final Object[] writeLocks = new Object[256];
 
     public AsyncUDSSession(ISOTPDevice device, UDSProtocol protocol) {
-        this.setName("UDSSession/" + device.toString() + "/" + protocol.toString());
-        this.setDaemon(true);
-
         this.device = device;
         this.protocol = protocol;
+        this.readThread = new Reader();
 
         for (int i = 0; i < writeLocks.length; i ++) {
             writeLocks[i] = new Object();
@@ -41,33 +42,40 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         this(device, UDSProtocol.STANDARD);
     }
 
-    private void ensureInitialized() throws IOException {
+    public void start() {
+        if (!this.readThread.isAlive()) {
+            this.readThread.start();
+        }
+    }
+
+    protected void ensureInitialized() {
         synchronized (this) {
             if (this.reader == null || this.writer == null) {
+                this.reader = new UDSFrameReader(device.reader(), protocol) {
+                    @Override
+                    protected void onFrameRead(UDSFrame frame) {
+                        AsyncUDSSession.this.onUDSFrameRead(frame);
+                    }
+                };
 
-                this.reader = new UDSFrameReader(device.reader(), protocol);
-                this.writer = new UDSFrameWriter(device.writer(), protocol);
+                this.writer = new UDSFrameWriter(device.writer(), protocol) {
+                    @Override
+                    protected void onFrameWrite(UDSFrame frame) {
+                        AsyncUDSSession.this.onUDSFrameWrite(frame);
+                    }
+                };
             }
         }
     }
 
-    public UDSFrameReader reader() throws IOException {
+    public FrameReader<UDSFrame> reader() throws IOException {
         ensureInitialized();
         return reader;
     }
 
-    public UDSFrameWriter writer() throws IOException {
+    public FrameWriter<UDSBody> writer() throws IOException {
         ensureInitialized();
         return writer;
-    }
-
-    @Override
-    public void run() {
-        try {
-            handle();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     protected long handle() throws IOException {
@@ -87,8 +95,6 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         if (frame == null) {
             return null;
         }
-
-        //System.out.println(frame.toString());
 
         if (frame.getBody() instanceof UDSResponse) {
             if (frame.getBody() instanceof UDSNegativeResponse) {
@@ -118,9 +124,10 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         }
     }
 
-    public <T extends UDSResponse> void requestAndWait(UDSComponent component, UDSRequest<T> request)
+    public <Q extends UDSRequest<T>, T extends UDSResponse>
+    void requestAndWait(UDSComponent component, Q request)
             throws IOException, TimeoutException {
-        UDSTransaction<T> transaction = request(component.getSendAddress(), request);
+        UDSTransaction<Q, T> transaction = request(component.getSendAddress(), request);
         transaction.join();
     }
 
@@ -146,10 +153,10 @@ public class AsyncUDSSession extends Thread implements UDSSession {
         request(component.getSendAddress(), request, callback, error);
     }
 
-    public <T extends UDSResponse> void request(Address destination, UDSRequest<T> request,
+    public <Q extends UDSRequest<T>, T extends UDSResponse> void request(Address destination, Q request,
                                                              Consumer<T> callback, Consumer<Exception> error)
             throws IOException {
-        try (UDSTransaction<T> transaction = request(destination, request)) {
+        try (UDSTransaction<Q, T> transaction = request(destination, request)) {
             callback.accept(transaction.get());
         } catch (Exception e) {
             error.accept(e);
@@ -157,18 +164,19 @@ public class AsyncUDSSession extends Thread implements UDSSession {
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends UDSResponse> UDSTransaction<T> request(Address destination, UDSRequest<T> request)
-            throws IOException, TimeoutException {
+    public <Q extends UDSRequest<T>, T extends UDSResponse>
+        UDSTransaction<Q, T> request(Address destination, Q request) throws IOException, TimeoutException {
         final int serviceId = protocol.getSid(request.getClass());
         synchronized (writeLocks[serviceId & 0xFF]) {
-            UDSTransaction<T> transaction = activeTransactions.get(serviceId & 0xFF);
+            UDSTransaction<Q, T> transaction = activeTransactions.get(serviceId & 0xFF);
             if (transaction != null) {
                 // Wait for this transaction to complete before submitting another
                 transaction.join();
             }
 
             // Construct the new transaction
-            transaction = new UDSTransaction<>(request.isResponseExpected()) {
+            transaction = new UDSTransaction<>((Class<Q>) request.getClass(),
+                                                request.isResponseExpected()) {
                 @Override
                 public void close() {
                     AsyncUDSSession.this.activeTransactions.remove(serviceId & 0xFF, this);
@@ -204,6 +212,22 @@ public class AsyncUDSSession extends Thread implements UDSSession {
             activeTransactions.clear();
         } catch (Exception e) {
             throw new IOException(e);
+        }
+    }
+
+    private class Reader extends Thread {
+        Reader() {
+            this.setName("UDSSession/" + device.toString() + "/" + protocol.toString());
+            this.setDaemon(true);
+        }
+
+        @Override
+        public void run() {
+            try {
+                handle();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
         }
     }
 }

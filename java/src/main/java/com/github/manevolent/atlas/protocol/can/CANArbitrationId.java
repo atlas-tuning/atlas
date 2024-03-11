@@ -43,4 +43,9 @@ public class CANArbitrationId implements Address {
         arbitrationIdBytes[3] = (byte) ((arbitrationId) & 0xFF);
         return arbitrationIdBytes;
     }
+
+    @Override
+    public int toInt() {
+        return arbitrationId;
+    }
 }

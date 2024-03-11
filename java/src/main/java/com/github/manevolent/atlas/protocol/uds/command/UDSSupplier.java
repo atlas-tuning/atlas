@@ -23,7 +23,7 @@ public interface UDSSupplier<R extends UDSRequest<S>, S extends UDSResponse, T> 
         UDSComponent component = getComponent();
         R request = newRequest();
         S response;
-        try (UDSTransaction<S> transaction = session.request(getSendAddress(), request)) {
+        try (UDSTransaction<R, S> transaction = session.request(getSendAddress(), request)) {
             response = transaction.get();
         } catch (Exception e) {
             throw new RuntimeException(e);

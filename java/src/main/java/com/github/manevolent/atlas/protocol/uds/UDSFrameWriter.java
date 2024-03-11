@@ -17,12 +17,17 @@ public class UDSFrameWriter implements FrameWriter<UDSBody> {
         this.protocol = protocol;
     }
 
+    protected void onFrameWrite(UDSFrame frame) {
+
+    }
+
     @Override
     public void write(Address address, UDSBody body) throws IOException {
         UDSFrame frame = new UDSFrame(protocol, body);
         frame.setAddress(address);
         Log.can().log(Level.FINER, frame.toString());
         transport.write(address, BasicFrame.from(frame));
+        onFrameWrite(frame);
     }
 
     public void write(UDSComponent component, UDSBody body) throws IOException {

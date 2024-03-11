@@ -66,6 +66,10 @@ public class MemoryParameter {
         return new Builder();
     }
 
+    public byte[] newBuffer() {
+        return new byte[getScale().getFormat().getSize()];
+    }
+
     public float getValue(byte[] data) {
         float unscaled = getScale().getFormat().convertFromBytes(
                 data,
