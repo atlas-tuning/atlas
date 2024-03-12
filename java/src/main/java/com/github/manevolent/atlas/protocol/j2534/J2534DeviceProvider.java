@@ -11,7 +11,7 @@ public interface J2534DeviceProvider<T extends J2534DeviceDescriptor> {
      */
     T getDefaultDevice() throws IOException;
 
-    void setDefaultDevice(T descriptor);
+    void setDefaultDevice(J2534DeviceDescriptor descriptor);
 
     List<T> getAllDevices();
 

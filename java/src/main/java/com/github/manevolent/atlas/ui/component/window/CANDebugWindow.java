@@ -363,7 +363,7 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
 
     public void clearFrames() {
         if (recordingPage != null) {
-            if (JOptionPane.showConfirmDialog(getComponent(),
+            if (JOptionPane.showConfirmDialog(getParent(),
                     "Are you sure you want to clear all CAN frames?",
                     "Clear Frames",
                     JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {

@@ -227,6 +227,11 @@ public class SerialTactrixOpenPort implements J2534Device {
         }
 
         @Override
+        public String toString() {
+            return device.getPath();
+        }
+
+        @Override
         public J2534Device createDevice() throws IOException {
             switch (communicationMode) {
                 case SERIAL_DEVICE:

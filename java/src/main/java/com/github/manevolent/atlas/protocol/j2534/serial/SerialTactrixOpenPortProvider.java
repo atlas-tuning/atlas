@@ -41,12 +41,18 @@ public class SerialTactrixOpenPortProvider implements J2534DeviceProvider<Serial
             }
         }
 
+        if (descriptors.isEmpty()) {
+            return null;
+        }
+
         return descriptors.getFirst();
     }
 
     @Override
-    public void setDefaultDevice(SerialTactrixOpenPort.Descriptor descriptor) {
-        Settings.set(deviceSetting, descriptor.getDeviceFile().getPath());
+    public void setDefaultDevice(J2534DeviceDescriptor descriptor) {
+        if (descriptor instanceof SerialTactrixOpenPort.Descriptor) {
+            Settings.set(deviceSetting, ((SerialTactrixOpenPort.Descriptor) descriptor).getDeviceFile().getPath());
+        }
     }
 
     @Override

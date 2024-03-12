@@ -40,6 +40,11 @@ public class UsbTactrixOpenPort implements J2534Device {
         }
 
         @Override
+        public String toString() {
+            return device.toString();
+        }
+
+        @Override
         public J2534Device createDevice() {
             device.open();
 

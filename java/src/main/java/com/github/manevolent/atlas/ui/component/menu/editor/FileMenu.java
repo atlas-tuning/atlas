@@ -45,6 +45,14 @@ public class FileMenu extends EditorMenu {
         fileMenu.add(saveRom);
 
         fileMenu.addSeparator();
+
+        JMenuItem openDeviceSettings = new JMenuItem("Device Settings...");
+        openDeviceSettings.addActionListener((e) -> {
+            getParent().openDeviceSettings();
+        });
+        fileMenu.add(openDeviceSettings);
+
+        fileMenu.addSeparator();
         JMenuItem exit = new JMenuItem("Exit");
         exit.addActionListener((e) -> getParent().exit());
         fileMenu.add(exit);

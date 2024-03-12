@@ -2,15 +2,11 @@ package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.connection.Connection;
 import com.github.manevolent.atlas.connection.ConnectionType;
-import com.github.manevolent.atlas.connection.DebugConnection;
-import com.github.manevolent.atlas.connection.SubaruDIConnection;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.Scale;
 import com.github.manevolent.atlas.model.Series;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.protocol.j2534.J2534Device;
-import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
 import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
 import com.github.manevolent.atlas.ui.behavior.Edit;
@@ -579,6 +575,11 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         opened.focus();
 
         openedTableDefs.put(table, opened);
+    }
+
+    public void openDeviceSettings() {
+        DeviceSettingsDialog dialog = new DeviceSettingsDialog(this);
+        dialog.setVisible(true);
     }
 
     private JDesktopPane initDesktop() {

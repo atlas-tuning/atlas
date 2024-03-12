@@ -16,19 +16,24 @@ public enum J2534DeviceType {
 
     TACTRIX_SERIAL_USB(UsbTactrixOpenPortProvider::new, "Tactrix OpenPort 2.0 (USB)");
 
-    private final Supplier<J2534DeviceProvider> provider;
+    private final Supplier<J2534DeviceProvider<?>> provider;
     private final String name;
 
-    J2534DeviceType(Supplier<J2534DeviceProvider> provider, String name) {
+    J2534DeviceType(Supplier<J2534DeviceProvider<?>> provider, String name) {
         this.provider = provider;
         this.name = name;
     }
 
-    public J2534DeviceProvider getProvider() {
+    public J2534DeviceProvider<?> getProvider() {
         return provider.get();
     }
 
     public String getName() {
         return name;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
     }
 }

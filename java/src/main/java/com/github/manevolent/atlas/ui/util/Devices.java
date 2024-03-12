@@ -18,8 +18,11 @@ public class Devices {
         return type;
     }
 
-    public static J2534DeviceProvider getProvider() {
+    public static J2534DeviceProvider<?> getProvider() {
         return getType().getProvider();
     }
 
+    public static void setType(J2534DeviceType newDeviceType) {
+        Settings.set(Setting.DEVICE_PROVIDER, newDeviceType.name());
+    }
 }
