@@ -3,13 +3,18 @@ package com.github.manevolent.atlas.connection;
 import com.github.manevolent.atlas.BitReader;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.MemoryParameter;
+import com.github.manevolent.atlas.model.Project;
+import com.github.manevolent.atlas.protocol.j2534.J2534Device;
+import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
+import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
+import com.github.manevolent.atlas.protocol.j2534.tactrix.SerialTactrixOpenPort;
 import com.github.manevolent.atlas.protocol.uds.*;
 import com.github.manevolent.atlas.protocol.uds.request.UDSClearDTCInformationRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSECUResetRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSReadDTCRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSReadDataByIDRequest;
 import com.github.manevolent.atlas.protocol.uds.response.UDSReadDTCResponse;
-import net.codecrete.usb.linux.IO;
+import com.github.manevolent.atlas.ui.util.Devices;
 
 import java.io.IOException;
 import java.util.*;
@@ -18,6 +23,7 @@ import java.util.function.Consumer;
 import java.util.logging.Level;
 
 public abstract class UDSConnection implements Connection, UDSListener {
+    private final J2534DeviceProvider deviceProvider;
     private ConnectionMode connectionMode = ConnectionMode.DISCONNECTED;
     private Set<MemoryParameter> parameters = new LinkedHashSet<>();
     private LinkedList<Consumer<MemoryFrame>> listeners = new LinkedList<>();
@@ -25,6 +31,11 @@ public abstract class UDSConnection implements Connection, UDSListener {
     private KeepAliveThread keepAliveThread ;
     private final Object stateObject = new Object();
     private long lastFrameSent = 0L;
+    private Project project;
+
+    public UDSConnection(J2534DeviceProvider deviceProvider) {
+        this.deviceProvider = deviceProvider;
+    }
 
     @Override
     public boolean isConnected() {
@@ -34,6 +45,31 @@ public abstract class UDSConnection implements Connection, UDSListener {
     @Override
     public ConnectionMode getConnectionMode() {
         return connectionMode;
+    }
+
+    protected J2534Device findDevice() throws IOException {
+        J2534DeviceProvider provider = Devices.getProvider();
+        J2534DeviceDescriptor defaultDevice = provider.getDefaultDevice();
+        if (defaultDevice == null) {
+            throw new NullPointerException("No default J2534 device found");
+        }
+
+        return defaultDevice.createDevice();
+    }
+
+    protected void onProjectChanging(Project newProject) {
+
+    }
+
+    public void setProject(Project project) {
+        if (this.project != project) {
+            onProjectChanging(project);
+            this.project = project;
+        }
+    }
+
+    public Project getProject() {
+        return project;
     }
 
     /**
@@ -55,6 +91,10 @@ public abstract class UDSConnection implements Connection, UDSListener {
      */
     protected abstract void keepAlive() throws IOException, TimeoutException;
 
+    /**
+     * Gets the current UDS session
+     * @return UDS session
+     */
     public UDSSession getSession() throws IOException, TimeoutException {
         if (session == null) {
             session = connect();

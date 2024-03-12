@@ -3,17 +3,14 @@ package com.github.manevolent.atlas.protocol.j2534.tactrix;
 import com.github.manevolent.atlas.BasicFrame;
 import com.github.manevolent.atlas.FrameReader;
 import com.github.manevolent.atlas.FrameWriter;
-import com.github.manevolent.atlas.protocol.can.*;
 import com.github.manevolent.atlas.protocol.isotp.ISOTPFrame;
 import com.github.manevolent.atlas.protocol.j2534.*;
 import com.github.manevolent.atlas.protocol.can.CANFrame;
-import com.github.manevolent.atlas.protocol.j2534.*;
 import com.rm5248.serial.NoSuchPortException;
 import com.rm5248.serial.NotASerialPortException;
 import com.rm5248.serial.SerialPort;
 import com.rm5248.serial.SerialPortBuilder;
 
-import javax.swing.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 
@@ -213,7 +210,7 @@ public class SerialTactrixOpenPort implements J2534Device {
 
     public enum CommunicationMode {
         SERIAL_DEVICE,
-        DIRECT_SOCKET
+        UNIX_SOCKET
     }
 
     public static class Descriptor implements J2534DeviceDescriptor {
@@ -223,6 +220,10 @@ public class SerialTactrixOpenPort implements J2534Device {
         public Descriptor(File device, CommunicationMode communicationMode) {
             this.device = device;
             this.communicationMode = communicationMode;
+        }
+
+        public File getDeviceFile() {
+            return device;
         }
 
         @Override
@@ -244,7 +245,7 @@ public class SerialTactrixOpenPort implements J2534Device {
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
-                case DIRECT_SOCKET:
+                case UNIX_SOCKET:
                     FileInputStream is = new FileInputStream(device);
                     FileOutputStream os = new FileOutputStream(device);
                     return new SerialTactrixOpenPort(is, os);

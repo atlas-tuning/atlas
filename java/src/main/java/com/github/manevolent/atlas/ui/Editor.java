@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.connection.Connection;
+import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.connection.DebugConnection;
 import com.github.manevolent.atlas.connection.SubaruDIConnection;
 import com.github.manevolent.atlas.model.Project;
@@ -8,6 +9,8 @@ import com.github.manevolent.atlas.model.Scale;
 import com.github.manevolent.atlas.model.Series;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.protocol.j2534.J2534Device;
+import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
 import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
 import com.github.manevolent.atlas.ui.behavior.Edit;
@@ -21,6 +24,7 @@ import com.github.manevolent.atlas.ui.component.tab.*;
 import com.github.manevolent.atlas.ui.component.toolbar.EditorToolbar;
 import com.github.manevolent.atlas.ui.component.window.*;
 import com.github.manevolent.atlas.ui.component.window.Window;
+import com.github.manevolent.atlas.ui.util.Devices;
 import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
@@ -34,6 +38,7 @@ import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -199,14 +204,51 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         }
     }
 
-    public Connection getConnection() {
-        if (connection == null && getProject() != null) {
-            //TODO other connections
-            //connection = new DebugConnection();
-            connection = new SubaruDIConnection(getProject());
+    public Connection createConnection() {
+        ConnectionType connectionType = getProject().getConnectionType();
+        if (connectionType == null) {
+            throw new IllegalArgumentException("Please set a connection type for this" +
+                    " project so communication can be established.");
+        }
+
+        postStatus("Creating connection with CAN device...");
+        Connection connection = connectionType.createConnection(Devices.getProvider());
+        if (connection != null) {
+            connection.setProject(getProject());
         }
 
         return connection;
+    }
+
+    public Connection getConnection() {
+        if (connection == null && getProject() != null) {
+            connection = createConnection();
+        }
+
+        if (connection != null) {
+            postStatus("Opened connection with CAN device.");
+        }
+
+        return connection;
+    }
+
+    public void reestablishConnection() {
+        try {
+            if (connection != null) {
+                connection.disconnect();
+                connection = null;
+            }
+        } catch (IOException | TimeoutException e) {
+            Log.can().log(Level.WARNING, "Problem disconnecting old connection", e);
+        }
+
+        try {
+            connection = createConnection();
+        } catch (Exception e) {
+            Log.can().log(Level.WARNING, "Problem creating new connection", e);
+        }
+
+        Log.ui().log(Level.INFO, "Connection reestablished.");
     }
 
     /**

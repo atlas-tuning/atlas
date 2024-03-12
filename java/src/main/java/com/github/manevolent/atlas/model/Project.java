@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.model;
 
+import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.model.source.VehicleSource;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
 import org.yaml.snakeyaml.LoaderOptions;
@@ -23,12 +24,12 @@ public class Project {
             Vehicle.class, Precision.class, MemorySection.class, MemoryParameter.class,
             MemoryByteOrder.class, MemoryAddress.class, DataFormat.class,
             Axis.class, ArithmeticOperation.class, MemoryEncryptionType.class, KeyProperty.class,
-            Color.class, SecurityAccessProperty.class
+            Color.class, SecurityAccessProperty.class, ConnectionType.class
     ).map(Class::getName).collect(Collectors.toSet()));
 
     private Vehicle vehicle;
     private List<MemorySection> sections;
-    private FlashMethod flashMethod;
+    private ConnectionType connectionType;
     private List<Table> tables;
     private Set<Scale> scales;
     private Set<MemoryParameter> parameters;
@@ -36,6 +37,14 @@ public class Project {
 
     public Project() {
 
+    }
+
+    public void setConnectionType(ConnectionType connectionType) {
+        this.connectionType = connectionType;
+    }
+
+    public ConnectionType getConnectionType() {
+        return this.connectionType;
     }
 
     public Vehicle getVehicle() {
@@ -52,14 +61,6 @@ public class Project {
 
     public void setSections(List<MemorySection> sections) {
         this.sections = sections;
-    }
-
-    public FlashMethod getFlashMethod() {
-        return flashMethod;
-    }
-
-    public void setFlashMethod(FlashMethod flashMethod) {
-        this.flashMethod = flashMethod;
     }
 
     public List<Table> getTables() {
@@ -231,8 +232,8 @@ public class Project {
             return this;
         }
 
-        public Builder withFlashMethod(FlashMethod method) {
-            this.project.setFlashMethod(method);
+        public Builder withFlashMethod(ConnectionType connectionType) {
+            this.project.setConnectionType(connectionType);
             return this;
         }
 

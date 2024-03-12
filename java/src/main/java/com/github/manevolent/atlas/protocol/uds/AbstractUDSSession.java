@@ -39,4 +39,11 @@ public abstract class AbstractUDSSession implements UDSSession, UDSListener {
             listeners.forEach(l -> l.onUDSFrameWrite(frame));
         }
     }
+
+    @Override
+    public void onDisconnected(UDSSession session) {
+        synchronized (listeners) {
+            listeners.forEach(l -> l.onDisconnected(session));
+        }
+    }
 }

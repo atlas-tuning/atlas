@@ -9,9 +9,7 @@ import com.github.manevolent.atlas.protocol.isotp.ISOTPFrameReader;
 import com.github.manevolent.atlas.protocol.isotp.ISOTPSpyDevice;
 import com.github.manevolent.atlas.protocol.j2534.ISOTPDevice;
 import com.github.manevolent.atlas.protocol.j2534.J2534Device;
-import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
-import com.github.manevolent.atlas.protocol.j2534.serial.SerialTatrixOpenPortFactory;
-import com.github.manevolent.atlas.protocol.j2534.tactrix.SerialTactrixOpenPort;
+import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
 import com.github.manevolent.atlas.protocol.subaru.SubaruProtocols;
 import com.github.manevolent.atlas.protocol.subaru.SubaruSecurityAccessCommandAES;
 import com.github.manevolent.atlas.protocol.subaru.uds.request.SubaruStatus1Request;
@@ -34,6 +32,7 @@ import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.*;
 import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.CENTRAL_GATEWAY;
 
 public class SubaruDIConnection extends UDSConnection {
+    private static final UDSProtocol protocol = SubaruProtocols.DIT;;
     /**
      * ECU orders things in non-native order
      * @param array array to reverse
@@ -48,17 +47,11 @@ public class SubaruDIConnection extends UDSConnection {
 
     private static final int DEFAULT_DID = 0xF300;
     private final Set<MemoryParameter> activeParameters = new LinkedHashSet<>();
-    private final Project project;
 
     private final int did;
 
-    public SubaruDIConnection(Project project) {
-        this.project = project;
-
-        if (project.hasProperty("subaru.dit.datalog.did")) {
-            //TODO custom dids
-        }
-
+    public SubaruDIConnection(J2534DeviceProvider provider) {
+        super(provider);
         did = DEFAULT_DID;
     }
 
@@ -71,19 +64,16 @@ public class SubaruDIConnection extends UDSConnection {
     public UDSSession connect() throws IOException, TimeoutException {
         changeConnectionMode(ConnectionMode.DISCONNECTED);
 
-        SerialTatrixOpenPortFactory canDeviceFactory =
-                new SerialTatrixOpenPortFactory(SerialTactrixOpenPort.CommunicationMode.DIRECT_SOCKET);
-        Collection<J2534DeviceDescriptor> devices = canDeviceFactory.findDevices();
-        J2534DeviceDescriptor deviceDescriptor = devices.stream().findFirst().orElseThrow(() ->
-                new IllegalArgumentException("No can devices found"));
-        J2534Device device = deviceDescriptor.createDevice();
+        J2534Device device = findDevice();
+        if (device == null) {
+            throw new NullPointerException("No J2534 device found");
+        }
+
         ISOTPDevice isotpDevice = device.openISOTOP(ENGINE_1, ENGINE_2, BODY_CONTROL, CENTRAL_GATEWAY);
-        UDSProtocol protocol = SubaruProtocols.DIT;
         AsyncUDSSession session = new AsyncUDSSession(isotpDevice, protocol);
         session.start();
 
         setConnectionMode(ConnectionMode.IDLE);
-
         return session;
     }
 
@@ -91,24 +81,14 @@ public class SubaruDIConnection extends UDSConnection {
     public UDSSession spy() throws IOException, TimeoutException {
         changeConnectionMode(ConnectionMode.DISCONNECTED);
 
-        SerialTatrixOpenPortFactory canDeviceFactory =
-                new SerialTatrixOpenPortFactory(SerialTactrixOpenPort.CommunicationMode.DIRECT_SOCKET);
-
-        Collection<J2534DeviceDescriptor> devices = canDeviceFactory.findDevices();
-        J2534DeviceDescriptor deviceDescriptor = devices.stream().findFirst().orElseThrow(() ->
-                new IllegalArgumentException("No can devices found"));
-        J2534Device device = deviceDescriptor.createDevice();
-
+        J2534Device device = findDevice();
         ISOTPFrameReader isotpReader = new ISOTPFrameReader(device.openCAN().reader());
         ISOTPSpyDevice spyDevice = new ISOTPSpyDevice(isotpReader);
-
-        UDSProtocol protocol = SubaruProtocols.DIT;
         AsyncUDSSession session = new AsyncUDSSession(spyDevice, protocol);
         setSession(session);
         session.start();
 
         setConnectionMode(ConnectionMode.IDLE);
-
         return session;
     }
 
@@ -145,6 +125,11 @@ public class SubaruDIConnection extends UDSConnection {
         if (newMode == ConnectionMode.DISCONNECTED) {
             setSession(null);
             return;
+        }
+
+        Project project = getProject();
+        if (project == null) {
+            throw new IllegalStateException("Project is not set");
         }
 
         AsyncUDSSession session = (AsyncUDSSession) getSession();
@@ -317,6 +302,13 @@ public class SubaruDIConnection extends UDSConnection {
             return frame;
         } catch (Exception e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    public static class Factory implements ConnectionFactory {
+        @Override
+        public Connection createConnection(J2534DeviceProvider deviceProvider) {
+            return new SubaruDIConnection(deviceProvider);
         }
     }
 }

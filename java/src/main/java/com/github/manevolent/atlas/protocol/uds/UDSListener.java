@@ -14,4 +14,10 @@ public interface UDSListener {
      */
     void onUDSFrameWrite(UDSFrame frame);
 
+    /**
+     * Called when the listener's parent is closed
+     * @param session session closed
+     */
+    default void onDisconnected(UDSSession session) { }
+
 }

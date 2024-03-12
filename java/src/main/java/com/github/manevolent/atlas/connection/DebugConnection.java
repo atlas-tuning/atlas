@@ -4,6 +4,8 @@ import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemoryParameter;
 
+import com.github.manevolent.atlas.protocol.j2534.J2534Device;
+import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
 import com.github.manevolent.atlas.protocol.uds.UDSComponent;
 import com.github.manevolent.atlas.protocol.uds.UDSProtocol;
 import com.github.manevolent.atlas.protocol.uds.UDSSession;
@@ -13,6 +15,7 @@ import com.github.manevolent.atlas.protocol.uds.request.UDSTesterPresentRequest;
 import net.codecrete.usb.linux.IO;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.*;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
@@ -20,6 +23,15 @@ import java.util.logging.Level;
 public class DebugConnection extends UDSConnection {
     private final Random random = new Random();
     private final Set<MemoryParameter> activeParameters = new LinkedHashSet<>();
+
+    public DebugConnection(J2534DeviceProvider deviceProvider) {
+        super(deviceProvider);
+    }
+
+    @Override
+    protected J2534Device findDevice() throws IOException {
+        throw new UnsupportedEncodingException();
+    }
 
     @Override
     public MemoryFrame readFrame(Collection<MemoryParameter> parameters) {
@@ -95,5 +107,12 @@ public class DebugConnection extends UDSConnection {
     protected void keepAlive() throws IOException, TimeoutException {
         getSession().request(getECUComponent().getSendAddress(),
                 new UDSTesterPresentRequest(new byte[] { (byte) 0xBE, (byte) 0xEE, (byte) 0xEF }));
+    }
+
+    public static class Factory implements ConnectionFactory {
+        @Override
+        public Connection createConnection(J2534DeviceProvider provider) {
+            return new DebugConnection(provider);
+        }
     }
 }

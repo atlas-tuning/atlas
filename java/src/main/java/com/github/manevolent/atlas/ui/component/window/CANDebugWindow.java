@@ -122,6 +122,15 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
         recordingPage.addFrame(frame);
     }
 
+    @Override
+    public void onDisconnected(UDSSession session) {
+        if (recordingPage == null) {
+            return;
+        }
+
+        recordingPage.setPaused(true, true);
+    }
+
     public Connection establishConnection() {
         try {
             Connection connection = getParent().getConnection();
@@ -186,18 +195,20 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
             return;
         }
 
-        try {
-            getParent().getConnection().spy();
-        } catch (Exception e) {
-            Log.can().log(Level.SEVERE, "Problem establishing spy session with ECU", e);
-            JOptionPane.showMessageDialog(getParent(), "Problem establishing spy session  with ECU!\r\n" +
-                            e.getMessage() + "\r\n" + "See console output (F12) for more details.",
-                    "Spy Connection Failed",
-                    JOptionPane.ERROR_MESSAGE);
-            return;
-        }
+        SwingUtilities.invokeLater(() -> {
+            try {
+                getParent().getConnection().spy();
+            } catch (Exception e) {
+                Log.can().log(Level.SEVERE, "Problem establishing spy session with ECU", e);
+                JOptionPane.showMessageDialog(getParent(), "Problem establishing spy session with ECU!\r\n" +
+                                e.getMessage() + "\r\n" + "See console output (F12) for more details.",
+                        "Spy Connection Failed",
+                        JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
-        toggleRecording();
+            toggleRecording();
+        });
     }
 
     public void toggleRecording() {

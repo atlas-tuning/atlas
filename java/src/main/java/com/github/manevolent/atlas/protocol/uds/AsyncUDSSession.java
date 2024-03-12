@@ -27,6 +27,8 @@ public class AsyncUDSSession extends AbstractUDSSession implements UDSSession {
     private UDSFrameReader reader;
     private UDSFrameWriter writer;
 
+    private boolean closed;
+
     private final Object[] writeLocks = new Object[256];
 
     public AsyncUDSSession(ISOTPDevice device, UDSProtocol protocol) {
@@ -80,14 +82,15 @@ public class AsyncUDSSession extends AbstractUDSSession implements UDSSession {
     }
 
     protected long handle() throws IOException {
-        for (long n = 0;;n++) {
+        long n;
+        for (n = 0; !closed; n++) {
             try {
                 handleNext();
             } catch (EOFException | SocketTimeoutException ex) {
                 // silently exit
-                return n;
             }
         }
+        return n;
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
@@ -213,10 +216,21 @@ public class AsyncUDSSession extends AbstractUDSSession implements UDSSession {
     @Override
     public void close() throws IOException {
         try {
-            readThread.interrupt();
-            reader.close();
-            device.close();
+            closed = true;
+
+            if (readThread != null && readThread.isAlive()) {
+                readThread.interrupt();
+            }
+            if (reader != null) {
+                reader.close();
+            }
+            if (device != null) {
+                device.close();
+            }
+
             activeTransactions.clear();
+
+            onDisconnected(this);
         } catch (Exception e) {
             throw new IOException(e);
         }

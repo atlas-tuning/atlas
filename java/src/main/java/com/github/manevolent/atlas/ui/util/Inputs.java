@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.ui.util;
 
+import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.component.MemoryAddressField;
 import org.kordamp.ikonli.Ikon;
@@ -12,6 +13,7 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -163,7 +165,9 @@ public class Inputs {
 
     public static JComboBox<Scale> scaleField(Project project, Scale existing,
                                               String toolTip, Consumer<Scale> valueChanged) {
-        JComboBox<Scale> comboBox = new JComboBox<>(project.getScales().toArray(new Scale[0]));
+        Scale[] values = project.getScales().stream()
+                .sorted(Comparator.comparing(Scale::toString)).toArray(Scale[]::new);
+        JComboBox<Scale> comboBox = new JComboBox<>(values);
         comboBox.setSelectedItem(existing);
         comboBox.addItemListener(e -> {
             if (e.getStateChange() != SELECTED) {
@@ -176,7 +180,9 @@ public class Inputs {
 
     public static JComboBox<DataFormat> dataTypeField(String toolTip, DataFormat intended,
                                                 Consumer<DataFormat> valueChanged) {
-        JComboBox<DataFormat> comboBox = new JComboBox<>(DataFormat.values());
+        DataFormat[] values = Arrays.stream(DataFormat.values())
+                .sorted(Comparator.comparing(DataFormat::toString)).toArray(DataFormat[]::new);
+        JComboBox<DataFormat> comboBox = new JComboBox<>(values);
         if (intended != null) {
             comboBox.setSelectedItem(intended);
         } else {
@@ -191,8 +197,30 @@ public class Inputs {
         return comboBox;
     }
 
+    public static JComboBox<ConnectionType> connectionTypeField(String toolTip, ConnectionType intended,
+                                                      Consumer<ConnectionType> valueChanged) {
+        ConnectionType[] values = Arrays.stream(ConnectionType.values())
+                .sorted(Comparator.comparing(ConnectionType::getName)).toArray(ConnectionType[]::new);
+        JComboBox<ConnectionType> comboBox = new JComboBox<>(values);
+        if (intended != null) {
+            comboBox.setSelectedItem(intended);
+        } else {
+            comboBox.setSelectedItem(ConnectionType.DEBUG);
+            valueChanged.accept(ConnectionType.DEBUG);
+        }
+        comboBox.addItemListener(e -> {
+            if (e.getStateChange() != SELECTED) {
+                return;
+            }
+            valueChanged.accept((ConnectionType) e.getItem());
+        });
+        return comboBox;
+    }
+
     public static JComboBox<Unit> unitField(String toolTip, Unit intended, Consumer<Unit> valueChanged) {
-        JComboBox<Unit> comboBox = new JComboBox<>(Unit.values());
+        Unit[] values = Arrays.stream(Unit.values())
+                .sorted(Comparator.comparing(Unit::toString)).toArray(Unit[]::new);
+        JComboBox<Unit> comboBox = new JComboBox<>(values);
         if (intended != null) {
             comboBox.setSelectedItem(intended);
         } else {

@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
+import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.*;
 import com.github.manevolent.atlas.ui.util.*;
@@ -18,6 +19,8 @@ public class ProjectTab extends Tab {
     private JButton resetButton;
     private JButton saveButton;
 
+    private JComboBox<ConnectionType> connectionTypeField;
+
     public ProjectTab(Editor editor, JTabbedPane tabbedPane) {
         super(editor, tabbedPane);
     }
@@ -30,6 +33,10 @@ public class ProjectTab extends Tab {
     @Override
     public Icon getIcon() {
         return Icons.get(CarbonIcons.PRODUCT);
+    }
+
+    public Project getProject() {
+        return getParent().getProject();
     }
 
     public Vehicle getVehicle() {
@@ -79,15 +86,37 @@ public class ProjectTab extends Tab {
                     modelUpdated();
                 }));
 
-
         addEntryRow(content, 6, "Model", "The transmission of the vehicle",
                 Inputs.textField(getVehicle().getTransmission(), s -> {
                     getVehicle().setTransmission(s);
                     modelUpdated();
                 }));
 
+        addHeaderRow(content, 7, CarbonIcons.PLUG_FILLED, "Connection");
+
+        addEntryRow(content, 8, "Type", "The communication type for connections to this vehicle",
+                connectionTypeField = Inputs.connectionTypeField(null, getProject().getConnectionType(), t -> {
+                    ConnectionType existing = getProject().getConnectionType();
+                    if (t != existing) {
+                        if (JOptionPane.showConfirmDialog(getParent(),
+                                "Are you sure you want to change the project connection type?\r\n" +
+                                "Doing so will interrupt any established connections.",
+                                "Warning",
+                                JOptionPane.YES_NO_OPTION,
+                                JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
+                            connectionTypeField.setSelectedItem(existing);
+                            return;
+                        }
+                        Job.fork(() -> {
+                            getProject().setConnectionType(t);
+                            getParent().reestablishConnection();
+                        });
+                        modelUpdated();
+                    }
+                }));
+
         content.add(Box.createVerticalGlue(), Layout.gridBagConstraints(
-                GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, 0, 7, 1, 1
+                GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, 0, 9, 1, 1
         ));
 
         JScrollPane scrollPane = new JScrollPane(content);

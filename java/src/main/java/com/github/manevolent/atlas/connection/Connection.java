@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.connection;
 
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemoryParameter;
+import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.protocol.uds.ECUResetMode;
 import com.github.manevolent.atlas.protocol.uds.UDSSession;
 
@@ -15,6 +16,10 @@ import java.util.function.Consumer;
 public interface Connection {
 
     boolean isConnected();
+
+    void setProject(Project project);
+
+    Project getProject();
 
     ConnectionMode getConnectionMode();
 

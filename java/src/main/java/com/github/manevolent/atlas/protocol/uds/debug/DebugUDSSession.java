@@ -15,6 +15,7 @@ import com.github.manevolent.atlas.protocol.uds.request.UDSECUResetRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSReadDataByIDRequest;
 import com.github.manevolent.atlas.protocol.uds.response.*;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
@@ -76,7 +77,7 @@ public class DebugUDSSession extends AsyncUDSSession
         try {
             body = replyQueue.poll(1000L, TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
-            throw new IOException(e);
+            throw new EOFException("Interrupted");
         }
 
         if (body == null) {
