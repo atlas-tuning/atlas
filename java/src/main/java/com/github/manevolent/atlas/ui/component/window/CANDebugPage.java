@@ -206,7 +206,9 @@ public class CANDebugPage extends JPanel implements AdjustmentListener {
                         frame.getBody().getClass().getSimpleName(),
                         frame.getBody().toString()
                 )));
+
                 table.revalidate();
+                table.repaint();
 
                 window.getToolbar().update();
             }

@@ -222,6 +222,19 @@ public class SerialTactrixOpenPort implements J2534Device {
             this.communicationMode = communicationMode;
         }
 
+        @Override
+        public boolean equals(Object other) {
+            if (other instanceof Descriptor) {
+                return equals((Descriptor) other);
+            } else {
+                return super.equals(other);
+            }
+        }
+
+        public boolean equals(Descriptor other) {
+            return other.device.getPath().equals(device.getPath());
+        }
+
         public File getDeviceFile() {
             return device;
         }
