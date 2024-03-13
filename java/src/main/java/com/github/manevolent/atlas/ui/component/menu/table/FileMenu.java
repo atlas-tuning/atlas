@@ -44,7 +44,7 @@ public class FileMenu extends TableEditorMenu {
         copyTable.addActionListener(e -> {
             Table table =  getParent().getTable();
             String newTableName = (String) JOptionPane.showInputDialog(getParent().getParent(),
-                    "Specify a name", "New Table",
+                    "Specify a name", table.getName(),
                     QUESTION_MESSAGE, null, null, table.getName() + " (Copy)");
 
             if (newTableName == null || newTableName.isBlank()) {

@@ -115,8 +115,10 @@ public class ProjectTab extends Tab {
                     }
                 }));
 
+        addHeaderRow(content, 9, CarbonIcons.SETTINGS, "Settings");
+
         content.add(Box.createVerticalGlue(), Layout.gridBagConstraints(
-                GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, 0, 9, 1, 1
+                GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, 0, 10, 1, 1
         ));
 
         JScrollPane scrollPane = new JScrollPane(content);

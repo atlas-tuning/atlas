@@ -76,8 +76,9 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         panel.add(save = Inputs.nofocus(Inputs.button(CarbonIcons.SAVE, "Save", "Save entered values", this::save)));
 
         panel.add(copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this definition into a new table", () -> {
-            String newTableName = (String) JOptionPane.showInputDialog(getParent(), "Specify a name", "New Table",
-                    QUESTION_MESSAGE, null, null, "New Table");
+            String newTableName = (String) JOptionPane.showInputDialog(getParent(), "Specify a name",
+                    "Copy Table",
+                    QUESTION_MESSAGE, null, null, workingTable.getName());
             if (newTableName == null || newTableName.isBlank()) {
                 return;
             }

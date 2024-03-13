@@ -319,8 +319,9 @@ public class TablesTab
             table = table.copy();
 
             String newTableName = (String) JOptionPane.showInputDialog(getParent().getParent(),
-                    "Specify a name", table.getName() + " (Copy)",
-                    QUESTION_MESSAGE, null, null, "New Table");
+                    "Specify a name",
+                    "New Table",
+                    QUESTION_MESSAGE, null, null, table.getName() + " (Copy)");
             if (newTableName == null || newTableName.isBlank()) {
                 return;
             }
