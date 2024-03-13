@@ -213,25 +213,53 @@ public class SerialTactrixOpenPort implements J2534Device {
         UNIX_SOCKET
     }
 
-    public static class Descriptor implements J2534DeviceDescriptor {
-        private final File device;
-        private final CommunicationMode communicationMode;
+    public static class SerialPortDescriptor implements J2534DeviceDescriptor {
+        private final String portName;
 
-        public Descriptor(File device, CommunicationMode communicationMode) {
+        public SerialPortDescriptor(String portName) {
+            this.portName = portName;
+        }
+
+        @Override
+        public String toString() {
+            return portName;
+        }
+
+        @Override
+        public J2534Device createDevice() throws IOException {
+            SerialPort serialPort;
+
+            try {
+                serialPort = new SerialPortBuilder()
+                        .setPort(portName)
+                        .setBaudRate(SerialPort.BaudRate.B115200)
+                        .build();
+            } catch (NoSuchPortException | NotASerialPortException e) {
+                throw new IOException(e);
+            }
+
+            return new SerialTactrixOpenPort(serialPort.getInputStream(),
+                    serialPort.getOutputStream());
+        }
+    }
+
+    public static class UnixSocketDescriptor implements J2534DeviceDescriptor {
+        private final File device;
+
+        public UnixSocketDescriptor(File device) {
             this.device = device;
-            this.communicationMode = communicationMode;
         }
 
         @Override
         public boolean equals(Object other) {
-            if (other instanceof Descriptor) {
-                return equals((Descriptor) other);
+            if (other instanceof UnixSocketDescriptor) {
+                return equals((UnixSocketDescriptor) other);
             } else {
                 return super.equals(other);
             }
         }
 
-        public boolean equals(Descriptor other) {
+        public boolean equals(UnixSocketDescriptor other) {
             return other.device.getPath().equals(device.getPath());
         }
 
@@ -246,30 +274,9 @@ public class SerialTactrixOpenPort implements J2534Device {
 
         @Override
         public J2534Device createDevice() throws IOException {
-            switch (communicationMode) {
-                case SERIAL_DEVICE:
-                    try {
-                        SerialPort serialPort = new SerialPortBuilder()
-                                .setPort(device.getAbsolutePath())
-                                .setBaudRate(SerialPort.BaudRate.B115200)
-                                .build();
-
-                        return new SerialTactrixOpenPort(serialPort.getInputStream(),
-                                serialPort.getOutputStream());
-                    } catch (NoSuchPortException e) {
-                        throw new RuntimeException(e);
-                    } catch (NotASerialPortException e) {
-                        throw new RuntimeException(e);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                case UNIX_SOCKET:
-                    FileInputStream is = new FileInputStream(device);
-                    FileOutputStream os = new FileOutputStream(device);
-                    return new SerialTactrixOpenPort(is, os);
-                default:
-                    throw new UnsupportedOperationException(communicationMode.name());
-            }
+            FileInputStream is = new FileInputStream(device);
+            FileOutputStream os = new FileOutputStream(device);
+            return new SerialTactrixOpenPort(is, os);
         }
     }
 

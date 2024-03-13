@@ -1,69 +1,35 @@
 package com.github.manevolent.atlas.protocol.j2534.serial;
 
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
-
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
 import com.github.manevolent.atlas.protocol.j2534.tactrix.SerialTactrixOpenPort;
-import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
-import com.github.manevolent.atlas.settings.StringValue;
+import com.rm5248.serial.SerialPort;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.Arrays;
-
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
-public class SerialTactrixOpenPortProvider implements J2534DeviceProvider<SerialTactrixOpenPort.Descriptor> {
-    private static final Setting<StringValue> deviceSetting = new Setting<>(StringValue.class,
-            "can.tactrix.serial.deviceFile");
-    private final SerialTactrixOpenPort.CommunicationMode communicationMode;
-
-    public SerialTactrixOpenPortProvider(SerialTactrixOpenPort.CommunicationMode communicationMode) {
-        this.communicationMode = communicationMode;
-    }
-
-    @Override
-    public SerialTactrixOpenPort.Descriptor getDefaultDevice() {
-        List<SerialTactrixOpenPort.Descriptor> descriptors = getAllDevices();
-
-        String desiredDeviceFile = Settings.get(deviceSetting);
-        if (desiredDeviceFile != null) {
-            Optional<SerialTactrixOpenPort.Descriptor> descriptor =
-                    descriptors.stream().filter(x ->x.getDeviceFile().getPath().equals(desiredDeviceFile))
-                            .findFirst();
-
-            if (descriptor.isPresent()) {
-                return descriptor.get();
-            }
-        }
-
-        if (descriptors.isEmpty()) {
-            return null;
-        }
-
-        return descriptors.getFirst();
+public class SerialTactrixOpenPortProvider implements J2534DeviceProvider<SerialTactrixOpenPort.SerialPortDescriptor> {
+    public SerialTactrixOpenPortProvider() {
     }
 
     @Override
     public void setDefaultDevice(J2534DeviceDescriptor descriptor) {
-        if (descriptor instanceof SerialTactrixOpenPort.Descriptor) {
-            Settings.set(deviceSetting, ((SerialTactrixOpenPort.Descriptor) descriptor).getDeviceFile().getPath());
-        }
+
     }
 
     @Override
-    public List<SerialTactrixOpenPort.Descriptor> getAllDevices() {
-        return Arrays.stream(Objects.requireNonNull(new File("/dev").listFiles()))
-                .filter(deviceFile -> deviceFile.getName().startsWith("cu"))
-                .filter(deviceFile -> {
-                    // OSX:
-                    return deviceFile.getName().startsWith("cu.usbmodem");
-                })
-                .map(deviceFile -> new SerialTactrixOpenPort.Descriptor(deviceFile, communicationMode))
-                .collect(Collectors.toList());
+    public List<SerialTactrixOpenPort.SerialPortDescriptor> getAllDevices() {
+        try {
+            return Arrays.stream(SerialPort.getSerialPorts())
+                    .map(SerialTactrixOpenPort.SerialPortDescriptor::new).toList();
+        } catch (IOException e) {
+            Log.can().log(Level.WARNING, "Problem getting serial ports", e);
+            return Collections.emptyList();
+        }
     }
 }

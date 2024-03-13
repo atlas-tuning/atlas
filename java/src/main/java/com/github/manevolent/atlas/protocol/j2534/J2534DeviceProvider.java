@@ -9,7 +9,9 @@ public interface J2534DeviceProvider<T extends J2534DeviceDescriptor> {
      * Gets the default device from this provider, or throws IOException on failure.
      * @return default device.
      */
-    T getDefaultDevice() throws IOException;
+    default T getDefaultDevice() throws IOException {
+        return getAllDevices().getFirst();
+    }
 
     void setDefaultDevice(J2534DeviceDescriptor descriptor);
 

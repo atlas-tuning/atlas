@@ -1,6 +1,7 @@
 package com.github.manevolent.atlas.protocol.j2534;
 
 import com.github.manevolent.atlas.protocol.j2534.serial.SerialTactrixOpenPortProvider;
+import com.github.manevolent.atlas.protocol.j2534.serial.UnixSocketTactrixOpenPortProvider;
 import com.github.manevolent.atlas.protocol.j2534.tactrix.SerialTactrixOpenPort;
 import com.github.manevolent.atlas.protocol.j2534.usb.UsbTactrixOpenPortProvider;
 
@@ -8,13 +9,11 @@ import java.util.function.Supplier;
 
 public enum J2534DeviceType {
 
-    TACTRIX_SERIAL(() -> new SerialTactrixOpenPortProvider(
-            SerialTactrixOpenPort.CommunicationMode.SERIAL_DEVICE), "Tactrix OpenPort 2.0 (Serial port)"),
-
-    TACTRIX_SERIAL_UNIX_SOCKET(() -> new SerialTactrixOpenPortProvider(
-            SerialTactrixOpenPort.CommunicationMode.UNIX_SOCKET), "Tactrix OpenPort 2.0 (Unix socket)"),
-
-    TACTRIX_SERIAL_USB(UsbTactrixOpenPortProvider::new, "Tactrix OpenPort 2.0 (USB)");
+    /**
+     * Driver-less OpenPort 2.0 options for folks that don't want to install drivers
+     */
+    TACTRIX_SERIAL(SerialTactrixOpenPortProvider::new, "Tactrix OpenPort 2.0 (Serial port)"),
+    TACTRIX_SERIAL_UNIX_SOCKET(UnixSocketTactrixOpenPortProvider::new, "Tactrix OpenPort 2.0 (Unix socket)");
 
     private final Supplier<J2534DeviceProvider<?>> provider;
     private final String name;

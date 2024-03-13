@@ -255,7 +255,7 @@ public class MemoryAddressDialog extends JDialog {
                             MemoryAddress current,
                             Consumer<MemoryAddress> changed) {
         sections = sections.stream().filter(predicate).toList();
-        return show(parent, sections, predicate, current, changed);
+        return show(parent, sections.stream().filter(predicate).toList(), current, changed);
     }
 
     public static MemoryAddress show(Frame parent, java.util.List<MemorySection> sections,

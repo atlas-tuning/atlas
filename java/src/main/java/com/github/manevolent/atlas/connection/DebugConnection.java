@@ -12,7 +12,6 @@ import com.github.manevolent.atlas.protocol.uds.UDSSession;
 import com.github.manevolent.atlas.protocol.uds.debug.DebugUDSSession;
 import com.github.manevolent.atlas.protocol.uds.request.UDSDefineDataIdentifierRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSTesterPresentRequest;
-import net.codecrete.usb.linux.IO;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
