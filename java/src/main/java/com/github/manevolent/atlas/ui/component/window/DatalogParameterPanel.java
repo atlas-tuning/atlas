@@ -237,12 +237,12 @@ public class DatalogParameterPanel extends JPanel {
 
         g2d.setFont(Fonts.VALUE_FONT);
         if (max != -Float.MAX_VALUE) {
-            drawText(bounds, g2d, Colors.withAlpha(Color.GREEN, labelColor.getAlpha()), 5, 30,
+            drawText(bounds, g2d, Colors.withAlpha(Color.GREEN, labelColor.getAlpha()), 5, 25,
                     String.format("Max: " + valueFormat + parameter.getScale().getUnit().getText(), max));
         }
 
         if (min != Float.MAX_VALUE) {
-            drawText(bounds, g2d, Colors.withAlpha(Color.RED, labelColor.getAlpha()), 5, 55,
+            drawText(bounds, g2d, Colors.withAlpha(Color.RED, labelColor.getAlpha()), 5, 45,
                     String.format("Min: " + valueFormat + parameter.getScale().getUnit().getText(), min));
         }
 
