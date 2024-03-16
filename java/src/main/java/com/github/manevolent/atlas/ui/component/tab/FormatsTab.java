@@ -169,25 +169,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         saveButton.setEnabled(isDirty());
         panel.add(Inputs.nofocus(saveButton));
 
-        JButton copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this format", () -> {
-            Scale scale = getSelectedScale();
-            if (scale == null) {
-                return;
-            }
-
-            String newScaleName = scale.getName() + " (Copy)";
-            Scale newScale = scale.copy();
-            newScale.setName(newScaleName);
-            workingCopies.put(newScale, newScale);
-            getParent().getProject().getScales().add(newScale);
-            getParent().setDirty(true);
-
-            update();
-            updateListModel();
-            list.setSelectedValue(newScale, true);
-
-            getParent().getOpenWindows().forEach(Window::reload);
-        }));
+        JButton copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this format", this::copyFormat));
         panel.add(copy);
 
         boolean isNewTable = workingCopies.containsKey(getSelectedScale());
@@ -570,10 +552,35 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
 
+        workingCopies.remove(scale);
         getParent().getProject().getScales().remove(scale);
+        list.setSelectedValue(null, false);
 
         update();
         updateListModel();
+
+        getParent().getOpenWindows().forEach(Window::reload);
+    }
+
+    public void copyFormat() {
+        Scale scale = getSelectedScale();
+        if (scale == null) {
+            return;
+        }
+
+        String newFormatName = (String) JOptionPane.showInputDialog(getParent().getParent(),
+                "Specify a name", "Copy Format",
+                QUESTION_MESSAGE, null, null, scale.getName() + " (Copy)");
+
+        Scale newScale = scale.copy();
+        newScale.setName(newFormatName);
+        workingCopies.put(newScale, newScale);
+        getParent().getProject().getScales().add(newScale);
+        getParent().setDirty(true);
+
+        update();
+        updateListModel();
+        list.setSelectedValue(newScale, true);
 
         getParent().getOpenWindows().forEach(Window::reload);
     }

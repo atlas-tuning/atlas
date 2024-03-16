@@ -7,6 +7,7 @@ import java.io.IOException;
 public class UDSFrame implements Frame, Addressed {
     private final UDSProtocol protocol;
     private Address address;
+    private Integer sid;
     private UDSBody body;
     private Direction direction = Direction.WRITE;
     private byte[] remaining;
@@ -50,6 +51,10 @@ public class UDSFrame implements Frame, Addressed {
     }
 
     public int getServiceId() {
+        if (sid != null) {
+            return sid;
+        }
+
         UDSBody body = getBody();
         if (body == null) {
             throw new NullPointerException("body");
@@ -66,6 +71,7 @@ public class UDSFrame implements Frame, Addressed {
 
     public void read(BitReader reader) throws IOException {
         int serviceId = (reader.readByte() & 0xFF);
+        this.sid = serviceId;
 
         Class<? extends UDSBody> clazz;
 

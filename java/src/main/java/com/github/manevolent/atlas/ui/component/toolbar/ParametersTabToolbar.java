@@ -29,5 +29,9 @@ public class ParametersTabToolbar extends Toolbar<ParametersTab> {
         toolbar.add(makeSmallButton(FontAwesomeSolid.TRASH, "delete", "Delete parameter", _ -> {
             getParent().deleteParameter();
         }));
+
+        toolbar.add(makeSmallButton(FontAwesomeSolid.COPY, "copy", "Copy parameter", _ -> {
+            getParent().copyParameter();
+        }));
     }
 }

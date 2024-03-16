@@ -515,6 +515,7 @@ public class TableEditor extends Window implements
 
         if (y != null) {
             y_label = new JRotateLabel(getSeriesHeaderString(y));
+            y_label.setFont(y_label.getFont().deriveFont(Font.ITALIC));
             y_label.setForeground(Color.GRAY);
             rootPanel.add(y_label, BorderLayout.WEST);
         } else {
@@ -523,6 +524,7 @@ public class TableEditor extends Window implements
 
         if (x != null) {
             x_label = new JLabel(getSeriesHeaderString(x));
+            x_label.setFont(x_label.getFont().deriveFont(Font.ITALIC));
             x_label.setHorizontalAlignment(JLabel.LEFT);
             x_label.setForeground(Color.GRAY);
             int leftOffset;

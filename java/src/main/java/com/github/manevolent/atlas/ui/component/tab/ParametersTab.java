@@ -5,6 +5,7 @@ import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.component.ColorField;
 import com.github.manevolent.atlas.ui.component.MemoryAddressField;
 import com.github.manevolent.atlas.ui.component.toolbar.ParametersTabToolbar;
+import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.util.*;
@@ -156,25 +157,8 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         saveButton.setEnabled(isDirty());
         panel.add(Inputs.nofocus(saveButton));
 
-        JButton copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this parameter", () -> {
-            MemoryParameter param = getSelectedParameter();
-            if (param == null) {
-                return;
-            }
-
-            String newParamName = param.getName() + " (Copy)";
-            MemoryParameter newParam = param.copy();
-            newParam.setName(newParamName);
-            workingCopies.put(newParam, newParam);
-            getParent().getProject().addParameter(newParam);
-            getParent().setDirty(true);
-
-            update();
-            updateListModel();
-            list.setSelectedValue(newParam, true);
-
-            getParent().getOpenWindows().forEach(Window::reload);
-        }));
+        JButton copy = Inputs.nofocus(Inputs.button(CarbonIcons.COPY, "Copy", "Copy this parameter",
+                this::copyParameter));
         panel.add(copy);
 
         boolean isNewTable = workingCopies.containsKey(getSelectedParameter());
@@ -192,6 +176,31 @@ public class ParametersTab extends Tab implements ListSelectionListener {
                         2, 1, // size
                         1, 1 // weight
                 ));
+    }
+
+    public void copyParameter() {
+        MemoryParameter param = getSelectedParameter();
+        if (param == null) {
+            return;
+        }
+
+        String newParamName = (String) JOptionPane.showInputDialog(getParent().getParent(),
+                "Specify a name", "Copy Parameter",
+                QUESTION_MESSAGE, null, null, param.getName() + " (Copy)");
+
+        MemoryParameter newParam = param.copy();
+        newParam.setName(newParamName);
+        workingCopies.put(newParam, newParam);
+        getParent().getProject().addParameter(newParam);
+        getParent().setDirty(true);
+
+        update();
+        updateListModel();
+        list.setSelectedValue(newParam, true);
+
+        getParent().getOpenWindows()
+                .stream().filter(x -> x instanceof DatalogWindow)
+                .forEach(Window::reload);
     }
 
     private boolean isDirty() {
@@ -228,7 +237,9 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         update();
         updateListModel();
 
-        getParent().getOpenWindows().forEach(Window::reload);
+        getParent().getOpenWindows()
+                .stream().filter(x -> x instanceof DatalogWindow)
+                .forEach(Window::reload);
     }
 
     private JPanel buildSettings() {
@@ -478,7 +489,9 @@ public class ParametersTab extends Tab implements ListSelectionListener {
         updateListModel();
         list.setSelectedValue(newParameter, true);
 
-        //TODO reload any datalogging
+        getParent().getOpenWindows()
+                .stream().filter(x -> x instanceof DatalogWindow)
+                .forEach(Window::reload);
     }
 
     public void deleteParameter() {
@@ -496,12 +509,16 @@ public class ParametersTab extends Tab implements ListSelectionListener {
             return;
         }
 
+        this.workingCopies.remove(parameter);
         getParent().getProject().removeParameter(parameter);
+        list.setSelectedValue(null, false);
 
         update();
         updateListModel();
 
-        getParent().getOpenWindows().forEach(Window::reload);
+        getParent().getOpenWindows()
+                .stream().filter(x -> x instanceof DatalogWindow)
+                .forEach(Window::reload);
     }
 
     private static class Renderer extends DefaultListCellRenderer {

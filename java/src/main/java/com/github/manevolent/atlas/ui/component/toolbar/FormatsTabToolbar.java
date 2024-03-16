@@ -28,5 +28,9 @@ public class FormatsTabToolbar extends Toolbar<FormatsTab> {
         toolbar.add(makeSmallButton(FontAwesomeSolid.TRASH, "delete", "Delete format", _ -> {
             getParent().deleteFormat();
         }));
+
+        toolbar.add(makeSmallButton(FontAwesomeSolid.COPY, "copy", "Copy format", _ -> {
+            getParent().copyFormat();
+        }));
     }
 }

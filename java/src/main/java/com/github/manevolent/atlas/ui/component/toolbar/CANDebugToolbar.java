@@ -97,6 +97,7 @@ public class CANDebugToolbar extends Toolbar<CANDebugWindow> {
         toolbar.add(Box.createHorizontalGlue());
 
         toolbar.add(statusLabel = new JLabel());
+        statusLabel.setFont(statusLabel.getFont().deriveFont(10f));
         statusLabel.setForeground(Fonts.getTextColor().darker());
 
         toolbar.add(Box.createHorizontalStrut(5));
