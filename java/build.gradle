@@ -1,0 +1,95 @@
+import edu.sc.seis.launch4j.tasks.Launch4jLibraryTask
+
+plugins {
+    id 'java'
+    id 'edu.sc.seis.launch4j' version '3.0.5'
+    id 'de.undercouch.download' version '5.6.0'
+}
+
+sourceCompatibility = 21
+targetCompatibility = 21
+
+group = "com.github.manevolent"
+version = "2024.1.0"
+
+project.ext.mainClass = 'com.github.manevolent.atlas.ui.Main'
+project.ext.ikonliVersion = '12.3.1'
+
+repositories {
+    mavenCentral()
+}
+
+launch4j {
+    mainClassName = project.ext.mainClass
+    outputDir = "windows-x64"
+    productName = 'Atlas'
+}
+
+// Enable preview features in JDK
+tasks.withType(JavaCompile).each {
+    it.options.compilerArgs.add('--enable-preview')
+}
+
+test {
+    jvmArgs(['--enable-preview'])
+}
+
+processResources {
+    filesMatching('application.properties') {
+        expand([
+                name: project.name,
+                version: project.version
+        ])
+    }
+}
+
+dependencies {
+    testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.0"
+
+    implementation "org.kordamp.ikonli:ikonli-swing:${project.ext.ikonliVersion}"
+    implementation "org.kordamp.ikonli:ikonli-fontawesome5-pack:${project.ext.ikonliVersion}"
+    implementation "org.kordamp.ikonli:ikonli-carbonicons-pack:${project.ext.ikonliVersion}"
+
+    implementation "net.codecrete.usb:java-does-usb:0.7.1"
+    implementation "com.rm5248:JavaSerial:0.13"
+    implementation "org.yaml:snakeyaml:2.2"
+    implementation "com.formdev:flatlaf:3.4"
+    implementation "commons-lang:commons-lang:2.6"
+    implementation "com.google.code.gson:gson:2.10.1"
+    implementation "com.google.guava:guava:33.0.0-jre"
+    implementation "net.java.dev.jna:jna:5.14.0"
+}
+
+tasks.register('downloadWindowsJre', Download) {
+    src 'https://corretto.aws/downloads/latest/amazon-corretto-21-x64-windows-jdk.zip'
+    dest layout.buildDirectory.file("windows-jre.zip")
+}
+
+tasks.register('addJreToWindowsDistribution', Copy) {
+    dependsOn 'downloadWindowsJre'
+    from zipTree(layout.buildDirectory.file("windows-jre.zip"))
+    into layout.buildDirectory.dir("windows-x64/jre")
+
+    // Unpack the JRE; it's nested
+    eachFile { fcp -> fcp.path = fcp.path.replaceFirst("^[^\\/]+\\/", '') }
+}
+
+tasks.register('createWindowsExe', Launch4jLibraryTask) {
+    outfile = 'Atlas.exe'
+    companyName = "Atlas Open Source"
+    mainClassName = project.ext.mainClass
+    requires64Bit = true
+    bundledJrePath = "jre"
+    headerType = "console"
+    jvmOptions = ['--enable-preview']
+    fileDescription = 'Free open source ECU tuning software'
+}
+
+tasks.register('packageWindowsDistribution', Zip) {
+    dependsOn 'addJreToWindowsDistribution', 'createWindowsExe'
+    archiveBaseName = "atlas-windows-x64"
+    from layout.buildDirectory.dir("windows-x64")
+    destinationDirectory = layout.buildDirectory.dir("dist")
+}
+
+assemble.dependsOn(packageWindowsDistribution)
