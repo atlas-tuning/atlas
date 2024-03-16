@@ -266,6 +266,7 @@ public abstract class UDSConnection implements Connection, UDSListener {
                     if (now >= deadline) {
                         try {
                             keepAlive();
+                            lastFrameSent = now;
                         } catch (IOException | TimeoutException e) {
                             Log.can().log(Level.WARNING, "Failed to send keep-alive message", e);
                         }

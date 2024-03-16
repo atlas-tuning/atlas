@@ -26,6 +26,7 @@ public class SerialTactrixOpenPort implements J2534Device {
     private String readLine() throws IOException {
         StringBuilder sb = new StringBuilder();
         int c;
+
         while ((c = is.read()) >= 0) {
             if (c == '\r') {
                 continue;
@@ -36,21 +37,22 @@ public class SerialTactrixOpenPort implements J2534Device {
 
             sb.append((char)c);
         }
+
         return sb.toString();
     }
 
     private void preconnect() throws IOException {
         // Empty the buffer
         int read;
+        //noinspection StatementWithEmptyBody
         while (is.available() > 0 && (read = is.read()) >= 0) {
-            //noinspection ResultOfMethodCallIgnored
         }
 
-        while (true) {
-            os.write("\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
-            os.write("ati\r\n".getBytes(StandardCharsets.US_ASCII));
-            os.flush();
+        os.write("\r\n\r\n".getBytes(StandardCharsets.US_ASCII));
+        os.write("ati\r\n".getBytes(StandardCharsets.US_ASCII));
+        os.flush();
 
+        while (true) {
             String versionInformation = readLine();
             if (versionInformation.startsWith("ari")) {
                 break;
