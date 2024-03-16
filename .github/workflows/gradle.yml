@@ -36,7 +36,7 @@ jobs:
     - name: Build with Gradle Wrapper
       working-directory: java
       run: ./gradlew assemble
-      
+
     - name: Archive release artifacts
       uses: actions/upload-artifact@v4
       with:
