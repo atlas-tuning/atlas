@@ -130,6 +130,10 @@ public class Project {
         return (T) properties.get(name);
     }
 
+    public ProjectProperty getProperty(String name) {
+        return properties.get(name);
+    }
+
     public Map<String, ProjectProperty> getProperties() {
         return properties;
     }

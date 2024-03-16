@@ -227,7 +227,7 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
             return;
         }
 
-        String suggestedName = Instant.now().toString();
+        String suggestedName = Instant.now().toString().replaceAll(":", "-");
         String newCanLogName = JOptionPane.showInputDialog(getParent(),
                 "Specify a name for this debugging session", suggestedName);
         if (newCanLogName == null || newCanLogName.isBlank()) {

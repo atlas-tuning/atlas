@@ -138,7 +138,9 @@ public class UDSFrame implements Frame, Addressed {
             sidString = "(unknown)";
         }
         String fullyReadWarning = remaining != null ? " remaining=" + Frame.toHexString(remaining) : "";
-        return getAddress().toString() + " " + sidString + " " + body.getClass().getSimpleName()
+        Address address = getAddress();
+        String addressString = address == null ? "??" : address.toString();
+        return addressString + " " + sidString + " " + body.getClass().getSimpleName()
                 + " " + body.toString() + fullyReadWarning;
     }
 

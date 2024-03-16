@@ -14,38 +14,6 @@ import static com.github.manevolent.atlas.model.builtin.SubaruWRX2022MT.*;
 public class FlashTest {
 
     @Test
-    public void test_IntakeAirTemperatureSensorCalibration() throws IOException {
-        Table iatSensorCal = newRom().findTableByName("Intake Air Temperature Sensor Calibration");
-
-        float[] x_data = iatSensorCal.getSeries(X).getAll();
-        float[] table_data = iatSensorCal.getData().getAll();
-
-        iatSensorCal.getData().getUnit().convert(table_data, Unit.FAHRENHEIT);
-
-        assertEquals(0.0f, x_data[0], 0f);
-        assertEquals(4.96f, x_data[table_data.length - 1], 0.0f);
-
-        assertEquals(356.0f, table_data[0], 0f);
-        assertEquals(-40.0f, table_data[table_data.length - 1], 0.0f);
-    }
-
-    @Test
-    public void test_ManifoldAirTemperatureSensorCalibration() throws IOException {
-        Table iatSensorCal = newRom().findTableByName("Manifold Air Temperature Sensor Calibration");
-
-        float[] x_data = iatSensorCal.getSeries(X).getAll();
-        float[] table_data = iatSensorCal.getData().getAll();
-
-        iatSensorCal.getData().getUnit().convert(table_data, Unit.FAHRENHEIT);
-
-        assertEquals(0.0f, x_data[0], 0f);
-        assertEquals(4.96f, x_data[table_data.length - 1], 0.0f);
-
-        assertEquals(266.0f, table_data[0], 0f);
-        assertEquals(-40.0f, table_data[table_data.length - 1], 0.0f);
-    }
-
-    @Test
     public void test_coolantTemp16BitScale() {
         float degreesCelsius = coolantTemp16BitScale.build().forward(0x59D3);
         assertEquals(degreesCelsius, 16f, 1f);

@@ -54,7 +54,7 @@ public class CANDebugPage extends JPanel implements AdjustmentListener {
 
     public CANDebugPage(CANDebugWindow window) {
         this.window = window;
-        this.name = Instant.now().toString();
+        this.name = Instant.now().toString().replaceAll(":", "-");
 
         initComponent();
     }
@@ -270,8 +270,6 @@ public class CANDebugPage extends JPanel implements AdjustmentListener {
         fileChooser.setDialogTitle("Export Debug Session");
         if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-
-
             int columnOffset = 1;
             try (FileWriter writer = new FileWriter(file)) {
                 Collection<String> columnNames = IntStream.range(columnOffset, table.getColumnCount())

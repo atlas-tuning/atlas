@@ -220,7 +220,7 @@ public class MemoryAddressDialog extends JDialog {
                 }));
 
         JButton cancel = Inputs.button("Cancel", this::cancel);
-        Inputs.createButtonRow(content, 3, cancel, ok);
+        Inputs.createButtonRow(content, 3, ok, cancel);
 
         getContentPane().add(content);
         addressField.transferFocus();

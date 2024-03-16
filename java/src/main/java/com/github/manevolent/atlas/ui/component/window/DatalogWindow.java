@@ -227,7 +227,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
             return;
         }
 
-        String suggestedName = Instant.now().toString();
+        String suggestedName = Instant.now().toString().replaceAll(":", "-");
         String newDatalogName = JOptionPane.showInputDialog(getParent(),
                 "Specify a name for this recording", suggestedName);
         if (newDatalogName == null || newDatalogName.isBlank()) {

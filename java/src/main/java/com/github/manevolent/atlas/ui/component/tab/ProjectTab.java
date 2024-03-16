@@ -1,8 +1,14 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
+import com.github.manevolent.atlas.Frame;
 import com.github.manevolent.atlas.connection.ConnectionType;
+import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.*;
+import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
+import com.github.manevolent.atlas.ssm4.Crypto;
 import com.github.manevolent.atlas.ui.*;
+import com.github.manevolent.atlas.ui.component.toolbar.ProjectsTabToolbar;
+import com.github.manevolent.atlas.ui.component.window.property.PropertyInput;
 import com.github.manevolent.atlas.ui.util.*;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
@@ -10,20 +16,85 @@ import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.Color;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.logging.Level;
+
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class ProjectTab extends Tab {
-    private JPanel center;
+    private static Map<Class<? extends ProjectProperty>, PropertyInput> propertyInputMap = new HashMap<>();
+    static {
+        propertyInputMap.put(KeyProperty.class, new PropertyInput() {
+            @Override
+            public boolean update(Editor editor, ProjectProperty property) {
+                KeyProperty keyProperty = (KeyProperty) property;
 
-    private boolean dirty;
+                String oldValue = keyProperty.getKey() != null ? Frame.toHexString(keyProperty.getKey()) : "";
 
-    private JButton resetButton;
-    private JButton saveButton;
+                String newValue = (String) JOptionPane.showInputDialog(null,
+                        "Specify a key value (hexadecimal)", "Key Property",
+                        QUESTION_MESSAGE, null, null, oldValue);
+
+                if (newValue == null) {
+                    return false;
+                }
+
+                byte[] data = Crypto.toByteArray(newValue);
+
+                keyProperty.setKey(data);
+
+                return true;
+            }
+
+            @Override
+            public ProjectProperty newInstance() {
+                return new KeyProperty(new byte[0]);
+            }
+        });
+
+        propertyInputMap.put(SecurityAccessProperty.class, new PropertyInput() {
+            @Override
+            public boolean update(Editor editor, ProjectProperty property) {
+
+                return false;
+            }
+
+            @Override
+            public ProjectProperty newInstance() {
+                return new SecurityAccessProperty(0, new byte[0]);
+            }
+        });
+    }
 
     private JComboBox<ConnectionType> connectionTypeField;
+    private JList<String> list;
 
     public ProjectTab(Editor editor, JTabbedPane tabbedPane) {
         super(editor, tabbedPane);
     }
+
+    public String getSelectedPropertyName() {
+        return list.getSelectedValue();
+    }
+
+    public ProjectProperty getSelectedProperty() {
+        return getProject().getProperty(list.getSelectedValue());
+    }
+
+    private ListModel<String> getPropertiesModel() {
+        DefaultListModel<String> model = new DefaultListModel<>();
+        getProject().getProperties().keySet().forEach(model::addElement);
+        return model;
+    }
+
+    private JList<String> initSettingsList() {
+        JList<String> list = new JList<>(getPropertiesModel());
+        list = Layout.minimumWidth(list, 200);
+        list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        return Layout.emptyBorder(list);
+    }
+
 
     @Override
     public String getTitle() {
@@ -117,8 +188,23 @@ public class ProjectTab extends Tab {
 
         addHeaderRow(content, 9, CarbonIcons.SETTINGS, "Settings");
 
+        JPanel settingsPanel = new JPanel(new BorderLayout());
+        {
+            Layout.matteBorder(1, 1, 1, 1, Color.GRAY.darker(), settingsPanel);
+
+            settingsPanel.add(new ProjectsTabToolbar(this).getComponent(), BorderLayout.NORTH);
+            settingsPanel.add(list = initSettingsList(), BorderLayout.CENTER);
+
+            content.add(settingsPanel, Layout.gridBagConstraints(
+                    GridBagConstraints.NORTHWEST, GridBagConstraints.BOTH,
+                    0, 10,
+                    2, 1,
+                    1, 1
+            ));
+        }
+
         content.add(Box.createVerticalGlue(), Layout.gridBagConstraints(
-                GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, 0, 10, 1, 1
+                GridBagConstraints.NORTHWEST, GridBagConstraints.VERTICAL, 0, 11, 1, 1
         ));
 
         JScrollPane scrollPane = new JScrollPane(content);
@@ -196,5 +282,49 @@ public class ProjectTab extends Tab {
         );
 
         return entryPanel;
+    }
+
+    public void newSetting() {
+
+    }
+
+    public void editSetting() {
+        String propertyName = getSelectedPropertyName();
+        ProjectProperty property = getSelectedProperty();
+        if (propertyName == null || property == null) {
+            return;
+        }
+
+        PropertyInput input = propertyInputMap.get(property.getClass());
+        if (input == null) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(getParent(), "Unknown property type: " + property.getClass(),
+                        "Edit setting failed",
+                        JOptionPane.ERROR_MESSAGE);
+            });
+
+            return;
+        }
+
+        if (input.update(getParent(), property)) {
+            Log.ui().log(Level.INFO, "Project property \"" + propertyName + "\" updated.");
+            getParent().setDirty(true);
+        }
+    }
+
+    public void copySetting() {
+        String propertyName = getSelectedPropertyName();
+        ProjectProperty property = getSelectedProperty();
+        if (propertyName == null || property == null) {
+            return;
+        }
+
+    }
+
+    public void deleteSetting() {
+        String propertyName = getSelectedPropertyName();
+        if (propertyName == null) {
+            return;
+        }
     }
 }

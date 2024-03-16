@@ -40,7 +40,7 @@ public class DatalogPage extends JPanel implements MouseListener, MouseMotionLis
 
     public DatalogPage(DatalogWindow window) {
         this.window = window;
-        this.name = Instant.now().toString();
+        this.name = Instant.now().toString().replaceAll(":", "-");
 
         initComponent();
     }
