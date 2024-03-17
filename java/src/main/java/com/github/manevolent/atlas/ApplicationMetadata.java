@@ -17,7 +17,7 @@ public class ApplicationMetadata {
             Properties properties = new Properties();
             try {
                 properties.load(ApplicationMetadata.class.getResourceAsStream(resourceName));
-            } catch (IOException e) {
+            } catch (Exception e) {
                 Log.get().log(Level.WARNING, "Problem reading application metadata", e);
             }
 

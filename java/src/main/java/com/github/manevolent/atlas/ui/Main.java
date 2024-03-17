@@ -33,7 +33,7 @@ public class Main {
 
         splashForm.setProgress(0.2f, "Loading ROM data...");
         Project project;
-        String lastOpenedProject = Settings.get(Setting.LAST_OPENED_PROJECT);
+        String lastOpenedProject = null;//Settings.get(Setting.LAST_OPENED_PROJECT);
         File romFile = null;
         if (lastOpenedProject != null) {
             File lastOpenedProjectFile = new File(lastOpenedProject);

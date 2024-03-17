@@ -169,7 +169,7 @@ public class ProjectTab extends Tab {
                 connectionTypeField = Inputs.connectionTypeField(null, getProject().getConnectionType(), t -> {
                     ConnectionType existing = getProject().getConnectionType();
                     if (t != existing) {
-                        if (JOptionPane.showConfirmDialog(getParent(),
+                        if (existing != null && JOptionPane.showConfirmDialog(getParent(),
                                 "Are you sure you want to change the project connection type?\r\n" +
                                 "Doing so will interrupt any established connections.",
                                 "Warning",
