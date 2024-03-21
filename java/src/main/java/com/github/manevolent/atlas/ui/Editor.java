@@ -360,7 +360,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 Log.ui().log(Level.INFO, message);
                 postStatus(message);
                 Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
-            } catch (IOException e) {
+            } catch (Exception e) {
                 postStatus("Open project failed; see console output for details.");
                 JOptionPane.showMessageDialog(this, "Failed to open project!\r\nSee console output for more details.",
                         "Open failed",
