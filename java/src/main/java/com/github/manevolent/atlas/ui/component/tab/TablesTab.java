@@ -31,6 +31,8 @@ public class TablesTab
     private Collection<TreePath> lastExpansions = new ArrayList<>();
     private DefaultTreeModel defaultModel;
 
+    private JPopupMenu tablePopupMenu;
+
     public TablesTab(Editor form, JTabbedPane tabbedPane) {
         super(form, tabbedPane);
     }
@@ -185,26 +187,26 @@ public class TablesTab
         tree.addMouseListener(this);
         tree.setCellRenderer(new Renderer());
 
-        JPopupMenu popupMenu = new JPopupMenu();
-        popupMenu.add(Menus.item(CarbonIcons.LAUNCH, "Open Table", e -> {
+        tablePopupMenu = new JPopupMenu();
+        tablePopupMenu.add(Menus.item(CarbonIcons.LAUNCH, "Open Table", e -> {
             TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
             open(getPath(lastSelected));
         }));
-        popupMenu.addSeparator();
-        popupMenu.add(Menus.item(CarbonIcons.DATA_TABLE_REFERENCE, "New Table...", e -> {
+        tablePopupMenu.addSeparator();
+        tablePopupMenu.add(Menus.item(CarbonIcons.DATA_TABLE_REFERENCE, "New Table...", e -> {
             getParent().newTable();
         }));
-        popupMenu.addSeparator();
-        popupMenu.add(Menus.item(CarbonIcons.CHART_CUSTOM, "Edit Definition", e -> {
+        tablePopupMenu.addSeparator();
+        tablePopupMenu.add(Menus.item(CarbonIcons.CHART_CUSTOM, "Edit Definition", e -> {
             TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
             define(getPath(lastSelected));
         }));
-        popupMenu.add(Menus.item(CarbonIcons.COPY, "Copy Definition", e -> {
+        tablePopupMenu.add(Menus.item(CarbonIcons.COPY, "Copy Definition", e -> {
             TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
             defineCopy(getPath(lastSelected));
         }));
-        popupMenu.addSeparator();
-        popupMenu.add(Menus.item(CarbonIcons.DELETE, "Delete Table", e -> {
+        tablePopupMenu.addSeparator();
+        tablePopupMenu.add(Menus.item(CarbonIcons.DELETE, "Delete Table", e -> {
             Table toDelete = getTable((TreeNode) tree.getLastSelectedPathComponent());
             if (toDelete == null) {
                 return;
@@ -221,7 +223,6 @@ public class TablesTab
 
             update();
         }));
-        tree.setComponentPopupMenu(popupMenu);
 
         // You can only be focused on one table at a time
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -347,6 +348,25 @@ public class TablesTab
 
     @Override
     public void mousePressed(MouseEvent e) {
+        if(SwingUtilities.isRightMouseButton(e)){
+            int selRow = tree.getClosestRowForLocation(e.getX(), e.getY());
+            TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
+            tree.setSelectionPath(selPath);
+            if (selRow > -1){
+                tree.setSelectionRow(selRow);
+            }
+
+            selPath = tree.getSelectionPath();
+            Object last = selPath != null ? selPath.getLastPathComponent() : null;
+            if (last instanceof TableNode) {
+                tree.setComponentPopupMenu(tablePopupMenu);
+            } else if (last != null) {
+                tree.setComponentPopupMenu(null);
+            } else {
+                tree.setComponentPopupMenu(null);
+            }
+        }
+
         // Bugfix for UI elements that seemingly repaint in a strange way
         this.getComponent().repaint();
     }
