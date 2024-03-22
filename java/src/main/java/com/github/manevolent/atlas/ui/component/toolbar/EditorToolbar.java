@@ -1,18 +1,13 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
-import com.github.manevolent.atlas.model.Scale;
-import com.github.manevolent.atlas.model.Series;
-import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.behavior.EditHistory;
 import com.github.manevolent.atlas.ui.behavior.WindowHistory;
-import com.github.manevolent.atlas.ui.component.window.Window;
 
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
-import java.util.List;
 
 public class EditorToolbar extends Toolbar<Editor> {
     private JButton left, right;

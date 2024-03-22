@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.ui.component.tab;
 
+import com.github.manevolent.atlas.model.Axis;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.ui.util.Icons;
@@ -12,14 +13,12 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
 
+import static com.github.manevolent.atlas.model.Axis.Y;
 import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
@@ -78,6 +77,7 @@ public class TablesTab
 
             List<String> items = Arrays.stream(table.getName().split("\\-"))
                     .map(String::trim).toList();
+
             MutableTreeNode parent = treeRoot;
             for (int i = 0 ; i < items.size(); i ++) {
                 String text = items.get(i);
@@ -183,6 +183,7 @@ public class TablesTab
         tree = new JTree();
         tree.addTreeSelectionListener(this);
         tree.addMouseListener(this);
+        tree.setCellRenderer(new Renderer());
 
         JPopupMenu popupMenu = new JPopupMenu();
         popupMenu.add(Menus.item(CarbonIcons.LAUNCH, "Open Table", e -> {
@@ -240,6 +241,8 @@ public class TablesTab
         c.gridy = 0;
         c.weightx = 1;
         c.weighty = 1;
+        c.gridwidth = 1;
+        c.fill = GridBagConstraints.HORIZONTAL;
         treePanel.add(tree, c);
 
         JScrollPane scrollPane = new JScrollPane(
@@ -332,14 +335,12 @@ public class TablesTab
 
     @Override
     public void mouseClicked(MouseEvent e) {
-        TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
-        tree.setSelectionPath(selPath);
-
         if (e.getClickCount() != 2) {
             return;
         }
 
-        if (e.getButton() == MouseEvent.BUTTON1) {
+        TreePath selPath = tree.getSelectionPath();
+        if (selPath != null && e.getButton() == MouseEvent.BUTTON1) {
             open(selPath);
         }
     }
@@ -370,7 +371,7 @@ public class TablesTab
         searchField.grabFocus();
     }
 
-    private class TableNode implements MutableTreeNode {
+    private static class TableNode implements MutableTreeNode {
         private final Table table;
         private final String text;
         private TreeNode parent;
@@ -466,6 +467,25 @@ public class TablesTab
 
         public boolean equals(TableNode obj) {
             return obj.table.equals(table);
+        }
+    }
+
+    private class Renderer extends DefaultTreeCellRenderer {
+        @Override
+        public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded,
+                                                      boolean leaf, int row, boolean hasFocus) {
+            JLabel label = (JLabel) super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
+
+            if (leaf) {
+                TableNode node = (TableNode) value;
+                if (node.table.hasAxis(Axis.X) || node.table.hasAxis(Axis.Y)) {
+                    label.setIcon(Icons.get(CarbonIcons.DATA_TABLE));
+                } else {
+                    label.setIcon(Icons.get(CarbonIcons.STRING_INTEGER));
+                }
+            }
+
+            return label;
         }
     }
 

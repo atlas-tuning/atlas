@@ -7,7 +7,6 @@ import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.protocol.j2534.J2534Device;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
-import com.github.manevolent.atlas.protocol.j2534.tactrix.SerialTactrixOpenPort;
 import com.github.manevolent.atlas.protocol.uds.*;
 import com.github.manevolent.atlas.protocol.uds.request.UDSClearDTCInformationRequest;
 import com.github.manevolent.atlas.protocol.uds.request.UDSECUResetRequest;

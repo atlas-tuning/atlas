@@ -12,8 +12,12 @@ import java.util.logging.Level;
 
 public class Main {
 
-    public static void main(String[] args) throws Exception {
+    private static void setupTheme() {
+        FlatDarculaLaf.setup();
+        UIManager.put("Tree.repaintWholeRow", true);
+    }
 
+    public static void main(String[] args) throws Exception {
         System.setProperty("sun.awt.exception.handler", AwtExceptionHandler.class.getName());
 
         Log.get().setLevel(Level.FINE);
@@ -29,11 +33,11 @@ public class Main {
         Settings.getAll();
 
         splashForm.setProgress(0.1f, "Loading theme...");
-        FlatDarculaLaf.setup();
+        setupTheme();
 
         splashForm.setProgress(0.2f, "Loading ROM data...");
         Project project;
-        String lastOpenedProject = null;//Settings.get(Setting.LAST_OPENED_PROJECT);
+        String lastOpenedProject = Settings.get(Setting.LAST_OPENED_PROJECT);
         File romFile = null;
         if (lastOpenedProject != null) {
             File lastOpenedProjectFile = new File(lastOpenedProject);

@@ -9,9 +9,7 @@ import com.github.manevolent.atlas.protocol.uds.UDSSession;
 import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.TimeoutException;
-import java.util.function.Consumer;
 
 public interface Connection {
 

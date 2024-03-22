@@ -1,8 +1,6 @@
 package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.model.Project;
-import com.github.manevolent.atlas.model.Scale;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceType;
@@ -11,7 +9,6 @@ import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
 import java.awt.*;
-import java.text.NumberFormat;
 import java.util.*;
 import java.util.List;
 import java.util.function.Consumer;
