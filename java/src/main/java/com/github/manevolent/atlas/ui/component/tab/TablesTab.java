@@ -253,6 +253,16 @@ public class TablesTab
                 JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
                 JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
 
+        scrollPane.getVerticalScrollBar().addAdjustmentListener(e -> {
+            scrollPane.revalidate();
+            scrollPane.repaint();
+        });
+
+        scrollPane.getHorizontalScrollBar().addAdjustmentListener(e -> {
+            scrollPane.revalidate();
+            scrollPane.repaint();
+        });
+
         scrollPane.setViewportBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
         scrollPane.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 0));
 
