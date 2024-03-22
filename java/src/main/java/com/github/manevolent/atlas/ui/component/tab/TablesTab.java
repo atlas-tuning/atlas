@@ -72,7 +72,9 @@ public class TablesTab
 
     private DefaultMutableTreeNode buildModel(String search) {
         DefaultMutableTreeNode treeRoot = new DefaultMutableTreeNode();
-        for (Table table : getParent().getProject().getTables()) {
+        List<Table> sortedTables = getParent().getProject().getTables().stream()
+                .sorted(Comparator.comparing(Table::getName)).toList();
+        for (Table table : sortedTables) {
             if (search != null && !table.getName().toLowerCase().contains(search.toLowerCase())) {
                 continue;
             }
