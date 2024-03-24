@@ -253,7 +253,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
      * @return true if the editor is ready to close
      */
     public boolean closing() {
-        new ArrayList<>(getOpenWindows()).forEach(window -> window.getComponent().doDefaultCloseAction());
+        getOpenWindows().forEach(window -> window.getComponent().doDefaultCloseAction());
 
         if (dirty) {
             String message = "You have unsaved changes to your project " +
