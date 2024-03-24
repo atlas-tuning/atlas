@@ -87,6 +87,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         setType(Type.NORMAL);
 
         openRom(null, project);
+        setDirty(false);
 
         initComponents();
 
@@ -315,6 +316,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 fileChooser.addChoosableFileFilter(def);
                 fileChooser.setFileFilter(def);
                 fileChooser.setDialogTitle("Save Project");
+                fileChooser.setCurrentDirectory(romFile != null ? romFile.getParentFile() : null);
                 if (fileChooser.showSaveDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
                     file = fileChooser.getSelectedFile();
                 } else {
@@ -355,20 +357,23 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         fileChooser.addChoosableFileFilter(def);
         fileChooser.setFileFilter(def);
         fileChooser.setDialogTitle("Open Project");
+        fileChooser.setCurrentDirectory(romFile != null ? romFile.getParentFile() : null);
         if (fileChooser.showOpenDialog(getParent()) == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            try {
-                openRom(file, Project.loadFromArchive(file));
+                withWaitCursor(() -> {
+                    try {
+                        openRom(file, Project.loadFromArchive(file));
+                    } catch (Exception e) {
+                        postStatus("Open project failed; see console output for details.");
+                        JOptionPane.showMessageDialog(this, "Failed to open project!\r\nSee console output for more details.",
+                                "Open failed",
+                                JOptionPane.ERROR_MESSAGE);
+                    }
+                });
                 String message = "Project opened from " + file.getPath();
                 Log.ui().log(Level.INFO, message);
                 postStatus(message);
                 Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
-            } catch (Exception e) {
-                postStatus("Open project failed; see console output for details.");
-                JOptionPane.showMessageDialog(this, "Failed to open project!\r\nSee console output for more details.",
-                        "Open failed",
-                        JOptionPane.ERROR_MESSAGE);
-            }
         }
     }
 
