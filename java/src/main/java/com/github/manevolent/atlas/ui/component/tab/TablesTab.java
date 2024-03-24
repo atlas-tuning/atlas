@@ -3,8 +3,12 @@ package com.github.manevolent.atlas.ui.component.tab;
 import com.github.manevolent.atlas.model.Axis;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.ui.component.popupmenu.tabledefinition.FolderPopupMenu;
+import com.github.manevolent.atlas.ui.component.popupmenu.tabledefinition.TablePopupMenu;
+import com.github.manevolent.atlas.ui.component.window.TableDefinitionEditor;
+import com.github.manevolent.atlas.ui.component.window.TableEditor;
+import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.util.Icons;
-import com.github.manevolent.atlas.ui.util.Menus;
 import com.github.manevolent.atlas.ui.Editor;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -17,8 +21,9 @@ import java.awt.event.*;
 import java.util.*;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
-import static com.github.manevolent.atlas.model.Axis.Y;
 import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
@@ -32,6 +37,7 @@ public class TablesTab
     private DefaultTreeModel defaultModel;
 
     private JPopupMenu tablePopupMenu;
+    private JPopupMenu folderPopupMenu;
 
     public TablesTab(Editor form, JTabbedPane tabbedPane) {
         super(form, tabbedPane);
@@ -47,7 +53,11 @@ public class TablesTab
         return Icons.get(CarbonIcons.TREE_VIEW_ALT, getTextColor());
     }
 
-    private Table getTable(TreeNode node) {
+    public JTree getTree() {
+        return tree;
+    }
+
+    public Table getTable(TreeNode node) {
         if (node instanceof TableNode) {
             return ((TableNode) node).table;
         }
@@ -55,15 +65,17 @@ public class TablesTab
         return null;
     }
 
-    private TreePath getPath(TreeNode node) {
+    public TreePath getPath(TreeNode node) {
         if (node instanceof TableNode) {
             return getPath(((TableNode) node).table);
         }
 
-        return null;
+        DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
+        TreeNode[] nodes = model.getPathToRoot(node);
+        return new TreePath(nodes);
     }
 
-    private TreePath getPath(Table table) {
+    public TreePath getPath(Table table) {
         TableNode node = nodeMap.get(table);
         DefaultTreeModel model = (DefaultTreeModel) tree.getModel();
         TreeNode[] nodes = model.getPathToRoot(node);
@@ -137,10 +149,123 @@ public class TablesTab
         getComponent().repaint();
     }
 
-    private void expandAll() {
+    public void expandAll() {
         for (Table table : nodeMap.keySet()) {
             tree.makeVisible(getPath(table));
         }
+    }
+
+    public void expandAll(TreeNode node) {
+        TreePath path = getPath(node);
+        if (path != null) {
+            tree.expandPath(path);
+        }
+
+        Enumeration<? extends TreeNode> children = node.children();
+        if (children != null) {
+            children.asIterator().forEachRemaining(this::expandAll);
+        }
+
+        tree.revalidate();
+        getComponent().repaint();
+    }
+
+    public List<Table> getTablesUnder(TreeNode node) {
+        if (node instanceof TableNode) {
+            return Collections.singletonList(((TableNode) node).table);
+        }
+
+        List<Table> tables = new ArrayList<>();
+
+        Enumeration<? extends TreeNode> children = node.children();
+        if (children != null) {
+            children.asIterator().forEachRemaining(child -> {
+                tables.addAll(getTablesUnder(child));
+            });
+        }
+
+        return tables;
+    }
+
+    public void renameTables(TreeNode node) {
+        if (node == null || node instanceof TableNode) {
+            return;
+        }
+
+        List<Table> tables = getTablesUnder(node);
+        if (tables.isEmpty()) {
+            return;
+        }
+
+        String oldFolderName = node.toString();
+        String newFolderName = (String) JOptionPane.showInputDialog(getParent().getParent(),
+                "Specify a name",
+                "Rename Folder",
+                QUESTION_MESSAGE, null, null, node.toString());
+
+        if (newFolderName == null || newFolderName.isBlank()) {
+            return;
+        }
+
+        List<String> nodes = new ArrayList<>();
+        while ((node = node.getParent()) != null) {
+            if (node.getParent() == null) break; // This is the root node, which has no name
+
+            nodes.addFirst(node.toString());
+        }
+
+        List<String> oldNodes = new ArrayList<>(nodes);
+        oldNodes.add(oldFolderName);
+        String oldPrefix = String.join(" - ", oldNodes);
+
+        List<String> newNodes = new ArrayList<>(nodes);
+        newNodes.add(newFolderName);
+        String newPrefix = String.join(" - ", newNodes);
+
+        tables.forEach(table -> {
+            String newName = table.getName().replaceFirst("^" + Pattern.quote(oldPrefix), newPrefix);
+            table.setName(newName);
+            getParent().setDirty(true);
+        });
+
+        update();
+
+        getParent().getOpenWindows()
+                .stream().filter(w -> w instanceof TableDefinitionEditor || w instanceof TableEditor)
+                .forEach(Window::reload);
+    }
+
+    public void deleteTables(TreeNode node) {
+        if (node == null || node instanceof TableNode) {
+            return;
+        }
+
+        List<Table> tables = getTablesUnder(node);
+        if (tables.isEmpty()) {
+            return;
+        }
+
+        boolean allClosed = tables.stream()
+                .allMatch(table -> getParent().getOpenWindows(table).stream().allMatch(Window::close));
+
+        if (!allClosed) {
+            return;
+        }
+
+        if (JOptionPane.showConfirmDialog(getParent(),
+                "Are you sure you want to delete " + tables.size() + " table(s)?",
+                "Delete Folder",
+                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        tables.forEach(table -> {
+            getParent().getProject().removeTable(table);
+            Log.ui().log(Level.INFO, "Removed " + table.getName());
+        });
+        getParent().setDirty(true);
+
+        update();
     }
 
     private void reexpand() {
@@ -189,42 +314,8 @@ public class TablesTab
         tree.addMouseListener(this);
         tree.setCellRenderer(new Renderer());
 
-        tablePopupMenu = new JPopupMenu();
-        tablePopupMenu.add(Menus.item(CarbonIcons.LAUNCH, "Open Table", e -> {
-            TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
-            open(getPath(lastSelected));
-        }));
-        tablePopupMenu.addSeparator();
-        tablePopupMenu.add(Menus.item(CarbonIcons.DATA_TABLE_REFERENCE, "New Table...", e -> {
-            getParent().newTable();
-        }));
-        tablePopupMenu.addSeparator();
-        tablePopupMenu.add(Menus.item(CarbonIcons.CHART_CUSTOM, "Edit Definition", e -> {
-            TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
-            define(getPath(lastSelected));
-        }));
-        tablePopupMenu.add(Menus.item(CarbonIcons.COPY, "Copy Definition", e -> {
-            TreeNode lastSelected = (TreeNode) tree.getLastSelectedPathComponent();
-            defineCopy(getPath(lastSelected));
-        }));
-        tablePopupMenu.addSeparator();
-        tablePopupMenu.add(Menus.item(CarbonIcons.DELETE, "Delete Table", e -> {
-            Table toDelete = getTable((TreeNode) tree.getLastSelectedPathComponent());
-            if (toDelete == null) {
-                return;
-            }
-
-            if (JOptionPane.showConfirmDialog(getParent(),
-                    "Are you sure you want to delete " + toDelete.getName() + "?",
-                    "Delete Table",
-                    JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
-                return;
-            }
-
-            getParent().getProject().removeTable(toDelete);
-
-            update();
-        }));
+        tablePopupMenu = new TablePopupMenu(this).getComponent();
+        folderPopupMenu = new FolderPopupMenu(this).getComponent();
 
         // You can only be focused on one table at a time
         tree.getSelectionModel().setSelectionMode(TreeSelectionModel.SINGLE_TREE_SELECTION);
@@ -298,8 +389,7 @@ public class TablesTab
         getComponent().repaint();
     }
 
-
-    private void open(TreePath selPath) {
+    public void open(TreePath selPath) {
         if (selPath == null) {
             return;
         }
@@ -311,7 +401,7 @@ public class TablesTab
         }
     }
 
-    private void define(TreePath selPath) {
+    public void define(TreePath selPath) {
         if (selPath == null) {
             return;
         }
@@ -323,7 +413,7 @@ public class TablesTab
         }
     }
 
-    private void defineCopy(TreePath selPath) {
+    public void defineCopy(TreePath selPath) {
         if (selPath == null) {
             return;
         }
@@ -344,6 +434,10 @@ public class TablesTab
             table.setName(newTableName);
             getParent().openTableDefinition(table);
         }
+    }
+
+    public void focusSearch() {
+        searchField.grabFocus();
     }
 
     @Override
@@ -373,7 +467,7 @@ public class TablesTab
             if (last instanceof TableNode) {
                 tree.setComponentPopupMenu(tablePopupMenu);
             } else if (last != null) {
-                tree.setComponentPopupMenu(null);
+                tree.setComponentPopupMenu(folderPopupMenu);
             } else {
                 tree.setComponentPopupMenu(null);
             }
@@ -397,10 +491,6 @@ public class TablesTab
     @Override
     public void mouseExited(MouseEvent e) {
 
-    }
-
-    public void focusSearch() {
-        searchField.grabFocus();
     }
 
     private static class TableNode implements MutableTreeNode {
@@ -508,8 +598,7 @@ public class TablesTab
                                                       boolean leaf, int row, boolean hasFocus) {
             JLabel label = (JLabel) super.getTreeCellRendererComponent(tree, value, sel, expanded, leaf, row, hasFocus);
 
-            if (leaf) {
-                TableNode node = (TableNode) value;
+            if (value instanceof TableNode node) {
                 if (node.table.hasAxis(Axis.X) || node.table.hasAxis(Axis.Y)) {
                     label.setIcon(Icons.get(CarbonIcons.DATA_TABLE));
                 } else {

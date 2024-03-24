@@ -506,7 +506,14 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     }
 
     public Collection<Window> getOpenWindows() {
-        return Collections.unmodifiableCollection(openWindows);
+        return Collections.unmodifiableCollection(new ArrayList<>(openWindows));
+    }
+
+    public Collection<Window> getOpenWindows(Table table) {
+        return getOpenWindows().stream()
+                .filter(w -> ((w instanceof TableEditor) && ((TableEditor) w).getTable() == table) ||
+                        ((w instanceof TableDefinitionEditor) && ((TableDefinitionEditor) w).getTable() == table))
+                .toList();
     }
 
     /**

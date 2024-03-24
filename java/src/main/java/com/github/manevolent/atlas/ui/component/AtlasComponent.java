@@ -48,16 +48,23 @@ public abstract class AtlasComponent<T extends Component, E> {
     protected abstract void initComponent(T component);
     protected void postInitComponent(T component) { }
 
+    protected Component getContent() {
+        return getComponent();
+    }
+
     public void reinitialize() {
         T component = getComponent();
+
+        Component content = getContent();
         if (component instanceof JComponent) {
-            ((JComponent) component).removeAll();
+            ((JComponent) content).removeAll();
         }
+
         initComponent(component);
         postInitComponent(component);
 
-        getComponent().revalidate();
-        getComponent().repaint();
+        content.revalidate();
+        content.repaint();
     }
 
 }

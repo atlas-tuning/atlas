@@ -26,9 +26,9 @@ import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class TableDefinitionEditor extends Window implements InternalFrameListener {
     private final Table realTable;
-    private final Table workingTable;
     private final Map<Axis, JCheckBox> axisCheckboxes = new HashMap<>();
 
+    private Table workingTable;
     private JPanel rootPanel;
     private TableEditor preview;
     private boolean dirty = false;
@@ -394,8 +394,13 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
     @Override
     public void reload() {
-        reinitialize();
-        updatePreview();
+        if (!dirty) {
+            workingTable = realTable.copy();
+            reinitialize();
+        } else {
+            updatePreview();
+            updateTitle();
+        }
     }
 
     @Override

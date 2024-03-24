@@ -35,16 +35,23 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
 
     @Override
     protected void postInitComponent(JInternalFrame component) {
-        component.pack();
+        if (!component.isVisible()) {
+            component.pack();
 
-        component.setPreferredSize(component.getPreferredSize());
-        component.setSize(component.getPreferredSize());
+            component.setPreferredSize(component.getPreferredSize());
+            component.setSize(component.getPreferredSize());
 
-        //TODO this most likely will annoy people, make a setting for it
-        try {
-            component.setMaximum(true);
-        } catch (PropertyVetoException e) {
-            // Ignore
+            //TODO this most likely will annoy people, make a setting for it
+            try {
+                component.setMaximum(true);
+            } catch (PropertyVetoException e) {
+                // Ignore
+            }
+        }
+
+        if (component.isVisible()) {
+            getComponent().revalidate();
+            getComponent().repaint();
         }
     }
 
@@ -122,7 +129,18 @@ public abstract class Window extends EditorComponent<JInternalFrame> {
     }
 
     @Override
+    protected Component getContent() {
+        return getComponent().getContentPane();
+    }
+
+    @Override
     public String toString() {
         return getTitle();
+    }
+
+    public boolean close() {
+        JInternalFrame component = getComponent();
+        component.doDefaultCloseAction();
+        return component.isClosed();
     }
 }
