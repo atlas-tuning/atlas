@@ -264,7 +264,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
                     Log.ui().log(Level.SEVERE, "Problem getting datalog frame", ex);
                 }
             }
-        }, 1000L,1000 / frequency);
+        }, 1000L, 1000 / frequency);
     }
 
     public void stopRecording() {
