@@ -194,11 +194,13 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     }
 
     public void postStatus(String status) {
-        if (footer != null) {
-            footer.setStatus(status);
-            footer.getComponent().revalidate();
-            footer.getComponent().repaint();
-        }
+        SwingUtilities.invokeLater(() -> {
+            if (footer != null) {
+                footer.setStatus(status);
+                footer.getComponent().revalidate();
+                footer.getComponent().repaint();
+            }
+        });
     }
 
     public Connection createConnection() {
