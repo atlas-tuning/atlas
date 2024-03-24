@@ -15,11 +15,9 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 import static com.github.manevolent.atlas.ui.util.Layout.*;
@@ -43,6 +41,7 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
     private ListModel<ScalingOperation> getOperationsModel() {
         DefaultListModel<ScalingOperation> model = new DefaultListModel<>();
+
         Scale scale = getSelectedScale();
 
         scale.getOperations().forEach(model::addElement);
@@ -533,20 +532,34 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
 
-        Long value = BinaryInputDialog.show(getParent(), selected.getFormat());
-        if (value == null) {
+        Long data = BinaryInputDialog.show(getParent(), selected.getFormat());
+        if (data == null) {
             return;
         }
 
-        float output = selected.forward((float) value);
+        float output = selected.forward((float) data);
+
+        java.util.List<String> stages = new LinkedList<>();
+
+        float value = (float) data;
+        for (ScalingOperation operation : selected.getOperations()) {
+            value = operation.getOperation().forward(value, operation.getCoefficient());
+            stages.add(String.format("    %.2f %s %.2f = %.2f",
+                    value,
+                    operation.getOperation().toString(),
+                    operation.getCoefficient(),
+                    value));
+        }
 
         JOptionPane.showMessageDialog(getParent(),
                 String.format(
-                         "Input: 0x" + Integer.toHexString((int) (value & 0xFFFFFFFFL)).toUpperCase()
-                                 + " (dec. " + value + ")" + "\r\n" +
-                         "Output: %.2f" + selected.getUnit().getText(), output
+                         "Input: 0x" + Integer.toHexString((int) (data & 0xFFFFFFFFL)).toUpperCase()
+                                 + " (dec. " + data + ")" + "\r\n\r\n" +
+                                 String.join("\r\n", stages) + "\r\n\r\n" +
+                         "Output: %.2f" + selected.getUnit().getText(),
+                        output
                 ),
-                "Test Operation - " + selected.getName(),
+                "Test Operations - " + selected.getName(),
                 JOptionPane.INFORMATION_MESSAGE);
     }
 

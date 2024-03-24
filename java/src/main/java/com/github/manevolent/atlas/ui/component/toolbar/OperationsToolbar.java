@@ -38,7 +38,7 @@ public class OperationsToolbar extends Toolbar<FormatsTab> {
             getParent().deleteOperation();
         }));
         toolbar.addSeparator();
-        toolbar.add(makeSmallButton(FontAwesomeSolid.VIAL, "test", "Test operation", _ -> {
+        toolbar.add(makeSmallButton(FontAwesomeSolid.VIAL, "test", "Test operations", _ -> {
             getParent().testOperation();
         }));
     }
