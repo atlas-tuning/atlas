@@ -287,7 +287,12 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     }
 
     public void withWaitCursor(Runnable runnable) {
-        withWaitCursor(() -> runnable);
+        setCursor(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR));
+        try {
+            runnable.run();
+        } finally {
+            setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
+        }
     }
 
     public <R> R withWaitCursor(Supplier<R> runnable) {
