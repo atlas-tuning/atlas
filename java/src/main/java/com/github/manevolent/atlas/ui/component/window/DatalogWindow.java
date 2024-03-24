@@ -239,7 +239,7 @@ public class DatalogWindow extends Window implements InternalFrameListener, Chan
         addPage(page);
         setRecordingPage(page);
 
-        long frequency = Settings.get(Setting.DATALOG_FREQUENCY, 10);
+        long frequency = Settings.get(Setting.DATALOG_FREQUENCY, 30);
 
         if (datalogTimer == null) { // Which it SHOULD be
             datalogTimer = new Timer("Datalog");
