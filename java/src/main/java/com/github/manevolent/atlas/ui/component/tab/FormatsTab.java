@@ -542,7 +542,8 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         JOptionPane.showMessageDialog(getParent(),
                 String.format(
-                         "Input: 0x" + Integer.toHexString((int) (value & 0xFFFFFFFFL)).toUpperCase() + "\r\n" +
+                         "Input: 0x" + Integer.toHexString((int) (value & 0xFFFFFFFFL)).toUpperCase()
+                                 + " (dec. " + value + ")" + "\r\n" +
                          "Output: %.2f" + selected.getUnit().getText(), output
                 ),
                 "Test Operation - " + selected.getName(),
