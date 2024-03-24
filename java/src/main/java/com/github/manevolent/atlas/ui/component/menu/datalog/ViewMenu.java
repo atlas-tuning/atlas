@@ -20,7 +20,7 @@ public class ViewMenu extends DatalogMenu {
         viewAll.addActionListener(e -> {
             DatalogPage activePage = getParent().getActivePage();
             if (activePage != null) {
-                activePage.zoomIn();
+                activePage.fitToScreen();
             }
         });
         viewMenu.add(viewAll);

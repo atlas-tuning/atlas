@@ -10,7 +10,13 @@ public interface J2534DeviceProvider<T extends J2534DeviceDescriptor> {
      * @return default device.
      */
     default T getDefaultDevice() throws IOException {
-        return getAllDevices().getFirst();
+        List<T> devices = getAllDevices();
+
+        if (devices == null || devices.isEmpty()) {
+            throw new NullPointerException("No J2534 devices were found.");
+        }
+
+        return devices.getFirst();
     }
 
     void setDefaultDevice(J2534DeviceDescriptor descriptor);

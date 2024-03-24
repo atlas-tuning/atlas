@@ -29,6 +29,7 @@ import javax.swing.*;
 import javax.swing.event.InternalFrameEvent;
 import javax.swing.event.InternalFrameListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
+import javax.swing.tree.TreeNode;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
@@ -537,8 +538,19 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     }
 
     public void newTable() {
+        String suggestedTableName;
+        TablesTab tab = tablesTab;
+        Table selected = tab.getTable((TreeNode) tab.getTree().getLastSelectedPathComponent());
+        if (selected != null && selected.getName().contains(" - ")) {
+            String prefix = selected.getName().substring(0, selected.getName().lastIndexOf(" - "));
+            suggestedTableName = prefix + " - New Table";
+        } else {
+            suggestedTableName = "New Table";
+        }
+
         String newTableName = (String) JOptionPane.showInputDialog(getParent(), "Specify a name", "New Table",
-                QUESTION_MESSAGE, null, null, "New Table");
+                QUESTION_MESSAGE, null, null, suggestedTableName);
+
         if (newTableName == null || newTableName.isBlank()) {
             return;
         }
