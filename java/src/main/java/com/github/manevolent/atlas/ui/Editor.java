@@ -524,12 +524,29 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
      */
     public <T extends Window> T openWindow(T window) {
         Log.ui().log(Level.FINER, "Opening window \"" + window.getTitle() + "\" [" + window.getClass() + "]...");
-        window.getComponent().addInternalFrameListener(this);
-        window.getComponent().setFocusable(true);
-        window.getComponent().setVisible(true);
+
+        JInternalFrame component;
+        try {
+            component = window.getComponent();
+        } catch (RuntimeException ex) {
+            SwingUtilities.invokeLater(() -> {
+                JOptionPane.showMessageDialog(getParent(), "Problem opening " + window.getTitle() + "!\r\n" +
+                                ex.getMessage() + "\r\n"
+                                + "See console output (F12) for more details.",
+                        "Window Open Error",
+                        JOptionPane.ERROR_MESSAGE);
+            });
+            Log.ui().log(Level.FINER, "Problem opening window \"" + window.getTitle() + "\", "
+                    + window.getClass() + "]", ex);
+            throw ex;
+        }
+
+        component.addInternalFrameListener(this);
+        component.setFocusable(true);
+        component.setVisible(true);
 
         openWindows.add(window);
-        desktop.add(window.getComponent());
+        desktop.add(component);
         windowMenu.update();
 
         postStatus("Opened " + window.getTitle());

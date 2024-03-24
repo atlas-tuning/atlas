@@ -27,6 +27,7 @@ import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 public class TableDefinitionEditor extends Window implements InternalFrameListener {
     private final Table realTable;
     private final Map<Axis, JCheckBox> axisCheckboxes = new HashMap<>();
+    private JButton swapButton;
 
     private Table workingTable;
     private JPanel rootPanel;
@@ -251,8 +252,10 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
                         if (axis == Y) {
                             axisCheckboxes.get(X).setEnabled(!checked);
+                            swapButton.setEnabled(checked);
                         } else if (axis == X) {
                             axisCheckboxes.get(Y).setEnabled(checked);
+                            swapButton.setEnabled(workingTable.hasAxis(Y));
                         }
 
                         nameField.setEnabled(checked);
@@ -267,19 +270,27 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
                 checkBox.setEnabled(!workingTable.hasAxis(Y));
             } else if (axis == Y) {
                 checkBox.setEnabled(workingTable.hasAxis(X));
+                swapButton.setEnabled(workingTable.hasAxis(Y));
             }
 
             checkBox.setFocusable(false);
             axisCheckboxes.put(axis, checkBox);
-            panel.add(Layout.emptyBorder(0, 0, 1, 0, bold(checkBox)),
-                    Layout.gridBagTop(2)
-            );
+
+            if (axis == Y) {
+                JPanel innerPanel = new JPanel(new BorderLayout());
+                innerPanel.add(bold(checkBox), BorderLayout.WEST);
+                innerPanel.add(swapButton, BorderLayout.EAST);
+                panel.add(innerPanel, Layout.gridBagTop(2));
+            } else {
+                Layout.preferHeight(checkBox, swapButton);
+                panel.add(Layout.emptyBorder(0, 0, 1, 0, bold(checkBox)), Layout.gridBagTop(2));
+            }
 
             enabled = checkBox.isSelected();
         } else {
             memoryLengthField = null;
             enabled = true;
-            panel.add(Layout.emptyBorder(0, 0, 1, 0, Labels.boldText("Data series")),
+            panel.add(Layout.emptyBorder(0, 0, 1, 0, Layout.preferHeight(Labels.boldText("Data series"), swapButton)),
                     Layout.gridBagTop(2));
         }
 
@@ -314,6 +325,21 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
         }
 
         return panel;
+    }
+
+    private void swapAxes() {
+        Series x = workingTable.getSeries(X);
+        Series y = workingTable.getSeries(Y);
+
+        if (x == null || y == null) {
+            return;
+        }
+
+        workingTable.setAxis(X, y);
+        workingTable.setAxis(Y, x);
+        setDirty(true);
+
+        reinitialize();
     }
 
     private void updatePreview() {
@@ -352,6 +378,8 @@ public class TableDefinitionEditor extends Window implements InternalFrameListen
 
         Color borderColor = Color.GRAY.darker();
         rootPanel = Layout.matteBorder(1, 0, 0, 0, borderColor, new JPanel(new GridBagLayout()));
+
+        swapButton = Inputs.button(CarbonIcons.ARROWS_HORIZONTAL, null, "Swap axes", this::swapAxes);
 
         JPanel seriesPanel = Layout.matteBorder(0, 0, 1, 0, borderColor, new JPanel());
         seriesPanel.setLayout(new BoxLayout(seriesPanel, BoxLayout.X_AXIS));

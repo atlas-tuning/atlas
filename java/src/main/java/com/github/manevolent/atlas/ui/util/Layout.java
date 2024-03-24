@@ -207,4 +207,29 @@ public class Layout {
         return BorderFactory.createEmptyBorder(insets.top, insets.left, insets.bottom, insets.right);
     }
 
+    public static <T extends JComponent> T preferHeight(T component, JComponent other) {
+        return preferHeight(component, (int) other.getPreferredSize().getHeight());
+    }
+
+    public static <T extends JComponent> T preferHeight(T component, int height) {
+        Dimension preferredSize = component.getPreferredSize();
+        component.setPreferredSize(new Dimension(
+                (int) preferredSize.getWidth(),
+                height
+        ));
+        return component;
+    }
+
+    public static <T extends JComponent> T preferWidth(T component, JComponent other) {
+        return preferWidth(component, (int) other.getPreferredSize().getWidth());
+    }
+
+    public static <T extends JComponent> T preferWidth(T component, int width) {
+        Dimension preferredSize = component.getPreferredSize();
+        component.setPreferredSize(new Dimension(
+                width,
+                (int) preferredSize.getHeight()
+        ));
+        return component;
+    }
 }
