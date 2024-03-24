@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.ui.BinaryInputDialog;
 import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
 import com.github.manevolent.atlas.ui.component.toolbar.OperationsToolbar;
 import com.github.manevolent.atlas.ui.component.window.Window;
@@ -456,6 +457,11 @@ public class FormatsTab extends Tab implements ListSelectionListener {
     }
 
     public void deleteOperation() {
+        Scale selected = getSelectedScale();
+        if (selected == null) {
+            return;
+        }
+
         ScalingOperation operation = ops.getSelectedValue();
         if (operation == null) {
             return;
@@ -468,12 +474,16 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
 
-        getSelectedScale().removeOperation(operation);
+        selected.removeOperation(operation);
 
         updateOperationsList();
     }
 
     public void addOperation() {
+        Scale selected = getSelectedScale();
+        if (selected == null) {
+            return;
+        }
 
         scaleChanged();
     }
@@ -483,7 +493,13 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         if (operation == null) {
             return;
         }
-        getSelectedScale().moveOperationDown(operation);
+
+        Scale selected = getSelectedScale();
+        if (selected == null) {
+            return;
+        }
+
+        selected.moveOperationDown(operation);
         scaleChanged();
     }
 
@@ -492,13 +508,45 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         if (operation == null) {
             return;
         }
-        getSelectedScale().moveOperationUp(operation);
+
+        Scale selected = getSelectedScale();
+        if (selected == null) {
+            return;
+        }
+
+        selected.moveOperationUp(operation);
         scaleChanged();
     }
 
     public void editOperation() {
+        Scale selected = getSelectedScale();
+        if (selected == null) {
+            return;
+        }
 
         scaleChanged();
+    }
+
+    public void testOperation() {
+        Scale selected = getSelectedScale();
+        if (selected == null) {
+            return;
+        }
+
+        Long value = BinaryInputDialog.show(getParent(), selected.getFormat());
+        if (value == null) {
+            return;
+        }
+
+        float output = selected.forward((float) value);
+
+        JOptionPane.showMessageDialog(getParent(),
+                String.format(
+                         "Input: 0x" + Integer.toHexString((int) (value & 0xFFFFFFFFL)).toUpperCase() + "\r\n" +
+                         "Output: %.2f" + selected.getUnit().getText(), output
+                ),
+                "Test Operation - " + selected.getName(),
+                JOptionPane.INFORMATION_MESSAGE);
     }
 
     public void newFormat() {

@@ -27,6 +27,7 @@ public class OperationsToolbar extends Toolbar<FormatsTab> {
         toolbar.add(makeSmallButton(FontAwesomeSolid.CARET_DOWN, "down", "Move operation down", _ -> {
             getParent().moveDown();
         }));
+        toolbar.addSeparator();
         toolbar.add(makeSmallButton(FontAwesomeSolid.EDIT, "edit", "Edit operation", _ -> {
             getParent().editOperation();
         }));
@@ -35,6 +36,10 @@ public class OperationsToolbar extends Toolbar<FormatsTab> {
         }));
         toolbar.add(makeSmallButton(FontAwesomeSolid.TRASH, "delete", "Delete operation", _ -> {
             getParent().deleteOperation();
+        }));
+        toolbar.addSeparator();
+        toolbar.add(makeSmallButton(FontAwesomeSolid.VIAL, "test", "Test operation", _ -> {
+            getParent().testOperation();
         }));
     }
 }
