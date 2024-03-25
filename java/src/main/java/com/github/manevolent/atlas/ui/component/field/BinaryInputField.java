@@ -100,6 +100,24 @@ public class BinaryInputField extends JTextField implements DocumentListener {
                     }
                 }
 
+                if (e.getKeyChar() == '-') {
+                    if (!getText().startsWith("0x")
+                            && precision == Precision.FLOATING_POINT
+                            && (min == null || min < 0)) {
+                        longValue = -longValue;
+                        doubleValue = -doubleValue;
+
+                        if (getText().startsWith("-")) {
+                            setText(getText().substring(1));
+                        } else {
+                            setText("-" + getText());
+                        }
+                    }
+
+                    e.consume();
+                    return;
+                }
+
                 for (char c : VALID_HEX_CHARACTERS) {
                     if (e.getKeyChar() == c || e.getKeyChar() == Character.toLowerCase(c)) {
                         e.setKeyChar(Character.toUpperCase(c));
@@ -185,7 +203,8 @@ public class BinaryInputField extends JTextField implements DocumentListener {
 
             inputValid.accept(true);
         } catch (Exception exception) {
-            SwingUtilities.invokeLater(() -> setText(""));
+            if (!getText().equals("-"))
+                SwingUtilities.invokeLater(() -> setText(""));
             longValue = 0;
             doubleValue = 0.0D;
             inputValid.accept(false);

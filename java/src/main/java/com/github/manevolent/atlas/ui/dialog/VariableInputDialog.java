@@ -1,34 +1,26 @@
 package com.github.manevolent.atlas.ui.dialog;
 
-import com.github.manevolent.atlas.model.ArithmeticOperation;
 import com.github.manevolent.atlas.model.DataFormat;
 import com.github.manevolent.atlas.model.Precision;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.component.field.BinaryInputField;
-import com.github.manevolent.atlas.ui.util.Fonts;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
-import java.util.HexFormat;
 import java.util.function.Consumer;
 
-import static com.github.manevolent.atlas.ui.util.Inputs.memorySectionField;
-
-public class BinaryInputDialog extends JDialog {
-    private final long minValue, maxValue;
-
+public class VariableInputDialog extends JDialog {
     private BinaryInputField binaryInputField;
-
+    private final double initialValue;
+    private final String message;
     private boolean canceled = false;
 
-    public BinaryInputDialog(Frame parent, long minValue, long maxValue) {
-        super(parent, "Enter Data Value", true);
+    public VariableInputDialog(Frame parent, String title, String message, double value) {
+        super(parent, title, true);
 
         addWindowListener(new WindowAdapter() {
             @Override
@@ -38,8 +30,8 @@ public class BinaryInputDialog extends JDialog {
             }
         });
 
-        this.minValue = minValue;
-        this.maxValue = maxValue;
+        this.message = message;
+        this.initialValue = value;
 
         setType(Type.POPUP);
         initComponent();
@@ -53,11 +45,8 @@ public class BinaryInputDialog extends JDialog {
     }
 
     private BinaryInputField createDataInputField(Consumer<Boolean> inputValid, Runnable enter) {
-        binaryInputField = new BinaryInputField(Precision.WHOLE_NUMBER, 0D,
+        binaryInputField = new BinaryInputField(Precision.FLOATING_POINT, initialValue,
                 inputValid, (field) -> enter.run(), this::cancel);
-
-        binaryInputField.setMin(minValue);
-        binaryInputField.setMax(maxValue);
 
         return binaryInputField;
     }
@@ -77,31 +66,29 @@ public class BinaryInputDialog extends JDialog {
         JButton ok = Inputs.button(CarbonIcons.CHECKMARK, "OK", null, this::accept);
 
         BinaryInputField dataInputField = createDataInputField(ok::setEnabled, this::accept);
-        Inputs.createEntryRow(content, 1, "Value", "The data value",
+        Inputs.createTextRow(content, 1, message);
+
+        Inputs.createEntryRow(content, 2, "Value", "The function coefficient",
                 dataInputField);
 
         JButton cancel = Inputs.button("Cancel", this::cancel);
-        Inputs.createButtonRow(content, 2, ok, cancel);
+        Inputs.createButtonRow(content, 3, ok, cancel);
 
         getContentPane().add(content);
         dataInputField.transferFocus();
     }
 
-    public Long getValue() {
+    public Double getValue() {
         if (!canceled) {
-            return binaryInputField.getLongValue();
+            return binaryInputField.getDoubleValue();
         } else {
             return null;
         }
     }
 
 
-    public static Long show(Editor parent, DataFormat format) {
-        return show(parent, (long)format.getMin(), (long)format.getMax());
-    }
-
-    public static Long show(Frame parent, long minValue, long maxValue) {
-        BinaryInputDialog dialog = new BinaryInputDialog(parent, minValue, maxValue);
+    public static Double show(Frame parent, String title, String message, double value) {
+        VariableInputDialog dialog = new VariableInputDialog(parent, title, message, value);
         dialog.setVisible(true);
         return dialog.getValue();
     }

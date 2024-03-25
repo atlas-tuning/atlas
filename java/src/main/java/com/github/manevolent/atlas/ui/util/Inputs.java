@@ -286,6 +286,23 @@ public class Inputs {
         return panel;
     }
 
+    public static JComponent createTextRow(JPanel entryPanel, int row, String label) {
+        JLabel labelField = Labels.text(label);
+        entryPanel.add(labelField, Layout.gridBagConstraints(
+                GridBagConstraints.NORTHWEST, GridBagConstraints.NONE, 0, row, 2, 1, 0, 1
+        ));
+
+        Insets insets = new JTextField().getInsets();
+        labelField.setBorder(BorderFactory.createEmptyBorder(
+                insets.top,
+                0,
+                insets.bottom,
+                insets.right
+        ));
+
+        return labelField;
+    }
+
     public static JComponent createEntryRow(JPanel entryPanel, int row,
                                             String label, String helpText,
                                             JComponent input) {

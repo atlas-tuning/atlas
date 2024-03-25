@@ -19,15 +19,22 @@ public class TableEditorToolbar extends Toolbar<TableEditor> {
         toolbar.addSeparator();
         toolbar.add(makeButton(FontAwesomeSolid.CALCULATOR, "calc", "Run custom function"));
         toolbar.addSeparator();
-        toolbar.add(makeButton(FontAwesomeSolid.TIMES, "multiply", "Multiply value at selected cells"));
-        toolbar.add(makeButton(FontAwesomeSolid.DIVIDE, "divide", "Divide value at selected cells"));
-        toolbar.add(makeButton(FontAwesomeSolid.PLUS, "add", "Add value to selected cells"));
+        toolbar.add(makeButton(FontAwesomeSolid.TIMES, "multiply", "Multiply value at selected cells",
+                (e) -> getParent().scaleSelection()));
+        toolbar.add(makeButton(FontAwesomeSolid.DIVIDE, "divide", "Divide value at selected cells",
+                (e) -> getParent().divideSelection()));
+        toolbar.add(makeButton(FontAwesomeSolid.PLUS, "add", "Add value to selected cells",
+                (e) -> getParent().addSelection()));
         toolbar.addSeparator();
-        toolbar.add(makeButton(FontAwesomeSolid.PERCENTAGE, "percent", "Scale values with a percentage"));
-        toolbar.add(makeButton(FontAwesomeSolid.EQUALS, "average", "Average values in selection"));
+        toolbar.add(makeButton(FontAwesomeSolid.PERCENTAGE, "percent", "Scale values with a percentage",
+                (e) -> getParent().scaleSelection()));
+        toolbar.add(makeButton(FontAwesomeSolid.EQUALS, "average", "Average values in selection",
+                (e) -> getParent().averageSelection()));
         toolbar.addSeparator();
-        toolbar.add(makeButton(FontAwesomeSolid.GRIP_HORIZONTAL, "interpolate-horizontal", "Interpolate horizontally"));
-        toolbar.add(makeButton(FontAwesomeSolid.GRIP_VERTICAL, "interpolate-vertical", "Interpolate vertically"));
+        toolbar.add(makeButton(FontAwesomeSolid.GRIP_HORIZONTAL, "interpolate-horizontal", "Interpolate horizontally",
+                (e) -> getParent().interpolateHorizontal()));
+        toolbar.add(makeButton(FontAwesomeSolid.GRIP_VERTICAL, "interpolate-vertical", "Interpolate vertically",
+                (e) -> getParent().interpolateVertical()));
 
 
     }

@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.ui.component.window;
 
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.ui.dialog.VariableInputDialog;
 import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Fonts;
 import com.github.manevolent.atlas.ui.component.JRotateLabel;
@@ -24,21 +25,29 @@ import java.awt.*;
 import java.awt.Color;
 import java.awt.event.*;
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.EventObject;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+import java.util.function.Function;
 import java.util.logging.Level;
 import java.util.stream.IntStream;
 
 import static com.github.manevolent.atlas.model.Axis.X;
 import static com.github.manevolent.atlas.model.Axis.Y;
+import static com.github.manevolent.atlas.ui.util.Fonts.bold;
 import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
+import static java.awt.event.KeyEvent.*;
 
 public class TableEditor extends Window implements
         FocusListener,
         TableModelListener,
-        ListSelectionListener {
+        ListSelectionListener, CellEditorListener {
+
+    private static final Set<Integer> navigationKeys = Set.of(
+            VK_LEFT, VK_KP_LEFT,
+            VK_RIGHT, VK_KP_RIGHT,
+            VK_UP, VK_KP_UP,
+            VK_DOWN, VK_KP_DOWN
+    );
+
     private static final int precisionPoints = 2;
     private static final String valueFormat = "%." + precisionPoints + "f";
     private final Table table;
@@ -98,7 +107,7 @@ public class TableEditor extends Window implements
             @Override
             public boolean isCellEditable(int row, int cols)
             {
-                return true;
+                return !readOnly;
             }
         };
         tableComponent.setBackground(Color.GRAY.darker().darker());
@@ -121,9 +130,9 @@ public class TableEditor extends Window implements
         tableComponent.setDefaultRenderer(Float.class, new TableCellRenderer());
 
         // Set a default editor, so we can control cell edit functions
-        tableComponent.setDefaultEditor(Object.class, new CellEditor());
-        tableComponent.setDefaultEditor(String.class, new CellEditor());
-        tableComponent.setDefaultEditor(Float.class, new CellEditor());
+        tableComponent.setDefaultEditor(Object.class, new TableCellEditor());
+        tableComponent.setDefaultEditor(String.class, new TableCellEditor());
+        tableComponent.setDefaultEditor(Float.class, new TableCellEditor());
 
         tableComponent.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
@@ -142,7 +151,48 @@ public class TableEditor extends Window implements
         tableComponent.addKeyListener(new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
-                updateSelection();
+                if (navigationKeys.contains(e.getKeyCode())) {
+                    SwingUtilities.invokeLater(() -> updateSelection());
+                    return;
+                }
+
+                if (Character.isDigit(e.getKeyChar()) || e.getKeyChar() == '.'
+                        || e.getKeyChar() == '-') {
+                    // Allow pressing numeric values
+                    return;
+                }
+
+                if (e.isControlDown() || e.isMetaDown()) {
+                    if (e.getKeyCode() == VK_A) {
+                        SwingUtilities.invokeLater(() -> updateSelection());
+                    }
+
+                    return;
+                }
+
+                if (e.getKeyCode() == VK_S  || e.getKeyChar() == '%') {
+                    scaleSelection();
+                } else if (e.getKeyCode() == VK_X || e.getKeyCode() == VK_M || e.getKeyChar() == '*') {
+                    multiplySelection();
+                } else if (e.getKeyCode() == VK_A || e.getKeyChar() == '+') {
+                    addSelection();
+                } else if (e.getKeyCode() == VK_MINUS || e.getKeyChar() == '-') {
+                    subtractSelection();
+                } else if (e.getKeyCode() == VK_H) {
+                    interpolateHorizontal();
+                } else if (e.getKeyCode() == VK_V) {
+                    interpolateVertical();
+                } else if (e.getKeyCode() == VK_I) {
+                    averageSelection();
+                } else if (e.getKeyCode() == VK_D || e.getKeyCode() == VK_SLASH || e.getKeyChar() == '/') {
+                    divideSelection();
+                }
+
+                if (e.getKeyCode() == VK_BACK_SPACE || e.getKeyCode() == VK_DELETE) {
+                    return;
+                }
+
+                e.consume();
             }
 
             @Override
@@ -194,6 +244,116 @@ public class TableEditor extends Window implements
         }
 
         updateCellWidth();
+    }
+
+    public void averageSelection() {
+        int[] selectedRows = tableComponent.getSelectedRows();
+        int[] selectedColumns = tableComponent.getSelectedColumns();
+        float sum = 0;
+        for (int selectedRow : selectedRows) {
+            for (int selectedColumn : selectedColumns) {
+                try {
+                    sum += table.getCell(selectedColumn, selectedRow);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }
+
+        float avg = sum / (selectedRows.length * selectedColumns.length);
+        processSelection(x -> avg);
+
+        updateCellWidth();
+        updateMinMax();
+        updateSelectionMinMax();
+        footer.reinitialize();
+    }
+
+    public void interpolateVertical() {
+
+    }
+
+    public void interpolateHorizontal() {
+
+    }
+
+    public void addSelection() {
+        Double answer = VariableInputDialog.show(getParent(), "Add",
+                "Enter value to add to cells", 1D);
+        if (answer == null) {
+            return;
+        }
+        float coefficient = answer.floatValue();
+        processSelection((value) -> value + coefficient);
+    }
+
+    public void subtractSelection() {
+        Double answer = VariableInputDialog.show(getParent(), "Subtract",
+                "Enter value to subtract from cells", 1D);
+        if (answer == null) {
+            return;
+        }
+        float coefficient = answer.floatValue();
+        processSelection((value) -> value - coefficient);
+    }
+
+    public void scaleSelection() {
+        Double answer = VariableInputDialog.show(getParent(), "Scale",
+                "Enter percentage to scale cells by", 100D);
+        if (answer == null) {
+            return;
+        }
+        float coefficient = answer.floatValue() / 100f;
+        processSelection((value) -> value * coefficient);
+    }
+
+    public void multiplySelection() {
+        Double answer = VariableInputDialog.show(getParent(), "Multiply",
+                "Enter value to multiply cells by", 1D);
+        if (answer == null) {
+            return;
+        }
+        float coefficient = answer.floatValue();
+        processSelection((value) -> value * coefficient);
+    }
+
+    public void divideSelection() {
+        Double answer = VariableInputDialog.show(getParent(), "Divide",
+                "Enter value to divide cells by", 1D);
+        if (answer == null) {
+            return;
+        }
+        float coefficient = answer.floatValue();
+        processSelection((value) -> value / coefficient);
+    }
+
+    public void processSelection(Function<Float, Float> function) {
+        int[] selectedRows = tableComponent.getSelectedRows();
+        int[] selectedColumns = tableComponent.getSelectedColumns();
+
+        if (selectedRows.length == 0 && selectedColumns.length == 0) {
+            selectedRows = IntStream.range(0, tableComponent.getRowCount()).toArray();
+            selectedColumns = IntStream.range(0, tableComponent.getColumnCount()).toArray();
+        }
+
+        for (int selectedRow : selectedRows) {
+            for (int selectedColumn : selectedColumns) {
+                float data;
+                try {
+                    data = table.getCell(selectedColumn, selectedRow);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+                data = function.apply(data);
+
+                tableComponent.getModel().setValueAt(data, selectedRow, selectedColumn);
+            }
+        }
+
+        updateCellWidth();
+        updateMinMax();
+        updateSelectionMinMax();
+        footer.reinitialize();
     }
 
     private TableModel generateTableModel() {
@@ -584,6 +744,16 @@ public class TableEditor extends Window implements
         return table;
     }
 
+    public void withSelfUpdate(boolean flag, Runnable runnable) {
+        boolean before = selfUpdate.get();
+        selfUpdate.set(flag);
+        try {
+            runnable.run();
+        } finally {
+            selfUpdate.set(before);
+        }
+    }
+
     @Override
     public void tableChanged(TableModelEvent e) {
         if (selfUpdate.get()) {
@@ -593,10 +763,25 @@ public class TableEditor extends Window implements
         int row = e.getFirstRow();
         int col = e.getColumn();
 
-        float value = (Float) tableComponent.getValueAt(
+        Object object = tableComponent.getValueAt(
                 e.getFirstRow(),
                 e.getColumn()
         );
+
+        if (object == null) {
+            float value;
+
+            try {
+                value = table.getCell(col, row);
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }
+
+            setValue(row, col, value);
+            return;
+        }
+
+        float value = (Float) object;
 
         if (value == -0) {
             value = 0;
@@ -626,15 +811,14 @@ public class TableEditor extends Window implements
         // we should let the user know that the scaling was adjusted.
         String newString = String.format(valueFormat, newValue);
         if (!valueString.equals(newString)) {
-            Log.ui().log(Level.WARNING,
-                    "Entered value adjusted to " +
-                    newString + " (entered as " + valueString + ") " +
-                            "at cell [" + (col+1) + "," + (row+1) + "] " +
-                            "due to precision of table \"" + table.getName() + "\".");
+            Log.ui().log(Level.FINE, STR."Entered value adjusted to \{newString} (entered as \{valueString}) at " +
+                    STR."cell [\{col + 1},\{row + 1}] due to precision of table \"\{table.getName()}\".");
         }
 
-        if ((newValue > max || newValue < min) ||
-                (oldValue <= min || oldValue >= max)) {
+        boolean updateMinMax = (newValue > max || newValue < min) ||
+                (oldValue <= min || oldValue >= max);
+
+        if (updateMinMax) {
             updateMinMax();
             footer.reinitialize();
         }
@@ -659,9 +843,7 @@ public class TableEditor extends Window implements
     }
 
     public void setValue(int row, int col, float value) {
-        selfUpdate.set(true);
-
-        try {
+        withSelfUpdate(true, () -> {
             tableComponent.getModel().setValueAt(
                     value,
                     row,
@@ -669,9 +851,7 @@ public class TableEditor extends Window implements
             );
 
             tableComponent.revalidate();
-        } finally {
-            selfUpdate.set(false);
-        }
+        });
     }
 
     /**
@@ -696,7 +876,8 @@ public class TableEditor extends Window implements
         }
 
         updateSelectionMinMax();
-        footer.reinitialize();
+
+        SwingUtilities.invokeLater(() -> footer.reinitialize());
     }
 
     public JTable getJTable() {
@@ -713,6 +894,27 @@ public class TableEditor extends Window implements
 
     public boolean isReadOnly() {
         return readOnly;
+    }
+
+    @Override
+    public void editingStopped(ChangeEvent e) {
+        int[] selectedRows = tableComponent.getSelectedRows();
+        int[] selectedColumns = tableComponent.getSelectedColumns();
+        if ((selectedRows.length <= 1 && selectedColumns.length <= 1)) {
+            return;
+        }
+
+        Object value = ((CellEditor)e.getSource()).getCellEditorValue();
+        if (value == null) {
+            return;
+        }
+
+        processSelection((x) -> (Float) value);
+    }
+
+    @Override
+    public void editingCanceled(ChangeEvent e) {
+
     }
 
     public class TableCellRenderer extends DefaultTableCellRenderer {
@@ -747,16 +949,33 @@ public class TableEditor extends Window implements
         }
     }
 
-    private class CellEditor extends DefaultCellEditor implements TableCellEditor {
+    private class TableCellEditor extends DefaultCellEditor implements javax.swing.table.TableCellEditor, KeyListener {
         private final JTextField textField;
 
-        private CellEditor(JTextField textField) {
+        private TableCellEditor(JTextField textField) {
             super(textField);
             this.textField = textField;
+            this.textField.addKeyListener(this);
+            this.textField.setInputVerifier(new InputVerifier() {
+                @Override
+                public boolean verify(JComponent input) {
+                    try {
+                        String text = ((JTextField)input).getText();
+                        if (text.isBlank()) {
+                            return true;
+                        }
+                        Float.parseFloat(text);
+                        return true;
+                    } catch (Exception ex) {
+                        return false;
+                    }
+                }
+            });
         }
 
-        private CellEditor() {
+        private TableCellEditor() {
             this(new JTextField());
+            addCellEditorListener(TableEditor.this);
         }
 
         @Override
@@ -766,14 +985,34 @@ public class TableEditor extends Window implements
 
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            this.textField.setFont(table.getFont());
-            this.textField.setText(String.format(valueFormat, value));
+            this.textField.setFont(getValueFont());
+            this.textField.setText("");
+            SwingUtilities.invokeLater(this.textField::grabFocus);
             return textField;
         }
 
         @Override
         public Object getCellEditorValue() {
+            if (textField.getText().isBlank()) {
+                return null;
+            }
+
             return Float.parseFloat(textField.getText());
+        }
+
+        @Override
+        public void keyTyped(KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyPressed(KeyEvent e) {
+
+        }
+
+        @Override
+        public void keyReleased(KeyEvent e) {
+
         }
     }
 }
