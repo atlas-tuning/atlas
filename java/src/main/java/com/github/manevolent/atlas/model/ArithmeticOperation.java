@@ -66,7 +66,6 @@ public enum ArithmeticOperation {
         return reverseOperation.apply(a, x);
     }
 
-
     @Override
     public String toString() {
         return text;

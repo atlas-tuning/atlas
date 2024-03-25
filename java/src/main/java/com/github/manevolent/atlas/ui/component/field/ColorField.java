@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.component;
+package com.github.manevolent.atlas.ui.component.field;
 
 import com.github.manevolent.atlas.model.Color;
 import com.github.manevolent.atlas.model.Project;

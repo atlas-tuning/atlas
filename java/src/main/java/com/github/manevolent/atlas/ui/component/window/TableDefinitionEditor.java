@@ -5,7 +5,7 @@ import com.github.manevolent.atlas.model.Scale;
 import com.github.manevolent.atlas.model.Series;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.component.MemoryAddressField;
+import com.github.manevolent.atlas.ui.component.field.MemoryAddressField;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.util.*;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;

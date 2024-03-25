@@ -2,8 +2,8 @@ package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.*;
-import com.github.manevolent.atlas.ui.component.ColorField;
-import com.github.manevolent.atlas.ui.component.MemoryAddressField;
+import com.github.manevolent.atlas.ui.component.field.ColorField;
+import com.github.manevolent.atlas.ui.component.field.MemoryAddressField;
 import com.github.manevolent.atlas.ui.component.toolbar.ParametersTabToolbar;
 import com.github.manevolent.atlas.ui.component.window.DatalogWindow;
 import com.github.manevolent.atlas.ui.component.window.Window;

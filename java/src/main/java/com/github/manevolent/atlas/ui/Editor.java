@@ -20,6 +20,7 @@ import com.github.manevolent.atlas.ui.component.tab.*;
 import com.github.manevolent.atlas.ui.component.toolbar.EditorToolbar;
 import com.github.manevolent.atlas.ui.component.window.*;
 import com.github.manevolent.atlas.ui.component.window.Window;
+import com.github.manevolent.atlas.ui.dialog.DeviceSettingsDialog;
 import com.github.manevolent.atlas.ui.util.Devices;
 import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;

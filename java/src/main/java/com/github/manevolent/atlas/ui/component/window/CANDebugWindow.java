@@ -7,7 +7,7 @@ import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.protocol.uds.*;
 import com.github.manevolent.atlas.protocol.uds.request.UDSTransferRequest;
 import com.github.manevolent.atlas.ui.Editor;
-import com.github.manevolent.atlas.ui.MemoryAddressDialog;
+import com.github.manevolent.atlas.ui.dialog.MemoryAddressDialog;
 import com.github.manevolent.atlas.ui.util.*;
 import com.github.manevolent.atlas.ui.component.menu.canlog.FileMenu;
 import com.github.manevolent.atlas.ui.component.toolbar.CANDebugToolbar;

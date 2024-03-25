@@ -2,7 +2,7 @@ package com.github.manevolent.atlas.ui.util;
 
 import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.model.*;
-import com.github.manevolent.atlas.ui.component.MemoryAddressField;
+import com.github.manevolent.atlas.ui.component.field.MemoryAddressField;
 import org.kordamp.ikonli.Ikon;
 
 import javax.swing.*;

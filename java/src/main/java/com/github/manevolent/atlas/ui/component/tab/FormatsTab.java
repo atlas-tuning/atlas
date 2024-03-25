@@ -2,11 +2,12 @@ package com.github.manevolent.atlas.ui.component.tab;
 
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
-import com.github.manevolent.atlas.ui.BinaryInputDialog;
+import com.github.manevolent.atlas.ui.dialog.BinaryInputDialog;
 import com.github.manevolent.atlas.ui.component.toolbar.FormatsTabToolbar;
 import com.github.manevolent.atlas.ui.component.toolbar.OperationsToolbar;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.Editor;
+import com.github.manevolent.atlas.ui.dialog.ScalingOperationDialog;
 import com.github.manevolent.atlas.ui.util.*;
 import org.kordamp.ikonli.Ikon;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
@@ -17,7 +18,6 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.util.*;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import static com.github.manevolent.atlas.ui.util.Fonts.getTextColor;
 import static com.github.manevolent.atlas.ui.util.Layout.*;
@@ -484,6 +484,31 @@ public class FormatsTab extends Tab implements ListSelectionListener {
             return;
         }
 
+        ScalingOperation operation = ScalingOperationDialog.show(getParent());
+        if (operation == null) {
+            return;
+        }
+
+        selected.addOperation(ops.getSelectedValue(), operation);
+        scaleChanged();
+    }
+
+    public void editOperation() {
+        Scale selected = getSelectedScale();
+        if (selected == null) {
+            return;
+        }
+
+        ScalingOperation operation = ops.getSelectedValue();
+        if (operation == null) {
+            return;
+        }
+
+        operation = ScalingOperationDialog.show(getParent(), operation);
+        if (operation == null) {
+            return;
+        }
+
         scaleChanged();
     }
 
@@ -517,15 +542,6 @@ public class FormatsTab extends Tab implements ListSelectionListener {
         scaleChanged();
     }
 
-    public void editOperation() {
-        Scale selected = getSelectedScale();
-        if (selected == null) {
-            return;
-        }
-
-        scaleChanged();
-    }
-
     public void testOperation() {
         Scale selected = getSelectedScale();
         if (selected == null) {
@@ -543,9 +559,10 @@ public class FormatsTab extends Tab implements ListSelectionListener {
 
         float value = (float) data;
         for (ScalingOperation operation : selected.getOperations()) {
+            float before = value;
             value = operation.getOperation().forward(value, operation.getCoefficient());
             stages.add(String.format("    %.2f %s %.2f = %.2f",
-                    value,
+                    before,
                     operation.getOperation().toString(),
                     operation.getCoefficient(),
                     value));

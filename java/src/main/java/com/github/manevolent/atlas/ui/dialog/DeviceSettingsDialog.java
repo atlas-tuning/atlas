@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui;
+package com.github.manevolent.atlas.ui.dialog;
 
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;

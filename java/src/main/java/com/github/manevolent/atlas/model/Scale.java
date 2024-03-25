@@ -118,6 +118,18 @@ public class Scale {
         operations.remove(operation);
     }
 
+    public void addOperation(ScalingOperation after, ScalingOperation operation) {
+        if (after == null) {
+            operations.add(operation);
+        } else {
+            operations.add(operations.indexOf(after) + 1, operation);
+        }
+    }
+
+    public void addOperation(ScalingOperation operation) {
+        addOperation(null, operation);
+    }
+
     public void moveOperationDown(ScalingOperation operation) {
         int index = operations.indexOf(operation);
         if (index < 0 || index >= operations.size() - 1) {

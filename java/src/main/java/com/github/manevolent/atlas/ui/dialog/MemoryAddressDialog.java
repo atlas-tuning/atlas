@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui;
+package com.github.manevolent.atlas.ui.dialog;
 
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemorySection;
@@ -174,11 +174,9 @@ public class MemoryAddressDialog extends JDialog {
                     memoryAddressField.setText("0x" + memoryAddressField.getText());
                 }
 
-                char[] valid = VALID_HEX_CHARACTERS;
-                for (int i = 0; i < valid.length; i ++) {
-                    if (e.getKeyChar() == valid[i] ||
-                        e.getKeyChar() == Character.toLowerCase(valid[i])) {
-                        e.setKeyChar(Character.toUpperCase(valid[i]));
+                for (char c : VALID_HEX_CHARACTERS) {
+                    if (e.getKeyChar() == c || e.getKeyChar() == Character.toLowerCase(c)) {
+                        e.setKeyChar(Character.toUpperCase(c));
                         return;
                     }
                 }
