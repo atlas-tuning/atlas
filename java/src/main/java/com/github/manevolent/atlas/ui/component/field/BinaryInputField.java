@@ -107,7 +107,9 @@ public class BinaryInputField extends JTextField implements DocumentListener {
                         longValue = -longValue;
                         doubleValue = -doubleValue;
 
-                        if (getText().startsWith("-")) {
+                        if (getSelectionEnd() - getSelectionStart() == getText().length()) {
+                            setText("-");
+                        } else if (getText().startsWith("-")) {
                             setText(getText().substring(1));
                         } else {
                             setText("-" + getText());
