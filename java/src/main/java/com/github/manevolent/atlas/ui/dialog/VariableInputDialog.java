@@ -4,6 +4,7 @@ import com.github.manevolent.atlas.model.DataFormat;
 import com.github.manevolent.atlas.model.Precision;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.component.field.BinaryInputField;
+import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -33,13 +34,15 @@ public class VariableInputDialog extends JDialog {
         this.message = message;
         this.initialValue = value;
 
+        setMinimumSize(new Dimension(300, getMinimumSize().height));
+
         setType(Type.POPUP);
         initComponent();
         pack();
         setLocationRelativeTo(parent);
         setResizable(false);
         setModal(true);
-        setMinimumSize(new Dimension(300, getMinimumSize().height));
+        setIconImage(Icons.getImage(CarbonIcons.STRING_INTEGER, Color.WHITE).getImage());
 
         binaryInputField.grabFocus();
     }

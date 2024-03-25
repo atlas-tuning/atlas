@@ -6,6 +6,7 @@ import com.github.manevolent.atlas.model.Precision;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.component.field.BinaryInputField;
 import com.github.manevolent.atlas.ui.util.Fonts;
+import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -48,6 +49,7 @@ public class BinaryInputDialog extends JDialog {
         setResizable(false);
         setModal(true);
         setMinimumSize(new Dimension(300, getMinimumSize().height));
+        setIconImage(Icons.getImage(CarbonIcons.MATRIX, Color.WHITE).getImage());
 
         binaryInputField.grabFocus();
     }

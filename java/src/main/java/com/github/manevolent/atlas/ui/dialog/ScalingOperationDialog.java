@@ -4,6 +4,7 @@ import com.github.manevolent.atlas.model.ArithmeticOperation;
 import com.github.manevolent.atlas.model.Precision;
 import com.github.manevolent.atlas.model.ScalingOperation;
 import com.github.manevolent.atlas.ui.component.field.BinaryInputField;
+import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -34,6 +35,7 @@ public class ScalingOperationDialog extends JDialog {
         });
 
         setType(Type.POPUP);
+        setIconImage(Icons.getImage(CarbonIcons.CALCULATOR, Color.WHITE).getImage());
         initComponent();
         pack();
         setLocationRelativeTo(parent);

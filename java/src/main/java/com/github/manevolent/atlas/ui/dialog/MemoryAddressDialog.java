@@ -4,6 +4,7 @@ import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemorySection;
 import com.github.manevolent.atlas.model.MemoryType;
 import com.github.manevolent.atlas.ui.util.Fonts;
+import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -58,6 +59,7 @@ public class MemoryAddressDialog extends JDialog {
         setResizable(false);
         setModal(true);
         setMinimumSize(new Dimension(300, getMinimumSize().height));
+        setIconImage(Icons.getImage(CarbonIcons.DATA_REFERENCE, Color.WHITE).getImage());
         memoryAddressField.grabFocus();
     }
 

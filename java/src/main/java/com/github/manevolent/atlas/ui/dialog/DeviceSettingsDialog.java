@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.ui.dialog;
 
+import com.github.manevolent.atlas.ApplicationMetadata;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceDescriptor;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
@@ -21,6 +22,8 @@ public class DeviceSettingsDialog extends JDialog {
     private JComboBox<J2534DeviceDescriptor> deviceField;
 
     public DeviceSettingsDialog(JFrame parent) {
+
+        setMinimumSize(new Dimension(350, 150));
         setType(Type.POPUP);
         setIconImage(Icons.getImage(CarbonIcons.TOOL_BOX, Color.WHITE).getImage());
         initComponent();
@@ -28,9 +31,7 @@ public class DeviceSettingsDialog extends JDialog {
         setResizable(false);
         setModal(true);
         setLocationRelativeTo(parent);
-        setTitle("Device Settings");
-
-        setMinimumSize(new Dimension(350, 150));
+        setTitle(ApplicationMetadata.getName() + " - Device Settings");
     }
 
     private static JComboBox<J2534DeviceType> deviceTypeField(J2534DeviceType existing,
@@ -127,7 +128,7 @@ public class DeviceSettingsDialog extends JDialog {
 
         updateDeviceModel(Devices.getProvider());
 
-        frame.add(Inputs.button("OK", this::dispose),
+        frame.add(Inputs.button(CarbonIcons.CHECKMARK, "OK", this::dispose),
                 Layout.gridBagConstraints(GridBagConstraints.SOUTHEAST,
                         GridBagConstraints.NONE,
                         0, 3,

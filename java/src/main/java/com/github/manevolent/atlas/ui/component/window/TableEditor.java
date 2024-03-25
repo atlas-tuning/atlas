@@ -825,8 +825,7 @@ public class TableEditor extends Window implements
 
         setValue(row, col, newValue);
 
-        if (String.format(valueFormat, newValue).length() !=
-                String.format(valueFormat, oldValue).length()) {
+        if (String.format(valueFormat, newValue).length() != String.format(valueFormat, oldValue).length()) {
             updateCellWidth();
         }
     }

@@ -21,6 +21,7 @@ import com.github.manevolent.atlas.ui.component.toolbar.EditorToolbar;
 import com.github.manevolent.atlas.ui.component.window.*;
 import com.github.manevolent.atlas.ui.component.window.Window;
 import com.github.manevolent.atlas.ui.dialog.DeviceSettingsDialog;
+import com.github.manevolent.atlas.ui.dialog.settings.ProjectSettingsDialog;
 import com.github.manevolent.atlas.ui.util.Devices;
 import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
@@ -623,6 +624,11 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
 
     public void openDeviceSettings() {
         DeviceSettingsDialog dialog = new DeviceSettingsDialog(this);
+        dialog.setVisible(true);
+    }
+
+    public void openProjectSettings() {
+        ProjectSettingsDialog dialog = new ProjectSettingsDialog(this, getProject());
         dialog.setVisible(true);
     }
 

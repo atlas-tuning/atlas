@@ -859,8 +859,8 @@ public class CANDebugWindow extends Window implements ChangeListener, UDSListene
             JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT));
             Layout.emptyBorder(5, 0, 0, 0, bottom);
 
-            bottom.add(Inputs.button("Read", this::reread));
-            bottom.add(Inputs.button("OK", this::dispose));
+            bottom.add(Inputs.button(CarbonIcons.RENEW, "Read", this::reread));
+            bottom.add(Inputs.button(CarbonIcons.CHECKMARK, "OK", this::dispose));
 
             frame.add(bottom,
                     Layout.gridBagConstraints(
