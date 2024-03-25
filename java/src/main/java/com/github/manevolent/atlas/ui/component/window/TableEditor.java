@@ -279,7 +279,7 @@ public class TableEditor extends Window implements
 
     public void addSelection() {
         Double answer = VariableInputDialog.show(getParent(), "Add",
-                "Enter value to add to cells", 1D);
+                "Enter value to add to cells", 0D);
         if (answer == null) {
             return;
         }
@@ -289,7 +289,7 @@ public class TableEditor extends Window implements
 
     public void subtractSelection() {
         Double answer = VariableInputDialog.show(getParent(), "Subtract",
-                "Enter value to subtract from cells", 1D);
+                "Enter value to subtract from cells", 0D);
         if (answer == null) {
             return;
         }
