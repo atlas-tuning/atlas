@@ -380,6 +380,16 @@ public class TablesTab
     @Override
     public void valueChanged(TreeSelectionEvent e) {
         updateExpansions();
+
+        TreePath selPath = e.getPath();
+        Object last = selPath != null ? selPath.getLastPathComponent() : null;
+        if (last instanceof TableNode) {
+            tree.setComponentPopupMenu(tablePopupMenu);
+        } else if (last != null) {
+            tree.setComponentPopupMenu(folderPopupMenu);
+        } else {
+            tree.setComponentPopupMenu(null);
+        }
     }
 
     public void update() {
@@ -454,22 +464,18 @@ public class TablesTab
 
     @Override
     public void mousePressed(MouseEvent e) {
-        if(SwingUtilities.isRightMouseButton(e)){
+        if (e.isPopupTrigger()) {
             int selRow = tree.getClosestRowForLocation(e.getX(), e.getY());
             TreePath selPath = tree.getPathForLocation(e.getX(), e.getY());
-            tree.setSelectionPath(selPath);
-            if (selRow > -1){
+            if (selPath != null) {
+                tree.setSelectionPath(selPath);
+            } else if (selRow > -1) {
                 tree.setSelectionRow(selRow);
             }
 
-            selPath = tree.getSelectionPath();
-            Object last = selPath != null ? selPath.getLastPathComponent() : null;
-            if (last instanceof TableNode) {
-                tree.setComponentPopupMenu(tablePopupMenu);
-            } else if (last != null) {
-                tree.setComponentPopupMenu(folderPopupMenu);
-            } else {
-                tree.setComponentPopupMenu(null);
+            JPopupMenu menu =  tree.getComponentPopupMenu();
+            if (menu != null) {
+                menu.show(tree, e.getX(), e.getY());
             }
         }
 
