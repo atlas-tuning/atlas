@@ -128,13 +128,15 @@ public class DeviceSettingsDialog extends JDialog {
 
         updateDeviceModel(Devices.getProvider());
 
-        frame.add(Inputs.button(CarbonIcons.CHECKMARK, "OK", this::dispose),
+        JButton ok;
+        frame.add(ok = Inputs.button(CarbonIcons.CHECKMARK, "OK", this::dispose),
                 Layout.gridBagConstraints(GridBagConstraints.SOUTHEAST,
                         GridBagConstraints.NONE,
                         0, 3,
                         2, 1,
                         1, 1)
         );
+        getRootPane().setDefaultButton(ok);
 
         add(frame);
     }

@@ -1,88 +1,66 @@
 package com.github.manevolent.atlas.ui.dialog.settings;
 
 import com.github.manevolent.atlas.model.Project;
-import org.kordamp.ikonli.Ikon;
+import com.github.manevolent.atlas.ui.Editor;
+import com.github.manevolent.atlas.ui.dialog.settings.element.TextSettingField;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
-import javax.swing.*;
 import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 
 public class ProjectSettingsDialog extends SettingsDialog<Project> {
-    public ProjectSettingsDialog(Frame parent, Project object) {
+    private final Editor parent;
+
+    public ProjectSettingsDialog(Editor parent, Project object) {
         super(CarbonIcons.PRODUCT, "Project Settings", parent, object);
+
+        this.parent = parent;
     }
 
     @Override
     protected List<SettingPage> getPages() {
         return Arrays.asList(
-                new BasicSettingPage(CarbonIcons.CAR, "Vehicle",
-                        new BasicSettingPage.TextElement(
+                new DefaultSettingPage(CarbonIcons.CAR, "Vehicle",
+                        new TextSettingField(
                                 "Year", "The manufacture year of the vehicle",
                                 getSettingObject().getVehicle().getYear(),
                                 var -> getSettingObject().getVehicle().setYear(var)
                         ),
-                        new BasicSettingPage.TextElement(
+                        new TextSettingField(
                                 "Market", "The market of the vehicle (i.e. USDM, JDM, EUDM)",
                                 getSettingObject().getVehicle().getMarket(),
                                 var -> getSettingObject().getVehicle().setMarket(var)
                         ),
-                        new BasicSettingPage.TextElement(
+                        new TextSettingField(
                                 "Make", "The make of the vehicle (i.e. GM, Mitsubishi, Subaru)",
                                 getSettingObject().getVehicle().getMake(),
                                 var -> getSettingObject().getVehicle().setMake(var)
                         ),
-                        new BasicSettingPage.TextElement(
+                        new TextSettingField(
                                 "Model", "The model of the vehicle (i.e. F150, EVO, WRX)",
                                 getSettingObject().getVehicle().getModel(),
                                 var -> getSettingObject().getVehicle().setModel(var)
                         ),
-                        new BasicSettingPage.TextElement(
+                        new TextSettingField(
                                 "Trim", "The trim of the vehicle (i.e. Base, Premium, Limited)",
                                 getSettingObject().getVehicle().getTrim(),
                                 var -> getSettingObject().getVehicle().setTrim(var)
                         ),
-                        new BasicSettingPage.TextElement(
+                        new TextSettingField(
                                 "Transmission", "The transmission of the vehicle (i.e. MT, AT, CVT, DCT)",
                                 getSettingObject().getVehicle().getTransmission(),
                                 var -> getSettingObject().getVehicle().setTransmission(var)
                         )
                 ),
-                new Connection(),
-                new Parameters()
+                new ConnectionSettingPage(parent, getSettingObject()),
+                new DefaultSettingPage(CarbonIcons.CHIP, "Memory Regions")
         );
     }
 
-    private class Connection extends AbstractSettingPage {
-        protected Connection() {
-            super(CarbonIcons.PLUG_FILLED, "Connection");
-        }
-
-        @Override
-        public JComponent getContent() {
-            return new JPanel();
-        }
-
-        @Override
-        public void apply() {
-
-        }
-    }
-
-    private class Parameters extends AbstractSettingPage {
-        protected Parameters() {
-            super(CarbonIcons.SETTINGS, "Parameters");
-        }
-
-        @Override
-        public JComponent getContent() {
-            return new JPanel();
-        }
-
-        @Override
-        public void apply() {
-
-        }
+    @Override
+    protected void apply() {
+        super.apply();
+        parent.setDirty(true);
     }
 }

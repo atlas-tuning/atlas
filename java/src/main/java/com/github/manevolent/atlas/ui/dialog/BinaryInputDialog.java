@@ -77,6 +77,7 @@ public class BinaryInputDialog extends JDialog {
     private void initComponent() {
         JPanel content = Inputs.createEntryPanel();
         JButton ok = Inputs.button(CarbonIcons.CHECKMARK, "OK", null, this::accept);
+        getRootPane().setDefaultButton(ok);
 
         BinaryInputField dataInputField = createDataInputField(ok::setEnabled, this::accept);
         Inputs.createEntryRow(content, 1, "Value", "The data value",

@@ -64,7 +64,6 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
 
     // Tabs
     private TablesTab tablesTab;
-    private ProjectTab projectTab;
     private ConsoleTab consoleTab;
     private ParametersTab parametersTab;
     private HelpTab helpTab;
@@ -390,9 +389,6 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         if (formatsTab != null) {
             formatsTab.reinitialize();
         }
-        if (projectTab != null) {
-            projectTab.reinitialize();
-        }
         if (tablesTab != null) {
             tablesTab.reinitialize();
         }
@@ -646,7 +642,6 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 splitPaneBorderColor));
 
         TabbedPane leftTabs = new TabbedPane(this);
-        leftTabs.addTab(initProjectTab(leftTabs.getComponent()));
         leftTabs.addTab(initTablesTab(leftTabs.getComponent()));
         leftPane.add(leftTabs.getComponent());
 
@@ -655,10 +650,6 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
 
     private Tab initTablesTab(JTabbedPane tabbedPane) {
         return (tablesTab = new TablesTab(this, tabbedPane));
-    }
-
-    private Tab initProjectTab(JTabbedPane tabbedPane) {
-        return (projectTab = new ProjectTab(this, tabbedPane));
     }
 
     private JPanel initBottomPane() {

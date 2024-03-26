@@ -204,6 +204,7 @@ public class MemoryAddressDialog extends JDialog {
     private void initComponent() {
         JPanel content = Inputs.createEntryPanel();
         JButton ok = Inputs.button(CarbonIcons.CHECKMARK, "OK", null, this::accept);
+        getRootPane().setDefaultButton(ok);
 
         JTextField addressField = createMemoryAddressField(ok::setEnabled, this::accept);
         Inputs.createEntryRow(content, 2, "Address", "The address relative to the selected region",

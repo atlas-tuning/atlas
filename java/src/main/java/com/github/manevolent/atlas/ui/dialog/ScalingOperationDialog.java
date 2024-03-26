@@ -67,6 +67,7 @@ public class ScalingOperationDialog extends JDialog {
     private void initComponent() {
         JPanel content = Inputs.createEntryPanel();
         JButton ok = Inputs.button(CarbonIcons.CHECKMARK, "OK", null, this::accept);
+        getRootPane().setDefaultButton(ok);
 
         operationField = Inputs.arithmeticOperationField(
                 "The arithmetic operation to perform",

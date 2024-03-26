@@ -5,6 +5,7 @@ import com.github.manevolent.atlas.model.Axis;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.Table;
 import com.github.manevolent.atlas.ui.component.tab.TablesTab;
+import com.github.manevolent.atlas.ui.dialog.settings.element.SettingField;
 import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import com.github.manevolent.atlas.ui.util.Layout;
@@ -26,9 +27,12 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     private final T settingObject;
     private final String title;
 
+    private JTree tree;
     private JPanel treePanel;
     private JPanel settingContentPanel;
     private DefaultTreeModel treeModel;
+
+    private java.util.List<SettingPage> pages;
 
     public SettingsDialog(Ikon ikon, String title, Frame parent, T object) {
         super(parent, ApplicationMetadata.getName() + " - " + title, true);
@@ -43,10 +47,11 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
             }
         });
 
-        setMinimumSize(new Dimension(800, 600));
+        setPreferredSize(new Dimension(800, 600));
 
         setIconImage(Icons.getImage(ikon, Color.WHITE).getImage());
-        setType(Window.Type.POPUP);
+
+        pages = getPages();
 
         initComponent();
 
@@ -54,7 +59,7 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
 
         setLocationRelativeTo(parent);
         setResizable(true);
-        setModal(true);
+        setModalityType(ModalityType.DOCUMENT_MODAL);
     }
 
     public T getSettingObject() {
@@ -95,13 +100,13 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     private DefaultTreeModel createModel() {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode(title);
 
-        getPages().forEach(page -> root.add(new SettingPageNode(page)));
+        pages.forEach(page -> root.add(new SettingPageNode(page)));
 
         return treeModel = new DefaultTreeModel(root);
     }
 
     private JComponent initTree() {
-        JTree tree = new JTree(createModel());
+        tree = new JTree(createModel());
 
         tree.addTreeSelectionListener(this);
         tree.setCellRenderer(new Renderer());
@@ -168,9 +173,26 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         Layout.emptyBorder(5, 5, 5, 5, footer);
-        footer.add(Inputs.nofocus(Inputs.button(CarbonIcons.CHECKMARK, "OK", this::dispose)));
+
+        JButton ok;
+        footer.add(ok = Inputs.nofocus(Inputs.button("OK", this::ok)));
+        footer.add(Inputs.nofocus(Inputs.button("Cancel", this::dispose)));
+        footer.add(Inputs.nofocus(Inputs.button("Apply", this::apply)));
+
+        getRootPane().setDefaultButton(ok);
 
         return footer;
+    }
+
+    private void ok() {
+        apply();
+        this.dispose();
+    }
+
+    protected void apply() {
+        for (SettingPage page : pages) {
+            page.apply();
+        }
     }
 
     private void initComponent() {
@@ -182,8 +204,11 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         contentPanel.add(initFooter(), BorderLayout.SOUTH);
 
         setContentPane(contentPanel);
-    }
 
+        if (tree.getRowCount() > 1) {
+            tree.setSelectionRow(1);
+        }
+    }
 
     private static class SettingPageNode implements MutableTreeNode {
         private final SettingPage settingPage;

@@ -23,16 +23,22 @@ import java.io.ByteArrayOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.Collection;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.TimeoutException;
 
 import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.*;
 import static com.github.manevolent.atlas.protocol.subaru.SubaruDITComponent.CENTRAL_GATEWAY;
 
 public class SubaruDIConnection extends UDSConnection {
-    private static final UDSProtocol protocol = SubaruProtocols.DIT;;
+    private static final String securityAccessPropertyFormat = "subaru.dit.securityaccess.%s";
+    private static final String gatewayKeyProperty = String.format(securityAccessPropertyFormat, "gateway");
+    private static final String memoryReadKeyProperty = String.format(securityAccessPropertyFormat, "memory_read");
+    private static final String memoryWriteKeyProperty = String.format(securityAccessPropertyFormat, "memory_write");
+    private static final String flashWriteKeyProperty = String.format(securityAccessPropertyFormat, "flash_write");
+    private static final String datalogKeyProperty = String.format(securityAccessPropertyFormat, "datalog");
+
+    private static final UDSProtocol protocol = SubaruProtocols.DIT;
+
     /**
      * ECU orders things in non-native order
      * @param array array to reverse
@@ -152,17 +158,16 @@ public class SubaruDIConnection extends UDSConnection {
         }
 
         // Select AES key for the gateway
-        String propertyFormat = "subaru.dit.securityaccess.%s";
         SecurityAccessProperty cgwAccessProperty;
-        cgwAccessProperty = project.getProperty(String.format(propertyFormat, "gateway"), SecurityAccessProperty.class);
+        cgwAccessProperty = project.getProperty(gatewayKeyProperty, SecurityAccessProperty.class);
 
         // Set AES key for the ECU
         String propertyName;
         switch (newMode) {
-            case READ_MEMORY -> propertyName = String.format(propertyFormat, "memory_read");
-            case WRITE_MEMORY -> propertyName = String.format(propertyFormat, "memory_write");
-            case FLASH_ROM -> propertyName = String.format(propertyFormat, "flash_write");
-            case DATALOG -> propertyName = String.format(propertyFormat, "datalog");
+            case READ_MEMORY -> propertyName = memoryReadKeyProperty;
+            case WRITE_MEMORY -> propertyName = memoryWriteKeyProperty;
+            case FLASH_ROM -> propertyName = flashWriteKeyProperty;
+            case DATALOG -> propertyName = datalogKeyProperty;
             default -> throw new UnsupportedOperationException(newMode.name());
         }
         SecurityAccessProperty engineAccessProperty;
@@ -309,6 +314,32 @@ public class SubaruDIConnection extends UDSConnection {
         @Override
         public Connection createConnection(J2534DeviceProvider deviceProvider) {
             return new SubaruDIConnection(deviceProvider);
+        }
+
+        @Override
+        public List<ConnectionParameter> getParameters() {
+            return Arrays.asList(
+                    new ConnectionParameter(true, gatewayKeyProperty,
+                            "Gateway Access Key",
+                            "The security access configuration for disarming the central gateway module",
+                            SecurityAccessProperty.class),
+                    new ConnectionParameter(true, memoryReadKeyProperty,
+                            "Memory Read Key",
+                            "The security access configuration for placing the ECU into memory read mode",
+                            SecurityAccessProperty.class),
+                    new ConnectionParameter(true, memoryWriteKeyProperty,
+                            "Memory Write Key",
+                            "The security access configuration for placing the ECU into memory write mode",
+                            SecurityAccessProperty.class),
+                    new ConnectionParameter(true, flashWriteKeyProperty,
+                            "Flash Write Key",
+                            "The security access configuration for placing the ECU into programming mode",
+                            SecurityAccessProperty.class),
+                    new ConnectionParameter(true, datalogKeyProperty,
+                            "Datalog Key",
+                            "The security access configuration for placing the ECU into a datalog session",
+                            SecurityAccessProperty.class)
+            );
         }
     }
 }

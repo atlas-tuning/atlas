@@ -1,30 +1,31 @@
 package com.github.manevolent.atlas.ui.dialog.settings;
 
+import com.github.manevolent.atlas.ui.dialog.settings.element.SettingField;
 import com.github.manevolent.atlas.ui.util.Fonts;
-import com.github.manevolent.atlas.ui.util.Inputs;
 import com.github.manevolent.atlas.ui.util.Labels;
 import com.github.manevolent.atlas.ui.util.Layout;
 import org.kordamp.ikonli.Ikon;
 
 import javax.swing.*;
 import java.awt.*;
-import java.util.Arrays;
-import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Supplier;
 
-public class BasicSettingPage extends AbstractSettingPage {
-    private final java.util.List<Element> elements;
+public abstract class BasicSettingPage extends AbstractSettingPage {
     private JPanel content;
 
-    public BasicSettingPage(Ikon icon, String name, List<Element> elements) {
-        super(icon, name);
+    private java.util.List<SettingField<?>> fields;
 
-        this.elements = elements;
+    public BasicSettingPage(Ikon icon, String name) {
+        super(icon, name);
     }
 
-    public BasicSettingPage(Ikon icon, String name, Element... elements) {
-        this(icon, name, Arrays.asList(elements));
+    protected abstract java.util.List<SettingField<?>> createFields();
+
+    private java.util.List<SettingField<?>> getFields() {
+        if (this.fields == null) {
+            this.fields = createFields();
+        }
+
+        return this.fields;
     }
 
     private JComponent addHeaderRow(JPanel entryPanel, int row,
@@ -104,9 +105,12 @@ public class BasicSettingPage extends AbstractSettingPage {
 
         addHeaderRow(content, 0, getIcon(), getName());
 
+        java.util.List<SettingField<?>> elements = getFields();
         for (int row = 0; row < elements.size(); row ++) {
-            Element element = elements.get(row);
-            addEntryRow(content, 1 + row, element.getName(), element.getTooltip(), element.getInputComponent());
+            SettingField<?> element = elements.get(row);
+            addEntryRow(content, 1 + row,
+                    element.getName(), element.getTooltip(),
+                    element.getInputComponent());
         }
 
         this.content = new JPanel(new BorderLayout());
@@ -124,61 +128,9 @@ public class BasicSettingPage extends AbstractSettingPage {
 
     @Override
     public void apply() {
-        for (Element<?> element : elements) {
+        for (SettingField<?> element : getFields()) {
             element.apply();
         }
     }
 
-    public interface Element<V> {
-        String getName();
-        String getTooltip();
-        JComponent getInputComponent();
-        V apply();
-    }
-
-    private abstract static class AbstractElement<V> implements Element<V> {
-        private final String name, tooltip;
-
-        private AbstractElement(String name, String tooltip) {
-            this.name = name;
-            this.tooltip = tooltip;
-        }
-
-        @Override
-        public String getName() {
-            return name;
-        }
-
-        @Override
-        public String getTooltip() {
-            return tooltip;
-        }
-    }
-
-    public static class TextElement extends AbstractElement<String> {
-        private final Consumer<String> apply;
-        private final JTextField textField;
-
-        public TextElement(String name,
-                           String tooltip,
-                           String defaultValue,
-                           Consumer<String> apply) {
-            super(name, tooltip);
-
-            this.apply = apply;
-            this.textField = Inputs.textField(defaultValue, (text) -> { /*ignore*/ });
-        }
-
-        @Override
-        public JComponent getInputComponent() {
-            return textField;
-        }
-
-        @Override
-        public String apply() {
-            String value = textField.getText();
-            apply.accept(value);
-            return value;
-        }
-    }
 }

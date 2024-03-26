@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.ui.component.window;
 
+import com.formdev.flatlaf.ui.FlatButtonUI;
 import com.github.manevolent.atlas.model.Axis;
 import com.github.manevolent.atlas.model.Scale;
 import com.github.manevolent.atlas.model.Series;

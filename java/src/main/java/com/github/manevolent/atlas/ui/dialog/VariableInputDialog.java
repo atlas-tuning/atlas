@@ -67,6 +67,7 @@ public class VariableInputDialog extends JDialog {
     private void initComponent() {
         JPanel content = Inputs.createEntryPanel();
         JButton ok = Inputs.button(CarbonIcons.CHECKMARK, "OK", null, this::accept);
+        getRootPane().setDefaultButton(ok);
 
         BinaryInputField dataInputField = createDataInputField(ok::setEnabled, this::accept);
         Inputs.createTextRow(content, 1, message);
