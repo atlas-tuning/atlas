@@ -103,7 +103,7 @@ public class SecurityAccessField extends JPanel {
     }
 
     public SecurityAccessProperty getDefault() {
-        return new SecurityAccessProperty(1, new byte[16]);
+        return new SecurityAccessProperty(1, new byte[0]);
     }
 
     public SecurityAccessProperty getProperty() {

@@ -143,6 +143,12 @@ public class Crypto {
 
     public static byte[] toByteArray(String hex) {
         int len = hex.length();
+
+        if (len % 2 != 0) {
+            hex = "0" + hex;
+            len ++;
+        }
+
         byte[] ans = new byte[len / 2];
 
         for (int i = 0; i < len; i += 2) {
