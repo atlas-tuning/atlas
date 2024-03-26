@@ -37,8 +37,8 @@ public class SecurityAccessSettingField extends AbstractSettingField<SecurityAcc
     }
 
     @Override
-    public SecurityAccessProperty apply() {
+    public boolean apply() {
         project.addProperty(key, property);
-        return property;
+        return true;
     }
 }

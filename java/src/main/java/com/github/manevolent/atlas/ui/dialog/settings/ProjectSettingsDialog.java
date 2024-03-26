@@ -59,8 +59,9 @@ public class ProjectSettingsDialog extends SettingsDialog<Project> {
     }
 
     @Override
-    protected void apply() {
-        super.apply();
-        parent.setDirty(true);
+    protected boolean apply() {
+        boolean applied = super.apply();
+        parent.setDirty(true); // Dirty because any applications could still have succeeded
+        return applied;
     }
 }

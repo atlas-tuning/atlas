@@ -5,19 +5,21 @@ import com.github.manevolent.atlas.ui.util.Inputs;
 
 import javax.swing.*;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 public class ConnectionTypeSettingField extends AbstractSettingField<ConnectionType> {
-    private final Consumer<ConnectionType> apply;
+    private final Function<ConnectionType, Boolean> apply;
     private final JComboBox<ConnectionType> comboBox;
 
     public ConnectionTypeSettingField(String name,
                                       String tooltip,
                                       ConnectionType defaultValue,
-                                      Consumer<ConnectionType> apply) {
+                                      Function<ConnectionType, Boolean> apply,
+                                      Consumer<ConnectionType> changed) {
         super(name, tooltip);
 
         this.apply = apply;
-        this.comboBox = Inputs.connectionTypeField(tooltip, defaultValue, (text) -> { /*ignore*/ });
+        this.comboBox = Inputs.connectionTypeField(tooltip, defaultValue, changed);
     }
 
     @Override
@@ -26,9 +28,8 @@ public class ConnectionTypeSettingField extends AbstractSettingField<ConnectionT
     }
 
     @Override
-    public ConnectionType apply() {
+    public boolean apply() {
         ConnectionType value = (ConnectionType) comboBox.getSelectedItem();
-        apply.accept(value);
-        return value;
+        return apply.apply(value);
     }
 }

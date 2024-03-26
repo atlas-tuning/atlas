@@ -25,9 +25,9 @@ public class TextSettingField extends AbstractSettingField<String> {
     }
 
     @Override
-    public String apply() {
+    public boolean apply() {
         String value = textField.getText();
         apply.accept(value);
-        return value;
+        return true;
     }
 }

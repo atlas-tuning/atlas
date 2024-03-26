@@ -6,5 +6,5 @@ public interface SettingField<V> {
     String getName();
     String getTooltip();
     JComponent getInputComponent();
-    V apply();
+    boolean apply();
 }

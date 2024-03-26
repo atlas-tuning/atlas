@@ -185,14 +185,18 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     }
 
     private void ok() {
-        apply();
-        this.dispose();
+        if (apply())
+            this.dispose();
     }
 
-    protected void apply() {
+    protected boolean apply() {
         for (SettingPage page : pages) {
-            page.apply();
+            if (!page.apply()) {
+                return false;
+            }
         }
+
+        return true;
     }
 
     private void initComponent() {

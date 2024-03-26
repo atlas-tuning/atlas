@@ -19,11 +19,14 @@ public class ConnectionSettingPage extends BasicSettingPage {
     private final Project project;
     private final Frame parent;
 
+    private ConnectionType connectionType;
+
     public ConnectionSettingPage(Frame parent, Project project) {
         super(CarbonIcons.PLUG_FILLED, "Connection");
 
         this.parent = parent;
         this.project = project;
+        this.connectionType = project.getConnectionType();
     }
 
     @Override
@@ -33,7 +36,7 @@ public class ConnectionSettingPage extends BasicSettingPage {
         elements.add(new ConnectionTypeSettingField(
                 "Connection Type",
                 "The communication type for connections to this vehicle",
-                project.getConnectionType(),
+                connectionType,
                 t -> {
                     ConnectionType existing = project.getConnectionType();
                     if (t != existing) {
@@ -43,15 +46,21 @@ public class ConnectionSettingPage extends BasicSettingPage {
                                 "Warning",
                                 JOptionPane.YES_NO_OPTION,
                                 JOptionPane.WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
-                            return;
+                            return false;
                         }
 
                         Job.fork(() -> project.setConnectionType(t));
                     }
+
+                    return true;
+                },
+                (connectionType) -> {
+                    this.connectionType = connectionType;
+                    reinitialize();
                 }));
 
         // Based on the connection type, make sure to list any settings for this type
-        for (ConnectionParameter parameter : project.getConnectionType().getFactory().getParameters()) {
+        for (ConnectionParameter parameter : connectionType.getFactory().getParameters()) {
             SettingField<?> field;
 
             if (parameter.getValueType().equals(SecurityAccessProperty.class)) {

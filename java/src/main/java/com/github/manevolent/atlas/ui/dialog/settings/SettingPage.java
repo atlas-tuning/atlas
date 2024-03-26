@@ -12,6 +12,6 @@ public interface SettingPage {
 
     JComponent getContent();
 
-    void apply();
+    boolean apply();
 
 }

@@ -113,7 +113,10 @@ public abstract class BasicSettingPage extends AbstractSettingPage {
                     element.getInputComponent());
         }
 
-        this.content = new JPanel(new BorderLayout());
+        if (this.content == null) {
+            this.content = new JPanel(new BorderLayout());
+        }
+
         this.content.add(content, BorderLayout.NORTH);
     }
 
@@ -126,11 +129,25 @@ public abstract class BasicSettingPage extends AbstractSettingPage {
         return this.content;
     }
 
+    public void reinitialize() {
+        this.fields = createFields();
+        JComponent content = getContent();
+        content.removeAll();
+        initComponent();
+
+        content.revalidate();
+        content.repaint();
+    }
+
     @Override
-    public void apply() {
+    public boolean apply() {
         for (SettingField<?> element : getFields()) {
-            element.apply();
+            if (!element.apply()) {
+                return false;
+            }
         }
+
+        return true;
     }
 
 }
