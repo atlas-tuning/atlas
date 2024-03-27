@@ -1,13 +1,12 @@
-package com.github.manevolent.atlas.ui.dialog.settings;
+package com.github.manevolent.atlas.ui.settings;
 
 import com.github.manevolent.atlas.model.KeyProperty;
 import com.github.manevolent.atlas.model.Project;
-import com.github.manevolent.atlas.model.ProjectProperty;
 import com.github.manevolent.atlas.model.PropertyDefinition;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
-import com.github.manevolent.atlas.ui.dialog.settings.field.KeySettingField;
-import com.github.manevolent.atlas.ui.dialog.settings.field.SecurityAccessSettingField;
-import com.github.manevolent.atlas.ui.dialog.settings.field.SettingField;
+import com.github.manevolent.atlas.ui.settings.field.KeySettingField;
+import com.github.manevolent.atlas.ui.settings.field.SecurityAccessSettingField;
+import com.github.manevolent.atlas.ui.settings.field.SettingField;
 import com.github.manevolent.atlas.ui.util.Fonts;
 import com.github.manevolent.atlas.ui.util.Labels;
 import com.github.manevolent.atlas.ui.util.Layout;

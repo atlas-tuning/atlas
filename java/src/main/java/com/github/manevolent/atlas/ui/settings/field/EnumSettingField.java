@@ -1,7 +1,6 @@
-package com.github.manevolent.atlas.ui.dialog.settings.field;
+package com.github.manevolent.atlas.ui.settings.field;
 
 import com.github.manevolent.atlas.connection.ConnectionType;
-import com.github.manevolent.atlas.model.MemoryEncryptionType;
 import com.github.manevolent.atlas.ui.util.Inputs;
 
 import javax.swing.*;

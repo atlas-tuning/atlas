@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.dialog.settings;
+package com.github.manevolent.atlas.ui.settings;
 
 import org.kordamp.ikonli.Ikon;
 

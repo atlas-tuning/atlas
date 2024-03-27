@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.dialog.settings.field;
+package com.github.manevolent.atlas.ui.settings.field;
 
 import javax.swing.*;
 import java.util.function.Consumer;

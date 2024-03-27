@@ -1,6 +1,6 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
-import com.github.manevolent.atlas.ui.dialog.settings.MemoryRegionListSettingPage;
+import com.github.manevolent.atlas.ui.settings.MemoryRegionListSettingPage;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;

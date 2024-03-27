@@ -1,6 +1,6 @@
-package com.github.manevolent.atlas.ui.dialog.settings;
+package com.github.manevolent.atlas.ui.settings;
 
-import com.github.manevolent.atlas.ui.dialog.settings.field.SettingField;
+import com.github.manevolent.atlas.ui.settings.field.SettingField;
 import org.kordamp.ikonli.Ikon;
 
 import java.awt.*;

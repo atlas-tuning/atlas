@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.dialog.settings;
+package com.github.manevolent.atlas.ui.settings;
 
 import com.github.manevolent.atlas.ApplicationMetadata;
 import com.github.manevolent.atlas.ui.util.Icons;

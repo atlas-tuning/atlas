@@ -1,8 +1,8 @@
-package com.github.manevolent.atlas.ui.dialog.settings;
+package com.github.manevolent.atlas.ui.settings;
 
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.ui.Editor;
-import com.github.manevolent.atlas.ui.dialog.settings.field.TextSettingField;
+import com.github.manevolent.atlas.ui.settings.field.TextSettingField;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import java.util.Arrays;

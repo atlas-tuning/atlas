@@ -1,10 +1,10 @@
-package com.github.manevolent.atlas.ui.dialog.settings;
+package com.github.manevolent.atlas.ui.settings;
 
 import com.github.manevolent.atlas.model.PropertyDefinition;
 import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.model.Project;
-import com.github.manevolent.atlas.ui.dialog.settings.field.EnumSettingField;
-import com.github.manevolent.atlas.ui.dialog.settings.field.SettingField;
+import com.github.manevolent.atlas.ui.settings.field.EnumSettingField;
+import com.github.manevolent.atlas.ui.settings.field.SettingField;
 import com.github.manevolent.atlas.ui.util.Job;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 

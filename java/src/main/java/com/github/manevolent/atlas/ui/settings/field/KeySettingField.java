@@ -1,10 +1,9 @@
-package com.github.manevolent.atlas.ui.dialog.settings.field;
+package com.github.manevolent.atlas.ui.settings.field;
 
 import com.github.manevolent.atlas.model.KeyProperty;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
 import com.github.manevolent.atlas.ui.component.field.KeyField;
-import com.github.manevolent.atlas.ui.component.field.SecurityAccessField;
 
 import javax.swing.*;
 import java.awt.*;

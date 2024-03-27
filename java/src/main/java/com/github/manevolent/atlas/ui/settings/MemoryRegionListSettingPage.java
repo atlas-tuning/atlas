@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.dialog.settings;
+package com.github.manevolent.atlas.ui.settings;
 
 import com.github.manevolent.atlas.model.MemorySection;
 import com.github.manevolent.atlas.model.MemoryType;
@@ -14,7 +14,6 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.stream.Collectors;
 
 public class MemoryRegionListSettingPage extends AbstractSettingPage implements ListSelectionListener {
     private final Editor editor;

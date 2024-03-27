@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.dialog.settings.field;
+package com.github.manevolent.atlas.ui.settings.field;
 
 public abstract class AbstractSettingField<V> implements SettingField<V> {
     private final String name, tooltip;
