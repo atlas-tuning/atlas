@@ -75,4 +75,9 @@ public class ConnectionSettingPage extends BasicSettingPage {
                     "Are you sure this correct?");
         }
     }
+
+    @Override
+    public boolean isDirty() {
+        return super.isDirty() || project.getConnectionType() != connectionType;
+    }
 }

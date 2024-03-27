@@ -21,7 +21,7 @@ import java.beans.PropertyChangeListener;
 import java.util.*;
 
 public abstract class SettingsDialog<T> extends JDialog implements TreeSelectionListener,
-        PropertyChangeListener {
+        PropertyChangeListener, KeyEventDispatcher {
     private final T settingObject;
     private final String title;
 
@@ -54,6 +54,9 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
 
         KeyboardFocusManager.getCurrentKeyboardFocusManager()
                 .addPropertyChangeListener("permanentFocusOwner", this);
+
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                        .addKeyEventDispatcher(this);
 
         setPreferredSize(new Dimension(800, 600));
 
@@ -367,6 +370,18 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
                 .removePropertyChangeListener("permanentFocusOwner", this);
 
         super.dispose();
+    }
+
+    @Override
+    public boolean dispatchKeyEvent(KeyEvent e) {
+        if (e.getID()  == KeyEvent.KEY_PRESSED) {
+            if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+                cancel();
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private static class SettingPageNode implements MutableTreeNode {
