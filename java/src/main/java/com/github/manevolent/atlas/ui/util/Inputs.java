@@ -14,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Vector;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
@@ -196,24 +197,39 @@ public class Inputs {
         return comboBox;
     }
 
-    public static JComboBox<ConnectionType> connectionTypeField(String toolTip, ConnectionType intended,
-                                                      Consumer<ConnectionType> valueChanged) {
-        ConnectionType[] values = Arrays.stream(ConnectionType.values())
-                .sorted(Comparator.comparing(ConnectionType::getName)).toArray(ConnectionType[]::new);
-        JComboBox<ConnectionType> comboBox = new JComboBox<>(values);
+    public static <E extends Enum<E>> JComboBox<E> enumField(String toolTip, Class<E> type, E intended,
+                                                             Consumer<E> valueChanged) {
+        List<E> values = Arrays.stream(type.getEnumConstants())
+                .sorted(Comparator.comparing(E::toString))
+                .toList();
+
+        Vector<E> vector = new Vector<>(values);
+
+        JComboBox<E> comboBox = new JComboBox<>(vector);
+        comboBox.setToolTipText(toolTip);
+
         if (intended != null) {
             comboBox.setSelectedItem(intended);
         } else {
-            comboBox.setSelectedItem(ConnectionType.DEBUG);
-            valueChanged.accept(ConnectionType.DEBUG);
+            E first = type.getEnumConstants()[0];
+            comboBox.setSelectedItem(first);
         }
+
         comboBox.addItemListener(e -> {
             if (e.getStateChange() != SELECTED) {
                 return;
             }
-            valueChanged.accept((ConnectionType) e.getItem());
+
+            //noinspection unchecked
+            valueChanged.accept((E) e.getItem());
         });
+
         return comboBox;
+    }
+
+    public static JComboBox<ConnectionType> connectionTypeField(String toolTip, ConnectionType intended,
+                                                      Consumer<ConnectionType> valueChanged) {
+        return enumField(toolTip, ConnectionType.class, intended, valueChanged);
     }
 
     public static JComboBox<Unit> unitField(String toolTip, Unit intended, Consumer<Unit> valueChanged) {

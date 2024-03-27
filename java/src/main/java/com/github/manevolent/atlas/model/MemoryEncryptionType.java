@@ -7,14 +7,18 @@ import java.util.function.Supplier;
 public enum MemoryEncryptionType {
 
     NONE("None", () -> null),
-    SUBARU_DIT("Subaru DI (2015+)", SubaruDIMemoryEncryption::new);
+    SUBARU_DIT("Subaru DI (2015+)", new SubaruDIMemoryEncryption.Factory());
 
-    private final Supplier<MemoryEncryption> instanceSupplier;
+    private final MemoryEncryptionFactory factory;
     private final String name;
 
-    MemoryEncryptionType(String name, Supplier<MemoryEncryption> instanceSupplier) {
+    MemoryEncryptionType(String name, MemoryEncryptionFactory factory) {
         this.name = name;
-        this.instanceSupplier = instanceSupplier;
+        this.factory = factory;
+    }
+
+    public MemoryEncryptionFactory getFactory() {
+        return factory;
     }
 
     public String getName() {
@@ -26,9 +30,5 @@ public enum MemoryEncryptionType {
         return name;
     }
 
-    public MemoryEncryption create(Project project) {
-        MemoryEncryption memoryEncryption = instanceSupplier.get();
-        memoryEncryption.setEncryptionKeys(project);
-        return memoryEncryption;
-    }
+
 }

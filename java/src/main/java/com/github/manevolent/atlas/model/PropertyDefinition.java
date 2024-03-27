@@ -1,15 +1,13 @@
-package com.github.manevolent.atlas.connection;
+package com.github.manevolent.atlas.model;
 
-import com.github.manevolent.atlas.model.ProjectProperty;
-
-public class ConnectionParameter {
+public final class PropertyDefinition {
     private final boolean required;
     private final String key, name, description;
     private final Class<? extends ProjectProperty> valueType;
 
-    public ConnectionParameter(boolean required,
-                               String key, String name, String description,
-                               Class<? extends ProjectProperty> valueType) {
+    public PropertyDefinition(boolean required,
+                              String key, String name, String description,
+                              Class<? extends ProjectProperty> valueType) {
         this.required = required;
         this.key = key;
         this.name = name;

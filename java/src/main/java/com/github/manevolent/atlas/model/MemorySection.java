@@ -80,7 +80,7 @@ public class MemorySection {
      */
     public void setup(Project project, byte[] data) {
         if (encryptionType != null && encryptionType != MemoryEncryptionType.NONE) {
-            encryption = encryptionType.create(project);
+            encryption = encryptionType.getFactory().create(project);
         } else {
             encryption = null;
         }
@@ -145,8 +145,50 @@ public class MemorySection {
         }
     }
 
+    public MemorySection copy() {
+        MemorySection copy = new MemorySection();
+        copy.setDataLength(getDataLength());
+        copy.setBaseAddress(getBaseAddress());
+        copy.setName(getName());
+        copy.setByteOrder(getByteOrder());
+        copy.setMemoryType(getMemoryType());
+        copy.setEncryptionType(getEncryptionType());
+        return copy;
+    }
+
+    public void apply(MemorySection other) {
+        setDataLength(other.getDataLength());
+        setBaseAddress(other.getBaseAddress());
+        setName(other.getName());
+        setByteOrder(other.getByteOrder());
+        setMemoryType(other.getMemoryType());
+        setEncryptionType(other.getEncryptionType());
+    }
+
     public static Builder builder() {
         return new Builder();
+    }
+
+    public boolean intersects(long baseAddress, int dataLength) {
+        long otherStart = baseAddress;
+        long otherEnd = baseAddress + dataLength;
+
+        long myStart = this.baseAddress;
+        long myEnd = this.baseAddress + this.dataLength;
+
+        return (myStart <= otherEnd) && (myEnd >= otherStart);
+    }
+
+    public boolean intersects(MemorySection other) {
+        return intersects(other.getBaseAddress(), other.getDataLength());
+    }
+
+    public boolean contains(MemoryAddress address) {
+        return intersects(address.getOffset(), 0);
+    }
+
+    public boolean contains(MemoryReference reference) {
+        return contains(reference.getAddress());
     }
 
     public static class Builder {

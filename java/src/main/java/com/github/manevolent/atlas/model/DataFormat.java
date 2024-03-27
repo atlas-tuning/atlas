@@ -4,20 +4,6 @@ import java.nio.ByteOrder;
 import java.util.function.BiFunction;
 
 public enum DataFormat {
-    SBYTE(1, Byte.MIN_VALUE, Byte.MAX_VALUE, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
-        byte b = data[0];
-        return (float) b;
-    }, (f, byteOrder) -> {
-        f = Math.min(Byte.MAX_VALUE, Math.max(Byte.MIN_VALUE, f));
-        int i = (int) Math.floor(f);
-        if (i < Byte.MIN_VALUE) {
-            i = Byte.MIN_VALUE;
-        } else if (i > Byte.MAX_VALUE) {
-            i = Byte.MAX_VALUE;
-        }
-        return new byte[] { (byte) i };
-    }),
-
     UBYTE(1, 0f, 255f, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
         byte b = data[0];
         int i = b & 0xFF;
@@ -33,29 +19,18 @@ public enum DataFormat {
         return new byte[] { (byte) i };
     }),
 
-    SSHORT(2, Short.MIN_VALUE, Short.MAX_VALUE, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
-        int low, high;
-        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
-            low = data[0] & 0xFF;
-            high = data[1] & 0xFF;
-        } else {
-            high = data[0] & 0xFF;
-            low = data[1] & 0xFF;
-        }
-        int combined = low | (high << 8);
-        return (float) (short) (combined & 0xFFFF);
+    SBYTE(1, Byte.MIN_VALUE, Byte.MAX_VALUE, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
+        byte b = data[0];
+        return (float) b;
     }, (f, byteOrder) -> {
-        f = Math.min(Short.MAX_VALUE, Math.max(Short.MIN_VALUE, f));
-        short s = (short)Math.floor(f);
-        byte[] data = new byte[2];
-        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
-            data[0] = (byte) (s & 0xFF);
-            data[1] = (byte) (s >> 8 & 0xFF);
-        } else {
-            data[1] = (byte) (s & 0xFF);
-            data[0] = (byte) (s >> 8 & 0xFF);
+        f = Math.min(Byte.MAX_VALUE, Math.max(Byte.MIN_VALUE, f));
+        int i = (int) Math.floor(f);
+        if (i < Byte.MIN_VALUE) {
+            i = Byte.MIN_VALUE;
+        } else if (i > Byte.MAX_VALUE) {
+            i = Byte.MAX_VALUE;
         }
-        return data;
+        return new byte[] { (byte) i };
     }),
 
     USHORT(2, 0f, 65535f, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
@@ -75,6 +50,31 @@ public enum DataFormat {
     }, (f, byteOrder) -> {
         f = Math.min(65535, Math.max(0, f));
         int s = ((int)Math.floor(f)) & 0xFFFF;
+        byte[] data = new byte[2];
+        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+            data[0] = (byte) (s & 0xFF);
+            data[1] = (byte) (s >> 8 & 0xFF);
+        } else {
+            data[1] = (byte) (s & 0xFF);
+            data[0] = (byte) (s >> 8 & 0xFF);
+        }
+        return data;
+    }),
+
+    SSHORT(2, Short.MIN_VALUE, Short.MAX_VALUE, Precision.WHOLE_NUMBER, (data, byteOrder) -> {
+        int low, high;
+        if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
+            low = data[0] & 0xFF;
+            high = data[1] & 0xFF;
+        } else {
+            high = data[0] & 0xFF;
+            low = data[1] & 0xFF;
+        }
+        int combined = low | (high << 8);
+        return (float) (short) (combined & 0xFFFF);
+    }, (f, byteOrder) -> {
+        f = Math.min(Short.MAX_VALUE, Math.max(Short.MIN_VALUE, f));
+        short s = (short)Math.floor(f);
         byte[] data = new byte[2];
         if (byteOrder == ByteOrder.LITTLE_ENDIAN) {
             data[0] = (byte) (s & 0xFF);

@@ -2,10 +2,9 @@ package com.github.manevolent.atlas.ui.dialog.settings;
 
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.ui.Editor;
-import com.github.manevolent.atlas.ui.dialog.settings.element.TextSettingField;
+import com.github.manevolent.atlas.ui.dialog.settings.field.TextSettingField;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
-import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
 
@@ -21,47 +20,58 @@ public class ProjectSettingsDialog extends SettingsDialog<Project> {
     @Override
     protected List<SettingPage> getPages() {
         return Arrays.asList(
-                new DefaultSettingPage(CarbonIcons.CAR, "Vehicle",
+                new DefaultSettingPage(
+                        parent,
+                        CarbonIcons.CAR, "Vehicle",
                         new TextSettingField(
                                 "Year", "The manufacture year of the vehicle",
                                 getSettingObject().getVehicle().getYear(),
+                                v -> true,
                                 var -> getSettingObject().getVehicle().setYear(var)
                         ),
                         new TextSettingField(
                                 "Market", "The market of the vehicle (i.e. USDM, JDM, EUDM)",
                                 getSettingObject().getVehicle().getMarket(),
+                                v -> true,
                                 var -> getSettingObject().getVehicle().setMarket(var)
                         ),
                         new TextSettingField(
                                 "Make", "The make of the vehicle (i.e. GM, Mitsubishi, Subaru)",
                                 getSettingObject().getVehicle().getMake(),
+                                v -> true,
                                 var -> getSettingObject().getVehicle().setMake(var)
                         ),
                         new TextSettingField(
                                 "Model", "The model of the vehicle (i.e. F150, EVO, WRX)",
                                 getSettingObject().getVehicle().getModel(),
+                                v -> true,
                                 var -> getSettingObject().getVehicle().setModel(var)
                         ),
                         new TextSettingField(
                                 "Trim", "The trim of the vehicle (i.e. Base, Premium, Limited)",
                                 getSettingObject().getVehicle().getTrim(),
+                                v -> true,
                                 var -> getSettingObject().getVehicle().setTrim(var)
                         ),
                         new TextSettingField(
                                 "Transmission", "The transmission of the vehicle (i.e. MT, AT, CVT, DCT)",
                                 getSettingObject().getVehicle().getTransmission(),
+                                v -> true,
                                 var -> getSettingObject().getVehicle().setTransmission(var)
                         )
                 ),
                 new ConnectionSettingPage(parent, getSettingObject()),
-                new DefaultSettingPage(CarbonIcons.CHIP, "Memory Regions")
+                new MemoryRegionListSettingPage(parent, getSettingObject()),
+                new DefaultSettingPage(parent, CarbonIcons.CATALOG, "Calibrations")
         );
     }
 
     @Override
-    protected boolean apply() {
-        boolean applied = super.apply();
-        parent.setDirty(true); // Dirty because any applications could still have succeeded
+    protected ApplyResult apply() {
+        ApplyResult applied = super.apply();
+        if (applied != ApplyResult.FAILED_VALIDATION) {
+            parent.setDirty(true); // Dirty because any applications could still have succeeded
+        }
         return applied;
     }
 }

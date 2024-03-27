@@ -22,7 +22,7 @@ public class KeyProperty extends ProjectProperty {
     }
 
     @Override
-    public ProjectProperty clone() {
+    public KeyProperty clone() {
         return new KeyProperty(Arrays.copyOf(key, key.length));
     }
 }

@@ -6,8 +6,8 @@ import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
 import java.util.function.Function;
 
 public enum ConnectionType {
-    SUBARU_DI("Subaru Direct Injection", new SubaruDIConnection.Factory()),
-    DEBUG("Debug", new DebugConnection.Factory());
+    DEBUG("Debug", new DebugConnection.Factory()),
+    SUBARU_DI("Subaru Direct Injection", new SubaruDIConnection.Factory());
 
     private final String name;
     private final ConnectionFactory factory;

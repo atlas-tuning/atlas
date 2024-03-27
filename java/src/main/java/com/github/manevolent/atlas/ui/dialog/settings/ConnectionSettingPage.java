@@ -1,12 +1,10 @@
 package com.github.manevolent.atlas.ui.dialog.settings;
 
-import com.github.manevolent.atlas.connection.ConnectionParameter;
+import com.github.manevolent.atlas.model.PropertyDefinition;
 import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.model.Project;
-import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
-import com.github.manevolent.atlas.ui.dialog.settings.element.ConnectionTypeSettingField;
-import com.github.manevolent.atlas.ui.dialog.settings.element.SecurityAccessSettingField;
-import com.github.manevolent.atlas.ui.dialog.settings.element.SettingField;
+import com.github.manevolent.atlas.ui.dialog.settings.field.EnumSettingField;
+import com.github.manevolent.atlas.ui.dialog.settings.field.SettingField;
 import com.github.manevolent.atlas.ui.util.Job;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -22,7 +20,7 @@ public class ConnectionSettingPage extends BasicSettingPage {
     private ConnectionType connectionType;
 
     public ConnectionSettingPage(Frame parent, Project project) {
-        super(CarbonIcons.PLUG_FILLED, "Connection");
+        super(parent, CarbonIcons.PLUG_FILLED, "Connection");
 
         this.parent = parent;
         this.project = project;
@@ -33,9 +31,10 @@ public class ConnectionSettingPage extends BasicSettingPage {
     protected List<SettingField<?>> createFields() {
         List<SettingField<?>> elements = new ArrayList<>();
 
-        elements.add(new ConnectionTypeSettingField(
+        elements.add(new EnumSettingField<>(
                 "Connection Type",
                 "The communication type for connections to this vehicle",
+                ConnectionType.class,
                 connectionType,
                 t -> {
                     ConnectionType existing = project.getConnectionType();
@@ -60,19 +59,15 @@ public class ConnectionSettingPage extends BasicSettingPage {
                 }));
 
         // Based on the connection type, make sure to list any settings for this type
-        for (ConnectionParameter parameter : connectionType.getFactory().getParameters()) {
-            SettingField<?> field;
-
-            if (parameter.getValueType().equals(SecurityAccessProperty.class)) {
-                field = new SecurityAccessSettingField(parent, project,
-                        parameter.getKey(), parameter.getName(), parameter.getDescription());
-            } else {
-                throw new UnsupportedOperationException(parameter.getValueType().getName());
-            }
-
-            elements.add(field);
+        for (PropertyDefinition parameter : connectionType.getFactory().getPropertyDefinitions()) {
+            elements.add(createSettingField(parameter, project));
         }
 
         return elements;
+    }
+
+    @Override
+    public boolean validate() {
+        return true;
     }
 }

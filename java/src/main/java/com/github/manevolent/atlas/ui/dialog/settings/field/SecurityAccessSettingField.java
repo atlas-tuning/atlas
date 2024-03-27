@@ -1,4 +1,4 @@
-package com.github.manevolent.atlas.ui.dialog.settings.element;
+package com.github.manevolent.atlas.ui.dialog.settings.field;
 
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
@@ -13,6 +13,7 @@ public class SecurityAccessSettingField extends AbstractSettingField<SecurityAcc
     private final String key;
 
     private SecurityAccessProperty property;
+    private boolean dirty;
 
     public SecurityAccessSettingField(Frame parent, Project project,
                                       String key, String name, String tooltip) {
@@ -33,12 +34,21 @@ public class SecurityAccessSettingField extends AbstractSettingField<SecurityAcc
     @Override
     public JComponent getInputComponent() {
         return new SecurityAccessField(parent, property, getTooltip(),
-                (newValue) -> property = newValue);
+                (newValue) -> {
+                    property = newValue;
+                    dirty = true;
+                });
     }
 
     @Override
     public boolean apply() {
         project.addProperty(key, property);
+        dirty = false;
         return true;
+    }
+
+    @Override
+    public boolean isDirty() {
+        return dirty;
     }
 }

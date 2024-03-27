@@ -1,16 +1,10 @@
 package com.github.manevolent.atlas.ui.dialog.settings;
 
 import com.github.manevolent.atlas.ApplicationMetadata;
-import com.github.manevolent.atlas.model.Axis;
-import com.github.manevolent.atlas.model.Project;
-import com.github.manevolent.atlas.model.Table;
-import com.github.manevolent.atlas.ui.component.tab.TablesTab;
-import com.github.manevolent.atlas.ui.dialog.settings.element.SettingField;
 import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import com.github.manevolent.atlas.ui.util.Layout;
 import org.kordamp.ikonli.Ikon;
-import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
 import javax.swing.event.TreeSelectionEvent;
@@ -43,13 +37,15 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                super.windowClosing(e);
+                cancel();
             }
         });
 
         setPreferredSize(new Dimension(800, 600));
 
         setIconImage(Icons.getImage(ikon, Color.WHITE).getImage());
+
+        setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
         pages = getPages();
 
@@ -80,11 +76,16 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     private void openPage(SettingPage settingPage) {
         settingContentPanel.removeAll();
 
-        JScrollPane scrollPane = new JScrollPane(settingPage.getContent());
-        scrollPane.setBorder(BorderFactory.createEmptyBorder());
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        JComponent content = settingPage.getContent();
+        if (settingPage.isScrollNeeded()) {
+            JScrollPane scrollPane = new JScrollPane(content);
+            scrollPane.setBorder(BorderFactory.createEmptyBorder());
+            scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+            settingContentPanel.add(scrollPane, BorderLayout.CENTER);
+        } else {
+            settingContentPanel.add(content, BorderLayout.CENTER);
+        }
 
-        settingContentPanel.add(scrollPane, BorderLayout.CENTER);
         settingContentPanel.revalidate();
         settingContentPanel.repaint();
     }
@@ -176,7 +177,7 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
 
         JButton ok;
         footer.add(ok = Inputs.nofocus(Inputs.button("OK", this::ok)));
-        footer.add(Inputs.nofocus(Inputs.button("Cancel", this::dispose)));
+        footer.add(Inputs.nofocus(Inputs.button("Cancel", this::cancel)));
         footer.add(Inputs.nofocus(Inputs.button("Apply", this::apply)));
 
         getRootPane().setDefaultButton(ok);
@@ -184,19 +185,58 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         return footer;
     }
 
-    private void ok() {
-        if (apply())
-            this.dispose();
+    public boolean isDirty() {
+        return pages.stream().anyMatch(SettingPage::isDirty);
     }
 
-    protected boolean apply() {
-        for (SettingPage page : pages) {
-            if (!page.apply()) {
-                return false;
+    private void cancel() {
+        if (isDirty()) {
+            String message = "You have unsaved changes to your settings " +
+                    "that will be lost. Save changes before closing?";
+
+            int answer = JOptionPane.showConfirmDialog(getParent(),
+                    message,
+                    "Unsaved changes",
+                    JOptionPane.YES_NO_CANCEL_OPTION
+            );
+
+            switch (answer) {
+                case JOptionPane.CANCEL_OPTION:
+                    return;
+                case JOptionPane.YES_OPTION:
+                    if (apply() != ApplyResult.SUCCESS) {
+                        return;
+                    }
+                case JOptionPane.NO_OPTION:
+                    break;
             }
         }
 
-        return true;
+        this.dispose();
+    }
+
+    private void ok() {
+        if (apply() == ApplyResult.SUCCESS) {
+            this.dispose();
+        }
+    }
+
+    /**
+     *
+     * @return
+     */
+    protected ApplyResult apply() {
+        if (!pages.stream().allMatch(SettingPage::validate)) {
+            return ApplyResult.FAILED_VALIDATION;
+        }
+
+        for (SettingPage page : pages) {
+            if (!page.apply()) {
+                return ApplyResult.FAILED_APPLY;
+            }
+        }
+
+        return ApplyResult.SUCCESS;
     }
 
     private void initComponent() {
@@ -338,5 +378,11 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
                 return label;
             }
         }
+    }
+
+    public enum ApplyResult {
+        FAILED_VALIDATION,
+        FAILED_APPLY,
+        SUCCESS
     }
 }

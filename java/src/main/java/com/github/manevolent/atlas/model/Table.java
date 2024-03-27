@@ -257,6 +257,10 @@ public class Table {
         data.setLength(n);
     }
 
+    public Collection<Series> getAllAxes() {
+        return axes.values();
+    }
+
     public static class Builder {
         private final Table table = new Table();
 

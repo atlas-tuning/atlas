@@ -22,13 +22,14 @@ import java.util.function.Consumer;
 import static com.github.manevolent.atlas.ui.util.Inputs.memorySectionField;
 
 public class BinaryInputDialog extends JDialog {
+    private final long defaultValue;
     private final long minValue, maxValue;
 
     private BinaryInputField binaryInputField;
 
     private boolean canceled = false;
 
-    public BinaryInputDialog(Frame parent, long minValue, long maxValue) {
+    public BinaryInputDialog(Frame parent, long defaultValue, long minValue, long maxValue) {
         super(parent, "Enter Data Value", true);
 
         addWindowListener(new WindowAdapter() {
@@ -39,6 +40,7 @@ public class BinaryInputDialog extends JDialog {
             }
         });
 
+        this.defaultValue = defaultValue;
         this.minValue = minValue;
         this.maxValue = maxValue;
 
@@ -55,7 +57,7 @@ public class BinaryInputDialog extends JDialog {
     }
 
     private BinaryInputField createDataInputField(Consumer<Boolean> inputValid, Runnable enter) {
-        binaryInputField = new BinaryInputField(Precision.WHOLE_NUMBER, 0D,
+        binaryInputField = new BinaryInputField(Precision.WHOLE_NUMBER, (double) defaultValue,
                 inputValid, (field) -> enter.run(), this::cancel);
 
         binaryInputField.setMin(minValue);
@@ -104,7 +106,11 @@ public class BinaryInputDialog extends JDialog {
     }
 
     public static Long show(Frame parent, long minValue, long maxValue) {
-        BinaryInputDialog dialog = new BinaryInputDialog(parent, minValue, maxValue);
+        return show(parent, 0L, minValue, maxValue);
+    }
+
+    public static Long show(Frame parent, long defaultValue, long minValue, long maxValue) {
+        BinaryInputDialog dialog = new BinaryInputDialog(parent, defaultValue, minValue, maxValue);
         dialog.setVisible(true);
         return dialog.getValue();
     }

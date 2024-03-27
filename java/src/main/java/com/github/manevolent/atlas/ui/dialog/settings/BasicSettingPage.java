@@ -1,6 +1,13 @@
 package com.github.manevolent.atlas.ui.dialog.settings;
 
-import com.github.manevolent.atlas.ui.dialog.settings.element.SettingField;
+import com.github.manevolent.atlas.model.KeyProperty;
+import com.github.manevolent.atlas.model.Project;
+import com.github.manevolent.atlas.model.ProjectProperty;
+import com.github.manevolent.atlas.model.PropertyDefinition;
+import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
+import com.github.manevolent.atlas.ui.dialog.settings.field.KeySettingField;
+import com.github.manevolent.atlas.ui.dialog.settings.field.SecurityAccessSettingField;
+import com.github.manevolent.atlas.ui.dialog.settings.field.SettingField;
 import com.github.manevolent.atlas.ui.util.Fonts;
 import com.github.manevolent.atlas.ui.util.Labels;
 import com.github.manevolent.atlas.ui.util.Layout;
@@ -10,12 +17,15 @@ import javax.swing.*;
 import java.awt.*;
 
 public abstract class BasicSettingPage extends AbstractSettingPage {
+    private final Frame parent;
     private JPanel content;
 
     private java.util.List<SettingField<?>> fields;
 
-    public BasicSettingPage(Ikon icon, String name) {
+    public BasicSettingPage(Frame parent, Ikon icon, String name) {
         super(icon, name);
+
+        this.parent = parent;
     }
 
     protected abstract java.util.List<SettingField<?>> createFields();
@@ -148,6 +158,25 @@ public abstract class BasicSettingPage extends AbstractSettingPage {
         }
 
         return true;
+    }
+
+    @Override
+    public boolean isDirty() {
+        return fields != null && fields.stream().anyMatch(SettingField::isDirty);
+    }
+
+    protected SettingField<?> createSettingField(PropertyDefinition definition, Project project) {
+        if (definition.getValueType().equals(SecurityAccessProperty.class)) {
+            return new SecurityAccessSettingField(parent, project,
+                    definition.getKey(), definition.getName(),
+                    definition.getDescription());
+        } else if (definition.getValueType().equals(KeyProperty.class)) {
+            return new KeySettingField(parent, project,
+                    definition.getKey(), definition.getName(),
+                    definition.getDescription());
+        } else {
+            throw new UnsupportedOperationException(definition.getValueType().getName());
+        }
     }
 
 }

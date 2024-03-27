@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.connection;
 import com.github.manevolent.atlas.BitWriter;
 import com.github.manevolent.atlas.model.MemoryAddress;
 import com.github.manevolent.atlas.model.MemoryParameter;
+import com.github.manevolent.atlas.model.PropertyDefinition;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
 import com.github.manevolent.atlas.protocol.isotp.ISOTPFrameReader;
@@ -317,25 +318,25 @@ public class SubaruDIConnection extends UDSConnection {
         }
 
         @Override
-        public List<ConnectionParameter> getParameters() {
+        public List<PropertyDefinition> getPropertyDefinitions() {
             return Arrays.asList(
-                    new ConnectionParameter(true, gatewayKeyProperty,
+                    new PropertyDefinition(true, gatewayKeyProperty,
                             "Gateway Access Key",
                             "The security access configuration for disarming the central gateway module",
                             SecurityAccessProperty.class),
-                    new ConnectionParameter(true, memoryReadKeyProperty,
+                    new PropertyDefinition(true, memoryReadKeyProperty,
                             "Memory Read Key",
                             "The security access configuration for placing the ECU into memory read mode",
                             SecurityAccessProperty.class),
-                    new ConnectionParameter(true, memoryWriteKeyProperty,
+                    new PropertyDefinition(true, memoryWriteKeyProperty,
                             "Memory Write Key",
                             "The security access configuration for placing the ECU into memory write mode",
                             SecurityAccessProperty.class),
-                    new ConnectionParameter(true, flashWriteKeyProperty,
+                    new PropertyDefinition(true, flashWriteKeyProperty,
                             "Flash Write Key",
                             "The security access configuration for placing the ECU into programming mode",
                             SecurityAccessProperty.class),
-                    new ConnectionParameter(true, datalogKeyProperty,
+                    new PropertyDefinition(true, datalogKeyProperty,
                             "Datalog Key",
                             "The security access configuration for placing the ECU into a datalog session",
                             SecurityAccessProperty.class)

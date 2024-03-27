@@ -1,6 +1,8 @@
 package com.github.manevolent.atlas.model;
 
 import java.io.IOException;
+import java.util.Collections;
+import java.util.List;
 
 public interface MemoryEncryption {
 

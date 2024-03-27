@@ -1,15 +1,18 @@
 package com.github.manevolent.atlas.model.subaru;
 
-import com.github.manevolent.atlas.model.MemoryEncryption;
-import com.github.manevolent.atlas.model.KeyProperty;
-import com.github.manevolent.atlas.model.Project;
+import com.github.manevolent.atlas.model.*;
+import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.util.Arrays;
+import java.util.List;
 
 public class SubaruDIMemoryEncryption implements MemoryEncryption {
+    private static final String keyProperty = "subaru.dit.flashkey";
+
     private short[] encryptKey;
     private short[] decryptKey;
 
@@ -18,7 +21,7 @@ public class SubaruDIMemoryEncryption implements MemoryEncryption {
 
     @Override
     public void setEncryptionKeys(Project project) {
-        KeyProperty property = project.getProperty("subaru.dit.flashkey", KeyProperty.class);
+        KeyProperty property = project.getProperty(keyProperty, KeyProperty.class);
         if (property == null) {
             throw new IllegalArgumentException("Missing key");
         } else if (property.getKey().length != 8) {
@@ -59,5 +62,22 @@ public class SubaruDIMemoryEncryption implements MemoryEncryption {
     @Override
     public int getBlockSize() {
         return 32 / 8; // 32 bits
+    }
+
+    public static class Factory implements MemoryEncryptionFactory {
+        @Override
+        public List<PropertyDefinition> getPropertyDefinitions() {
+            return Arrays.asList(
+                    new PropertyDefinition(true, keyProperty,
+                            "Feistel Key",
+                            "The feistel algorithm encryption key",
+                            KeyProperty.class)
+            );
+        }
+
+        @Override
+        public MemoryEncryption create() {
+            return new SubaruDIMemoryEncryption();
+        }
     }
 }

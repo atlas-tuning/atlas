@@ -14,4 +14,11 @@ public interface SettingPage {
 
     boolean apply();
 
+    boolean validate();
+
+    default boolean isScrollNeeded() {
+        return true;
+    }
+
+    boolean isDirty();
 }

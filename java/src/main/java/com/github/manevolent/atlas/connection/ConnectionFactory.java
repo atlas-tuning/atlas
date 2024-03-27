@@ -1,5 +1,6 @@
 package com.github.manevolent.atlas.connection;
 
+import com.github.manevolent.atlas.model.PropertyDefinition;
 import com.github.manevolent.atlas.protocol.j2534.J2534DeviceProvider;
 
 import java.util.Collections;
@@ -18,7 +19,7 @@ public interface ConnectionFactory {
      * Gets the parameters for this connection that will be expected on a project.
      * @return list of parameters.
      */
-    default List<ConnectionParameter> getParameters() {
+    default List<PropertyDefinition> getPropertyDefinitions() {
         return Collections.emptyList();
     }
 

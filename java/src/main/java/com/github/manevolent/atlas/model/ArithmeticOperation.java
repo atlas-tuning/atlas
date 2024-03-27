@@ -3,6 +3,17 @@ package com.github.manevolent.atlas.model;
 import java.util.function.BiFunction;
 
 public enum ArithmeticOperation {
+    ADD("+", (a, x) -> {
+        return a + x;
+    }, (a, x) -> {
+        return a - x;
+    }),
+
+    SUBTRACT("-", (a, x) -> {
+        return a - x;
+    }, (a, x) -> {
+        return a + x;
+    }),
 
     EXPONENT("^", (a, x) -> {
         return (float) Math.pow(a, x);
@@ -22,17 +33,6 @@ public enum ArithmeticOperation {
         return a * x;
     }),
 
-    ADD("+", (a, x) -> {
-        return a + x;
-    }, (a, x) -> {
-        return a - x;
-    }),
-
-    SUBTRACT("-", (a, x) -> {
-        return a - x;
-    }, (a, x) -> {
-        return a + x;
-    }),
 
     RSHIFT(">>", (a, x) -> {
         return a / (float)Math.pow(2, x.intValue());

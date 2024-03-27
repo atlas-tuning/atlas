@@ -202,6 +202,26 @@ public class Project {
         return new Builder();
     }
 
+    public List<MemoryReference> getMemoryReferences() {
+        List<MemoryReference> references = new ArrayList<>();
+
+        getTables().forEach(table -> {
+            if (table.getData() != null) {
+                references.add(MemoryReference.of(table, table.getData()));
+            }
+
+            for (Series series : table.getAllAxes()) {
+                references.add(MemoryReference.of(table, series));
+            }
+        });
+
+        getParameters().forEach(parameter -> {
+            references.add(MemoryReference.of(parameter));
+        });
+
+        return references;
+    }
+
     public static class Builder {
         private final Project project = new Project();
 
