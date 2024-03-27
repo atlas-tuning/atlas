@@ -1,9 +1,6 @@
 package com.github.manevolent.atlas.ui.settings;
 
-import com.github.manevolent.atlas.model.MemoryReference;
-import com.github.manevolent.atlas.model.MemorySection;
-import com.github.manevolent.atlas.model.MemoryType;
-import com.github.manevolent.atlas.model.Project;
+import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.component.toolbar.MemoryRegionListToolbar;
 import com.github.manevolent.atlas.ui.settings.validation.ValidationSeverity;
@@ -15,10 +12,14 @@ import javax.swing.*;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
 import java.awt.*;
+import java.awt.Color;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static javax.swing.JOptionPane.QUESTION_MESSAGE;
 
 public class MemoryRegionListSettingPage extends AbstractSettingPage implements ListSelectionListener {
     private final Editor editor;
@@ -27,10 +28,10 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
     private JList<MemorySection> list;
     private JPanel settingsContent;
     private JComponent content;
-    private SettingPage settingPage;
+    private MemoryRegionSettingPage settingPage;
 
     private java.util.Map<MemorySection, MemorySection> workingCopies = new HashMap<>();
-    private java.util.Map<MemorySection, SettingPage> settingPages = new HashMap<>();
+    private java.util.Map<MemorySection, MemoryRegionSettingPage> settingPages = new HashMap<>();
 
     protected MemoryRegionListSettingPage(Editor editor, Project project) {
         super(CarbonIcons.CHIP, "Memory Regions");
@@ -38,14 +39,15 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
         this.editor = editor;
         this.project = project;
 
+        project.getSections().forEach(section -> workingCopies.put(section, section.copy()));
+
         getContent();
     }
 
     private ListModel<MemorySection> createListModel() {
         DefaultListModel<MemorySection> model = new DefaultListModel<>();
 
-        project.getSections().stream()
-                .map(section -> workingCopies.computeIfAbsent(section, MemorySection::copy))
+        workingCopies.values().stream()
                 .sorted(Comparator.comparing(MemorySection::getBaseAddress))
                 .forEach(model::addElement);
 
@@ -130,6 +132,96 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
         settingsContent.repaint();
     }
 
+    public void newRegion() {
+        String newSectionName = (String) JOptionPane.showInputDialog(editor,
+                "Specify a name", "New Memory Region",
+                QUESTION_MESSAGE, null, null, "New Memory Region");
+
+        if (newSectionName == null || newSectionName.isBlank()) {
+            return;
+        }
+
+        MemorySection section = MemorySection.builder()
+                .withName(newSectionName)
+                .withBaseAddress(0x00000000)
+                .withLength(0)
+                .withByteOrder(MemoryByteOrder.LITTLE_ENDIAN)
+                .withEncryptionType(MemoryEncryptionType.NONE)
+                .withType(MemoryType.RAM)
+                .build();
+
+        workingCopies.put(section, section.copy());
+
+        SwingUtilities.invokeLater(() -> {
+            // Update the model
+            list.setModel(createListModel());
+            list.setSelectedValue(section, true);
+        });
+    }
+
+    public void copyRegion() {
+        if (settingPage == null) {
+            return;
+        }
+
+        MemorySection source = settingPage.getRealSection();
+
+        String newSectionName = (String) JOptionPane.showInputDialog(editor,
+                "Specify a name", "Copy Memory Region",
+                QUESTION_MESSAGE, null, null, source.getName() + " (Copy)");
+
+        if (newSectionName == null || newSectionName.isBlank()) {
+            return;
+        }
+
+        MemorySection copy = source.copy();
+        copy.setName(newSectionName);
+        MemorySection workingCopy = copy.copy();
+        workingCopies.put(copy, workingCopy);
+
+        SwingUtilities.invokeLater(() -> {
+            // Update the model
+            list.setModel(createListModel());
+            list.setSelectedValue(workingCopy, true);
+        });
+    }
+
+    public void deleteRegion() {
+        if (settingPage == null) {
+            return;
+        }
+
+        MemorySection realSection = settingPage.getRealSection();
+        MemorySection workingSection = settingPage.getWorkingSection();
+
+        long references = project.getMemoryReferences().stream()
+                .filter(realSection::contains)
+                .count();
+
+        if (references > 0) {
+            JOptionPane.showMessageDialog(editor, "Cannot delete memory region " + realSection.getName() + "!\r\n" +
+                            "Memory region is in use by " + references + " references and cannot be deleted.",
+                    "Delete failed",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        if (JOptionPane.showConfirmDialog(editor,
+                "Are you sure you want to delete " + realSection.getName() + "?",
+                "Delete Memory Region",
+                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+            return;
+        }
+
+        settingPages.remove(workingSection);
+        workingCopies.remove(realSection);
+
+        SwingUtilities.invokeLater(() -> {
+            // Update the model
+            list.setModel(createListModel());
+        });
+    }
+
     private JPanel initRightPanel() {
         JPanel panel = new JPanel(new BorderLayout());
         Layout.emptyBorder(panel);
@@ -166,10 +258,23 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
 
     @Override
     public boolean apply() {
-        boolean applied = settingPages.values().stream().allMatch(SettingPage::apply);
+        boolean applied = settingPages.values().stream().allMatch(BasicSettingPage::apply);
+
         if (applied) {
             workingCopies.forEach(MemorySection::apply);
+
+            workingCopies.forEach((real, workingCopy) -> {
+                if (!project.getSections().contains(real)) {
+                    project.addSection(real);
+                }
+            });
+
+            new ArrayList<>(project.getSections())
+                    .stream()
+                    .filter(section -> !workingCopies.containsKey(section))
+                    .forEach(project::removeSection);
         }
+
         return applied;
     }
 
@@ -231,6 +336,10 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
 
     @Override
     public boolean isDirty() {
-        return settingPages.values().stream().anyMatch(SettingPage::isDirty);
+        boolean willDelete = project.getSections()
+                .stream()
+                .anyMatch(section -> !workingCopies.containsKey(section));
+
+        return willDelete || settingPages.values().stream().anyMatch(SettingPage::isDirty);
     }
 }

@@ -22,15 +22,15 @@ public class MemoryRegionListToolbar extends Toolbar<MemoryRegionListSettingPage
     @Override
     protected void initComponent(JToolBar toolbar) {
         toolbar.add(makeSmallButton(FontAwesomeSolid.PLUS, "new", "New region", _ -> {
-
+            getParent().newRegion();
         }));
 
         toolbar.add(makeSmallButton(FontAwesomeSolid.TRASH, "delete", "Delete region", _ -> {
-
+            getParent().deleteRegion();
         }));
 
         toolbar.add(makeSmallButton(FontAwesomeSolid.COPY, "copy", "Copy region", _ -> {
-
+            getParent().copyRegion();
         }));
     }
 }

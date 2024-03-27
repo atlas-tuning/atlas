@@ -222,6 +222,18 @@ public class Project {
         return references;
     }
 
+    public void addSection(MemorySection section) {
+        sections.add(section);
+    }
+
+    public boolean removeSection(MemorySection section) {
+        return sections.remove(section);
+    }
+
+    public boolean hasSection(MemorySection section) {
+        return sections.contains(section);
+    }
+
     public static class Builder {
         private final Project project = new Project();
 

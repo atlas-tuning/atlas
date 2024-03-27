@@ -31,6 +31,14 @@ public class MemoryRegionSettingPage extends BasicSettingPage {
         this.section = section;
     }
 
+    public MemorySection getRealSection() {
+        return real;
+    }
+
+    public MemorySection getWorkingSection() {
+        return section;
+    }
+
     @Override
     protected List<SettingField<?>> createFields() {
         List<SettingField<?>> elements = new ArrayList<>();
@@ -95,5 +103,10 @@ public class MemoryRegionSettingPage extends BasicSettingPage {
         }
 
         return elements;
+    }
+
+    @Override
+    public boolean isDirty() {
+        return !project.getSections().contains(real) || super.isDirty();
     }
 }

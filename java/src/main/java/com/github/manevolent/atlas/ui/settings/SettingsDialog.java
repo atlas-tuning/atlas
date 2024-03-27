@@ -34,6 +34,7 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     private JPanel treePanel;
     private JPanel settingContentPanel;
     private JLabel problemLabel;
+    private JButton apply;
     private DefaultTreeModel treeModel;
 
     private SettingPage currentPage;
@@ -90,6 +91,7 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
 
     @Override
     public void propertyChange(PropertyChangeEvent evt) {
+        apply.setEnabled(isDirty());
         validatePages();
     }
 
@@ -212,7 +214,7 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         JButton ok;
         buttonRow.add(ok = Inputs.nofocus(Inputs.button("OK", this::ok)));
         buttonRow.add(Inputs.nofocus(Inputs.button("Cancel", this::cancel)));
-        buttonRow.add(Inputs.nofocus(Inputs.button("Apply", this::apply)));
+        buttonRow.add(apply = Inputs.nofocus(Inputs.button("Apply", this::apply)));
 
         getRootPane().setDefaultButton(ok);
 
@@ -250,7 +252,8 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
                 case JOptionPane.CANCEL_OPTION:
                     return;
                 case JOptionPane.YES_OPTION:
-                    if (apply() != ApplyResult.SUCCESS) {
+                    ApplyResult result = apply();
+                    if (result != ApplyResult.SUCCESS && result != ApplyResult.NOTHING_APPLIED) {
                         return;
                     }
                 case JOptionPane.NO_OPTION:
@@ -262,8 +265,9 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     }
 
     private void ok() {
-        if (apply() == ApplyResult.SUCCESS) {
-            this.dispose();
+        ApplyResult result = apply();
+        if (result == ApplyResult.SUCCESS || result == ApplyResult.NOTHING_APPLIED) {
+            dispose();
         }
     }
 
@@ -297,6 +301,8 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
 
             applied = true;
         }
+
+        apply.setEnabled(isDirty());
 
         return applied ? ApplyResult.SUCCESS : ApplyResult.NOTHING_APPLIED;
     }
