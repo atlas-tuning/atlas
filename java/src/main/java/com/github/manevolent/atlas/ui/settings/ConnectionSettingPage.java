@@ -5,6 +5,8 @@ import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.ui.settings.field.EnumSettingField;
 import com.github.manevolent.atlas.ui.settings.field.SettingField;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationSeverity;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationState;
 import com.github.manevolent.atlas.ui.util.Job;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -67,7 +69,10 @@ public class ConnectionSettingPage extends BasicSettingPage {
     }
 
     @Override
-    public boolean validate() {
-        return true;
+    public void validate(ValidationState state) {
+        if (connectionType == ConnectionType.DEBUG) {
+            state.add(this, ValidationSeverity.WARNING, "Connection type is currently set to debug. " +
+                    "Are you sure this correct?");
+        }
     }
 }

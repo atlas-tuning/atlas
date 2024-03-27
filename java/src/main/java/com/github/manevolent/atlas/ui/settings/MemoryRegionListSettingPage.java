@@ -1,10 +1,13 @@
 package com.github.manevolent.atlas.ui.settings;
 
+import com.github.manevolent.atlas.model.MemoryReference;
 import com.github.manevolent.atlas.model.MemorySection;
 import com.github.manevolent.atlas.model.MemoryType;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.ui.Editor;
 import com.github.manevolent.atlas.ui.component.toolbar.MemoryRegionListToolbar;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationSeverity;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationState;
 import com.github.manevolent.atlas.ui.util.Layout;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
@@ -14,6 +17,8 @@ import javax.swing.event.ListSelectionListener;
 import java.awt.*;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class MemoryRegionListSettingPage extends AbstractSettingPage implements ListSelectionListener {
     private final Editor editor;
@@ -32,14 +37,16 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
 
         this.editor = editor;
         this.project = project;
+
+        getContent();
     }
 
     private ListModel<MemorySection> createListModel() {
         DefaultListModel<MemorySection> model = new DefaultListModel<>();
 
         project.getSections().stream()
-                .sorted(Comparator.comparing(MemorySection::getBaseAddress))
                 .map(section -> workingCopies.computeIfAbsent(section, MemorySection::copy))
+                .sorted(Comparator.comparing(MemorySection::getBaseAddress))
                 .forEach(model::addElement);
 
         return model;
@@ -167,25 +174,54 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
     }
 
     @Override
-    public boolean validate() {
-        long codeSections = workingCopies.values().stream().filter(x -> x.getMemoryType() == MemoryType.CODE).count();
+    public void validate(ValidationState validation) {
+        long codeSections = workingCopies.values().stream()
+                .filter(x -> x.getMemoryType() == MemoryType.CODE).count();
+
         if (codeSections <= 0) {
-            JOptionPane.showMessageDialog(editor,
-                    "At least one " + MemoryType.CODE + " memory region must be defined.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-
-            return false;
+            validation.add(this, ValidationSeverity.ERROR, "At least one " +
+                    MemoryType.CODE + " memory region must be defined.");
         } else if (codeSections > 1) {
-            JOptionPane.showMessageDialog(editor,
-                    "Only one " + MemoryType.CODE + " memory region can be defined.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-
-            return false;
+            validation.add(this, ValidationSeverity.ERROR, "Only one " +
+                    MemoryType.CODE + " memory region can be defined.");
         }
 
-        return settingPages.values().stream().allMatch(SettingPage::validate);
+        workingCopies.forEach((real, workingCopy) -> {
+            if (workingCopy.getName().isBlank()) {
+                validation.add(this, ValidationSeverity.ERROR, "Memory region name cannot be left blank");
+            }
+
+            java.util.List<MemorySection> collisions = workingCopies.values().stream()
+                    .filter(s -> s != workingCopy)
+                    .filter(s -> s.intersects(workingCopy))
+                    .toList();
+
+            if (!collisions.isEmpty()) {
+                validation.add(this, ValidationSeverity.ERROR, "Memory region " + workingCopy.getName() +
+                        " would intersect with " +
+                        "other defined memory regions.\r\n" +
+                        "Regions: " + collisions.stream().map(MemorySection::getName).collect(Collectors.joining(", ")) + ".");
+            }
+
+            java.util.List<MemoryReference> references = project.getMemoryReferences().stream()
+                    .filter(real::contains)
+                    .toList();
+
+            List<MemoryReference> broken = references.stream()
+                    .filter(ref -> !workingCopy.contains(ref))
+                    .sorted(Comparator.comparing(ref -> ref.getAddress().getOffset()))
+                    .toList();
+
+            if (!broken.isEmpty()) {
+                validation.add(this, ValidationSeverity.ERROR, "Memory region " + workingCopy.getName()
+                        + " would break " + broken.size()
+                        + " memory reference(s):\r\n" +
+                        broken.stream().limit(20)
+                                .map(MemoryReference::toString)
+                                .collect(Collectors.joining(", ")) + ".\r\n" +
+                        "More references could become broken; only the first 20 will be shown.");
+            }
+        });
     }
 
     @Override

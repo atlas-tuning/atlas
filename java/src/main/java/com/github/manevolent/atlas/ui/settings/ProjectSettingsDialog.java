@@ -69,7 +69,7 @@ public class ProjectSettingsDialog extends SettingsDialog<Project> {
     @Override
     protected ApplyResult apply() {
         ApplyResult applied = super.apply();
-        if (applied != ApplyResult.FAILED_VALIDATION) {
+        if (applied != ApplyResult.FAILED_VALIDATION && applied != ApplyResult.NOTHING_APPLIED) {
             parent.setDirty(true); // Dirty because any applications could still have succeeded
         }
         return applied;

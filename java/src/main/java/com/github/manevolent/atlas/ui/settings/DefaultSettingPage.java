@@ -24,9 +24,4 @@ public class DefaultSettingPage extends BasicSettingPage {
     protected List<SettingField<?>> createFields() {
         return elements;
     }
-
-    @Override
-    public boolean validate() {
-        return true;
-    }
 }

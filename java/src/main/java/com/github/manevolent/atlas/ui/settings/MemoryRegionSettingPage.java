@@ -3,6 +3,8 @@ package com.github.manevolent.atlas.ui.settings;
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.ui.settings.field.*;
 import com.github.manevolent.atlas.ui.settings.field.*;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationSeverity;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationState;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 
 import javax.swing.*;
@@ -93,59 +95,5 @@ public class MemoryRegionSettingPage extends BasicSettingPage {
         }
 
         return elements;
-    }
-
-    @Override
-    public boolean validate() {
-        if (section.getName().isBlank()) {
-            JOptionPane.showMessageDialog(parent,
-                    "Memory region name cannot be left blank.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-
-            return false;
-        }
-
-        List<MemorySection> collisions = project.getSections().stream()
-                .filter(s -> s != real)
-                .filter(s -> s.intersects(section))
-                .toList();
-
-        if (!collisions.isEmpty()) {
-            JOptionPane.showMessageDialog(parent,
-                    "Memory region " + section.getName() + " would intersect with " +
-                            "other defined memory regions:\r\n" +
-                        collisions.stream().map(MemorySection::getName).collect(Collectors.joining(", ")) + ".",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-
-            return false;
-        }
-
-        List<MemoryReference> references = project.getMemoryReferences().stream()
-                .filter(real::contains)
-                .toList();
-
-        List<MemoryReference> broken = references.stream()
-                .filter(ref -> !section.contains(ref))
-                .sorted(Comparator.comparing(ref -> ref.getAddress().getOffset()))
-                .toList();
-
-        if (!broken.isEmpty()) {
-            JOptionPane.showMessageDialog(parent,
-                    "Memory region " + section.getName()
-                            + " would break " + broken.size()
-                            + " memory reference(s):\r\n" +
-                            broken.stream().limit(20)
-                                    .map(MemoryReference::toString)
-                                    .collect(Collectors.joining(", ")) + ".\r\n" +
-                    "More references could become broken; only the first 20 will be shown.",
-                    "Error",
-                    JOptionPane.ERROR_MESSAGE);
-
-            return false;
-        }
-
-        return true;
     }
 }

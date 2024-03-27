@@ -12,6 +12,10 @@ public class Icons {
 
 
     public static FontIcon get(Ikon ikon, Color color, int size) {
+        if (ikon == null) {
+            return null;
+        }
+
         FontIcon icon = new FontIcon();
         icon.setIkon(ikon);
         icon.setIconColor(color);

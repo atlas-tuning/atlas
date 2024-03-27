@@ -1,6 +1,9 @@
 package com.github.manevolent.atlas.ui.settings;
 
 import com.github.manevolent.atlas.ApplicationMetadata;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationProblem;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationSeverity;
+import com.github.manevolent.atlas.ui.settings.validation.ValidationState;
 import com.github.manevolent.atlas.ui.util.Icons;
 import com.github.manevolent.atlas.ui.util.Inputs;
 import com.github.manevolent.atlas.ui.util.Layout;
@@ -11,22 +14,29 @@ import javax.swing.event.TreeSelectionEvent;
 import javax.swing.event.TreeSelectionListener;
 import javax.swing.tree.*;
 import java.awt.*;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.util.Arrays;
+import java.awt.event.*;
 
-import java.util.Enumeration;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import java.util.*;
 
-public abstract class SettingsDialog<T> extends JDialog implements TreeSelectionListener {
+public abstract class SettingsDialog<T> extends JDialog implements TreeSelectionListener,
+        PropertyChangeListener {
     private final T settingObject;
     private final String title;
+
+    private final ProblemsSettingPage problems;
+
+    private final java.util.List<SettingPage> pages;
+    private final Map<SettingPage, TreeNode> nodes = new HashMap<>();
 
     private JTree tree;
     private JPanel treePanel;
     private JPanel settingContentPanel;
+    private JLabel problemLabel;
     private DefaultTreeModel treeModel;
 
-    private java.util.List<SettingPage> pages;
+    private SettingPage currentPage;
 
     public SettingsDialog(Ikon ikon, String title, Frame parent, T object) {
         super(parent, ApplicationMetadata.getName() + " - " + title, true);
@@ -41,13 +51,18 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
             }
         });
 
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .addPropertyChangeListener("permanentFocusOwner", this);
+
         setPreferredSize(new Dimension(800, 600));
 
         setIconImage(Icons.getImage(ikon, Color.WHITE).getImage());
 
         setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 
-        pages = getPages();
+        pages = new ArrayList<>(getPages());
+
+        pages.add(problems = new ProblemsSettingPage(this));
 
         initComponent();
 
@@ -73,8 +88,21 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         treePanel.repaint();
     }
 
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        validatePages();
+    }
+
+    public void selectPage(SettingPage settingPage) {
+        TreePath path = new TreePath(treeModel.getPathToRoot(nodes.get(settingPage)));
+        tree.setSelectionPath(path);
+    }
+
     private void openPage(SettingPage settingPage) {
         settingContentPanel.removeAll();
+
+        this.currentPage = settingPage;
+        validatePages();
 
         JComponent content = settingPage.getContent();
         if (settingPage.isScrollNeeded()) {
@@ -101,7 +129,11 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     private DefaultTreeModel createModel() {
         DefaultMutableTreeNode root = new DefaultMutableTreeNode(title);
 
-        pages.forEach(page -> root.add(new SettingPageNode(page)));
+        pages.forEach(page -> {
+            MutableTreeNode node = new SettingPageNode(page);
+            nodes.put(page, node);
+            root.add(node);
+        });
 
         return treeModel = new DefaultTreeModel(root);
     }
@@ -171,16 +203,30 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     }
 
     private JComponent initFooter() {
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel footer = new JPanel(new GridLayout(1, 2));
+
+        JPanel buttonRow = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
         Layout.emptyBorder(5, 5, 5, 5, footer);
 
         JButton ok;
-        footer.add(ok = Inputs.nofocus(Inputs.button("OK", this::ok)));
-        footer.add(Inputs.nofocus(Inputs.button("Cancel", this::cancel)));
-        footer.add(Inputs.nofocus(Inputs.button("Apply", this::apply)));
+        buttonRow.add(ok = Inputs.nofocus(Inputs.button("OK", this::ok)));
+        buttonRow.add(Inputs.nofocus(Inputs.button("Cancel", this::cancel)));
+        buttonRow.add(Inputs.nofocus(Inputs.button("Apply", this::apply)));
 
         getRootPane().setDefaultButton(ok);
+
+        problemLabel = new JLabel();
+        problemLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        problemLabel.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                tree.setSelectionRow(tree.getRowCount() - 1);
+            }
+        });
+
+        footer.add(problemLabel);
+        footer.add(buttonRow);
 
         return footer;
     }
@@ -226,17 +272,33 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
      * @return
      */
     protected ApplyResult apply() {
-        if (!pages.stream().allMatch(SettingPage::validate)) {
+        ValidationState state = validatePages();
+        if (state != null && state.willBlockApply()) {
+            JOptionPane.showMessageDialog(getParent(),
+                    "Failed to save settings!\r\n" +
+                            "There are outstanding errors that must be" +
+                            " addressed before settings can be saved.\r\n" +
+                    "See the Problems page for more details.",
+                    "Settings Save Failed",
+                    JOptionPane.ERROR_MESSAGE);
+
             return ApplyResult.FAILED_VALIDATION;
         }
 
+        boolean applied = false;
         for (SettingPage page : pages) {
+            if (!page.isDirty()) {
+                continue;
+            }
+
             if (!page.apply()) {
                 return ApplyResult.FAILED_APPLY;
             }
+
+            applied = true;
         }
 
-        return ApplyResult.SUCCESS;
+        return applied ? ApplyResult.SUCCESS : ApplyResult.NOTHING_APPLIED;
     }
 
     private void initComponent() {
@@ -252,6 +314,53 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         if (tree.getRowCount() > 1) {
             tree.setSelectionRow(1);
         }
+    }
+
+    private void updateProblemLabel(ValidationProblem problem) {
+        if (problem == null) {
+            problemLabel.setIcon(null);
+            problemLabel.setText(null);
+            return;
+        }
+
+        ValidationSeverity severity = problem.getSeverity();
+
+        problemLabel.setIcon(Icons.get(severity.getIkon(), severity.getColor()));
+        problemLabel.setText(problem.getErrorMessage().split("\r\n")[0]);
+
+        SwingUtilities.invokeLater(() -> {
+            problemLabel.revalidate();
+            problemLabel.repaint();
+        });
+    }
+
+    private ValidationState validatePages() {
+        if (this.pages == null) {
+            return null;
+        }
+
+        if (currentPage != null) {
+            ValidationState state = currentPage.validate();
+
+            ValidationProblem problem = state.getProblems().stream()
+                    .min(Comparator.comparing(v -> v.getSeverity().getOrdinal()))
+                    .orElse(null);
+
+            updateProblemLabel(problem);
+        }
+
+        ValidationState state = new ValidationState();
+        pages.forEach(page -> page.validate(state));
+        problems.setProblems(state.getProblems());
+        return state;
+    }
+
+    @Override
+    public void dispose() {
+        KeyboardFocusManager.getCurrentKeyboardFocusManager()
+                .removePropertyChangeListener("permanentFocusOwner", this);
+
+        super.dispose();
     }
 
     private static class SettingPageNode implements MutableTreeNode {
@@ -383,6 +492,7 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     public enum ApplyResult {
         FAILED_VALIDATION,
         FAILED_APPLY,
-        SUCCESS
+        SUCCESS,
+        NOTHING_APPLIED
     }
 }
