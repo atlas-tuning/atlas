@@ -329,7 +329,7 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
     }
 
     private void updateProblemLabel(ValidationProblem problem) {
-        if (problem == null) {
+        if (problem == null || problem.getErrorMessage() == null) {
             problemLabel.setIcon(null);
             problemLabel.setText(null);
             return;
@@ -357,6 +357,10 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         boolean hasProblemsOnPage = state.getProblems().stream().anyMatch(x -> x.getPage() == currentPage);
         ValidationProblem problem = state.getProblems().stream()
                 .filter(x -> {
+                    if (currentPage == problems) {
+                        return false;
+                    }
+
                     if (currentPage != null && hasProblemsOnPage) {
                         return currentPage == x.getPage();
                     } else {
@@ -492,7 +496,7 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
         }
     }
 
-    private class Renderer extends DefaultTreeCellRenderer {
+    private static class Renderer extends DefaultTreeCellRenderer {
         @Override
         public Component getTreeCellRendererComponent(JTree tree, Object value, boolean sel, boolean expanded,
                                                       boolean leaf, int row, boolean hasFocus) {

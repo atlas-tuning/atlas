@@ -63,6 +63,7 @@ public class CalibrationListSettingPage extends AbstractSettingPage implements L
         Layout.emptyBorder(list);
         list.setBackground(new JPanel().getBackground());
         list.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        Layout.preferWidth(list, 200);
 
         if (list.getModel().getSize() > 0) {
             list.setSelectedIndex(0);
