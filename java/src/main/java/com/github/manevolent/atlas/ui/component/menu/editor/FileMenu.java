@@ -45,9 +45,16 @@ public class FileMenu extends EditorMenu {
         JMenuItem saveRom = new JMenuItem("Save Project");
         saveRom.setIcon(Icons.get(CarbonIcons.SAVE));
         saveRom.addActionListener((e) -> {
-            getParent().saveProject();
+            getParent().saveProject(true);
         });
         fileMenu.add(saveRom);
+
+        JMenuItem saveRomAs = new JMenuItem("Save Project As...");
+        saveRomAs.setIcon(Icons.get(CarbonIcons.SAVE_MODEL));
+        saveRomAs.addActionListener((e) -> {
+            getParent().saveProject(false);
+        });
+        fileMenu.add(saveRomAs);
 
         fileMenu.addSeparator();
 

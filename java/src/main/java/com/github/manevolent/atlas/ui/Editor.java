@@ -4,6 +4,7 @@ import com.github.manevolent.atlas.connection.Connection;
 import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.model.storage.ProjectStorageType;
 import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
 import com.github.manevolent.atlas.ui.behavior.Edit;
@@ -143,7 +144,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 KeyStroke.getKeyStroke(KeyEvent.VK_H, InputEvent.META_DOWN_MASK)); // OSX
         Inputs.bind(this.getRootPane(),
                 "save",
-                this::saveProject,
+                () -> this.saveProject(true),
                 KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK),
                 KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.META_DOWN_MASK)); // OSX
         Inputs.bind(this.getRootPane(),
@@ -284,7 +285,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 case JOptionPane.CANCEL_OPTION:
                     return false;
                 case JOptionPane.YES_OPTION:
-                    return saveProject();
+                    return saveProject(true);
                 case JOptionPane.NO_OPTION:
             }
         }
@@ -317,12 +318,12 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         }
     }
 
-    public boolean saveProject() {
+    public boolean saveProject(boolean existing) {
         postStatus("Saving project...");
 
         return withWaitCursor(() -> {
             File file;
-            if (this.romFile == null || !romFile.exists()) {
+            if (!existing || this.romFile == null || !romFile.exists()) {
                 JFileChooser fileChooser = new JFileChooser();
                 FileNameExtensionFilter def = new FileNameExtensionFilter("Atlas project files", "atlas");
                 fileChooser.addChoosableFileFilter(def);
@@ -339,7 +340,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
             }
 
             try {
-                project.saveToArchive(file);
+                ProjectStorageType.ZIP.getStorageFactory().createStorage().save(project, file);
                 setDirty(false);
                 String message = "Project saved to " + file.getPath();
                 Log.ui().log(Level.INFO, message);
@@ -348,7 +349,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 Settings.set(Setting.LAST_OPENED_PROJECT, file.getAbsolutePath());
 
                 return true;
-            } catch (IOException e) {
+            } catch (Exception e) {
                 postStatus("Project save failed; see console output for details.");
                 JOptionPane.showMessageDialog(this, "Failed to save project!\r\nSee console output for more details.",
                         "Save failed",
@@ -374,7 +375,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
             File file = fileChooser.getSelectedFile();
                 withWaitCursor(() -> {
                     try {
-                        openProject(file, Project.loadFromArchive(file));
+                        openProject(file, ProjectStorageType.ZIP.getStorageFactory().createStorage().load(file));
                     } catch (Exception e) {
                         postStatus("Open project failed; see console output for details.");
                         JOptionPane.showMessageDialog(this, "Failed to open project!\r\nSee console output for more details.",

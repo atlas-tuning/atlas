@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.model;
 import com.github.manevolent.atlas.connection.ConnectionType;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.model.source.ArraySource;
+import com.github.manevolent.atlas.model.source.LazySource;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -20,16 +21,6 @@ import java.util.zip.ZipInputStream;
 import java.util.zip.ZipOutputStream;
 
 public class Project {
-    private static final Set<String> acceptableClassNames = Collections.unmodifiableSet(Stream.of(
-            Project.class, Scale.class, ScalingOperation.class,
-            Series.class, Table.class, Unit.class, UnitClass.class,
-            Vehicle.class, Precision.class, MemorySection.class, MemoryParameter.class,
-            MemoryByteOrder.class, MemoryAddress.class, DataFormat.class,
-            Axis.class, ArithmeticOperation.class, MemoryEncryptionType.class, KeyProperty.class,
-            Color.class, SecurityAccessProperty.class, ConnectionType.class,
-            Calibration.class, UUID.class
-    ).map(Class::getName).collect(Collectors.toSet()));
-
     private Vehicle vehicle;
     private List<MemorySection> sections;
     private ConnectionType connectionType;
@@ -172,34 +163,6 @@ public class Project {
 
     public boolean hasProperty(ProjectProperty property) {
         return properties.containsValue(property);
-    }
-
-    public void saveToArchive(File file) throws IOException {
-        try (FileOutputStream fos = new FileOutputStream(file)) {
-            saveToArchive(fos);
-        }
-    }
-
-    public void saveToArchive(OutputStream outputStream) throws IOException {
-        Yaml yaml = new Yaml();
-        String yamlString = yaml.dump(this);
-        byte[] yamlData = yamlString.getBytes(StandardCharsets.UTF_16);
-
-        try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
-            for (Calibration calibration : getCalibrations()) {
-                if (!calibration.hasData()) {
-                    continue;
-                }
-
-                zos.putNextEntry(new ZipEntry(calibration.getUuid().toString() + ".bin"));
-                calibration.copyTo(zos);
-                zos.closeEntry();
-            }
-
-            zos.putNextEntry(new ZipEntry("project.yaml"));
-            zos.write(yamlData);
-            zos.closeEntry();
-        }
     }
 
     public static Builder builder() {
@@ -374,64 +337,4 @@ public class Project {
             return project;
         }
     }
-
-    public static Project loadFromArchive(File file) throws IOException {
-        try (FileInputStream fis = new FileInputStream(file)) {
-            return loadFromArchive(fis);
-        }
-    }
-
-    public static Project loadFromArchive(InputStream inputStream) throws IOException {
-        ZipInputStream zis = new ZipInputStream(inputStream);
-        String yamlString = null;
-        Map<UUID, byte[]> sections = new HashMap<>();
-
-        ZipEntry entry;
-        while (((entry = zis.getNextEntry()) != null)) {
-            if (entry.getName().equals("project.yaml")) {
-                yamlString = new String(zis.readAllBytes(), StandardCharsets.UTF_16);
-            } else if (entry.getName().endsWith(".bin")) {
-                String uuidString = entry.getName().replaceFirst("\\.bin$", "");
-                try {
-                    UUID uuid = UUID.fromString(uuidString);
-                    sections.put(uuid, zis.readAllBytes());
-                } catch (Exception ex) {
-                    Log.ui().log(Level.WARNING, "Problem opening calibration binary \"" + entry.getName() + "\"", ex);
-                }
-            } else {
-                // ignore
-            }
-        }
-
-        TagInspector taginspector = tag -> acceptableClassNames.contains(tag.getClassName());
-
-        LoaderOptions loaderOptions = new LoaderOptions();
-        loaderOptions.setMaxAliasesForCollections(1024);
-        loaderOptions.setNestingDepthLimit(1024);
-        loaderOptions.setTagInspector(taginspector);
-        Yaml yaml = new Yaml(loaderOptions);
-
-        yamlString = yamlString.replaceAll(Pattern.quote("com.github.manevolent.atlas.model.Rom"),
-                Project.class.getName());
-        Project project = yaml.load(yamlString);
-
-        if (project.getCalibrations() == null) {
-            project.setCalibrations(new ArrayList<>());
-        }
-
-        for (Calibration calibration : project.getCalibrations()) {
-            MemorySection section = calibration.getSection();
-            if (section == null) {
-                continue;
-            }
-
-            byte[] data = sections.get(calibration.getUuid());
-            calibration.setSource(new ArraySource(section.getBaseAddress(), data, 0, section.getDataLength()));
-        }
-
-        project.sections.forEach(x -> x.setup(project));
-
-        return project;
-    }
-
 }

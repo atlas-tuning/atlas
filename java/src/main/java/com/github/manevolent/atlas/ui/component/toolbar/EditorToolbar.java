@@ -22,7 +22,7 @@ public class EditorToolbar extends Toolbar<Editor> {
             getParent().openProject();
         }));
         toolbar.add(makeSmallButton(FontAwesomeSolid.SAVE, "save", "Save project", _ -> {
-            getParent().saveProject();
+            getParent().saveProject(true);
         }));
 
         toolbar.addSeparator();

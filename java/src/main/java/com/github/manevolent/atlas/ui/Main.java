@@ -3,6 +3,7 @@ package com.github.manevolent.atlas.ui;
 import com.formdev.flatlaf.FlatDarculaLaf;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.model.storage.ProjectStorageType;
 import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
 
@@ -45,7 +46,7 @@ public class Main {
                 splashForm.setProgress(0.4f, "Loading " + lastOpenedProjectFile.getName() + "...");
 
                 try {
-                    project = Project.loadFromArchive(lastOpenedProjectFile);
+                    project = ProjectStorageType.ZIP.getStorageFactory().createStorage().load(lastOpenedProjectFile);
                     romFile = lastOpenedProjectFile;
 
                     Log.ui().log(Level.INFO, "Reopened last project at " +

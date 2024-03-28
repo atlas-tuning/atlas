@@ -2,6 +2,7 @@ package com.github.manevolent.atlas.model;
 
 
 import com.github.manevolent.atlas.model.source.ArraySource;
+import com.github.manevolent.atlas.model.source.LazySource;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -34,15 +35,19 @@ public class Calibration implements MemorySource {
     }
 
     public void updateSource(byte[] data, int offset, int length) {
-        this.source = new ArraySource(section.getBaseAddress(), data, offset, length);
+        updateSource(new ArraySource(section.getBaseAddress(), data, offset, length));
+    }
+
+    public void updateSource(MemorySource source) {
+        this.source = source;
+    }
+
+    public MemorySource getSource() {
+        return this.source;
     }
 
     public boolean hasData() {
-        return source != null;
-    }
-
-    public void setSource(MemorySource source) {
-        this.source = source;
+        return getSource() != null;
     }
 
     public int copyTo(OutputStream outputStream) throws IOException {
