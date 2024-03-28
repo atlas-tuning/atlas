@@ -1,7 +1,8 @@
 package com.github.manevolent.atlas.model;
 
 import com.github.manevolent.atlas.connection.ConnectionType;
-import com.github.manevolent.atlas.model.source.VehicleSource;
+import com.github.manevolent.atlas.logging.Log;
+import com.github.manevolent.atlas.model.source.ArraySource;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
 import org.yaml.snakeyaml.LoaderOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -10,6 +11,7 @@ import org.yaml.snakeyaml.inspector.TagInspector;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.util.logging.Level;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -19,12 +21,13 @@ import java.util.zip.ZipOutputStream;
 
 public class Project {
     private static final Set<String> acceptableClassNames = Collections.unmodifiableSet(Stream.of(
-            Project.class, VehicleSource.class, Scale.class, ScalingOperation.class,
+            Project.class, Scale.class, ScalingOperation.class,
             Series.class, Table.class, Unit.class, UnitClass.class,
             Vehicle.class, Precision.class, MemorySection.class, MemoryParameter.class,
             MemoryByteOrder.class, MemoryAddress.class, DataFormat.class,
             Axis.class, ArithmeticOperation.class, MemoryEncryptionType.class, KeyProperty.class,
-            Color.class, SecurityAccessProperty.class, ConnectionType.class
+            Color.class, SecurityAccessProperty.class, ConnectionType.class,
+            Calibration.class
     ).map(Class::getName).collect(Collectors.toSet()));
 
     private Vehicle vehicle;
@@ -34,6 +37,7 @@ public class Project {
     private Set<Scale> scales;
     private Set<MemoryParameter> parameters;
     private Map<String, ProjectProperty> properties;
+    private List<Calibration> calibrations;
 
     public Project() {
 
@@ -138,6 +142,10 @@ public class Project {
         return properties;
     }
 
+    public void setProperties(Map<String, ProjectProperty> map) {
+        this.properties = map;
+    }
+
     public boolean hasParameter(MemoryParameter parameter) {
         return parameters.contains(parameter);
     }
@@ -158,10 +166,6 @@ public class Project {
         return properties.values();
     }
 
-    public void setProperties(Map<String, ProjectProperty> map) {
-        this.properties = map;
-    }
-
     public boolean hasProperty(String name) {
         return properties.containsKey(name);
     }
@@ -177,22 +181,22 @@ public class Project {
     }
 
     public void saveToArchive(OutputStream outputStream) throws IOException {
+        Yaml yaml = new Yaml();
+        String yamlString = yaml.dump(this);
+        byte[] yamlData = yamlString.getBytes(StandardCharsets.UTF_16);
+
         try (ZipOutputStream zos = new ZipOutputStream(outputStream)) {
-            for (MemorySection section : getSections()) {
-                // Skip RAM sections
-                if (section.getMemoryType() == MemoryType.RAM) {
+            for (Calibration calibration : getCalibrations()) {
+                if (!calibration.hasData()) {
                     continue;
                 }
 
-                zos.putNextEntry(new ZipEntry(section.getName() + ".bin"));
-                section.copyTo(zos);
+                zos.putNextEntry(new ZipEntry(calibration.getUuid().toString() + ".bin"));
+                calibration.copyTo(zos);
                 zos.closeEntry();
             }
 
-            Yaml yaml = new Yaml();
-            String yamlString = yaml.dump(this);
             zos.putNextEntry(new ZipEntry("project.yaml"));
-            byte[] yamlData = yamlString.getBytes(StandardCharsets.UTF_16);
             zos.write(yamlData);
             zos.closeEntry();
         }
@@ -234,6 +238,26 @@ public class Project {
         return sections.contains(section);
     }
 
+    public void addCalibration(Calibration calibration) {
+        this.calibrations.add(calibration);
+    }
+
+    public boolean removeCalibration(Calibration calibration) {
+        return calibrations.remove(calibration);
+    }
+
+    public boolean hasCalibration(Calibration calibration) {
+        return calibrations.contains(calibration);
+    }
+
+    public List<Calibration> getCalibrations() {
+        return calibrations;
+    }
+
+    public void setCalibrations(List<Calibration> calibrations) {
+        this.calibrations = calibrations;
+    }
+
     public static class Builder {
         private final Project project = new Project();
 
@@ -244,6 +268,7 @@ public class Project {
             project.setParameters(new LinkedHashSet<>());
             project.setProperties(new LinkedHashMap<>());
             project.setVehicle(new Vehicle());
+            project.setCalibrations(new ArrayList<>());
 
             withScales(Scale.NONE);
         }
@@ -338,10 +363,13 @@ public class Project {
             return this;
         }
 
+        public Builder withCalibration(Calibration calibration) {
+            project.addCalibration(calibration);
+            return this;
+        }
+
         public Project build() {
-            project.sections.forEach(x -> {
-                x.setup(project, null);
-            });
+            project.sections.forEach(x -> x.setup(project));
 
             return project;
         }
@@ -356,14 +384,20 @@ public class Project {
     public static Project loadFromArchive(InputStream inputStream) throws IOException {
         ZipInputStream zis = new ZipInputStream(inputStream);
         String yamlString = null;
-        Map<String, byte[]> sections = new HashMap<>();
+        Map<UUID, byte[]> sections = new HashMap<>();
 
         ZipEntry entry;
         while (((entry = zis.getNextEntry()) != null)) {
             if (entry.getName().equals("project.yaml")) {
                 yamlString = new String(zis.readAllBytes(), StandardCharsets.UTF_16);
             } else if (entry.getName().endsWith(".bin")) {
-                sections.put(entry.getName(), zis.readAllBytes());
+                String uuidString = entry.getName().replaceFirst("\\.bin$", "");
+                try {
+                    UUID uuid = UUID.fromString(uuidString);
+                    sections.put(uuid, zis.readAllBytes());
+                } catch (Exception ex) {
+                    Log.ui().log(Level.WARNING, "Problem opening calibration binary \"" + entry.getName() + "\"", ex);
+                }
             } else {
                 // ignore
             }
@@ -381,9 +415,18 @@ public class Project {
                 Project.class.getName());
         Project project = yaml.load(yamlString);
 
-        for (MemorySection section : project.getSections()) {
-            byte[] data = sections.get(section.getName() + ".bin");
-            section.setup(project, data);
+        if (project.getCalibrations() == null) {
+            project.setCalibrations(new ArrayList<>());
+        }
+
+        for (Calibration calibration : project.getCalibrations()) {
+            MemorySection section = calibration.getSection();
+            if (section == null) {
+                continue;
+            }
+
+            byte[] data = sections.get(calibration.getUuid());
+            calibration.setSource(new ArraySource(section.getBaseAddress(), data, 0, section.getDataLength()));
         }
 
         return project;

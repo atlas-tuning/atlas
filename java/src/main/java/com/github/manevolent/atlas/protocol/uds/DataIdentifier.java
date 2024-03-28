@@ -106,7 +106,6 @@ public enum DataIdentifier {
                         .withBaseAddress(range.begin & 0xFFFF)
                         .withEndAddress(range.end & 0xFFFF)
                         .withEncryptionType(MemoryEncryptionType.NONE)
-                        .withSource(null)
                         .withByteOrder(null)
                         .withName(range.text())
                         .build())

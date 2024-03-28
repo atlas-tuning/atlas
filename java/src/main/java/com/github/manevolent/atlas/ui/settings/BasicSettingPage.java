@@ -4,6 +4,7 @@ import com.github.manevolent.atlas.model.KeyProperty;
 import com.github.manevolent.atlas.model.Project;
 import com.github.manevolent.atlas.model.PropertyDefinition;
 import com.github.manevolent.atlas.model.uds.SecurityAccessProperty;
+import com.github.manevolent.atlas.ui.settings.field.CheckboxSettingField;
 import com.github.manevolent.atlas.ui.settings.field.KeySettingField;
 import com.github.manevolent.atlas.ui.settings.field.SecurityAccessSettingField;
 import com.github.manevolent.atlas.ui.settings.field.SettingField;
@@ -117,8 +118,11 @@ public abstract class BasicSettingPage extends AbstractSettingPage {
         java.util.List<SettingField<?>> elements = getFields();
         for (int row = 0; row < elements.size(); row ++) {
             SettingField<?> element = elements.get(row);
+
+            String title = element instanceof CheckboxSettingField ? "" : element.getName();
+
             addEntryRow(content, 1 + row,
-                    element.getName(), element.getTooltip(),
+                    title, element.getTooltip(),
                     element.getInputComponent());
         }
 

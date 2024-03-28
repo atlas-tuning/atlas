@@ -74,7 +74,7 @@ public class Main {
         Editor editorForm = new Editor(project);
 
         splashForm.setProgress(0.75f, "Opening Project...");
-        editorForm.openRom(romFile, project);
+        editorForm.openProject(romFile, project);
 
         splashForm.setProgress(1.0f, "Opening Atlas...");
         Thread.sleep(500L);

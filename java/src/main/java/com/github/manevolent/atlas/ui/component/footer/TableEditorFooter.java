@@ -119,7 +119,7 @@ public class TableEditorFooter extends Footer<TableEditor> {
                 if (x != null) {
                     float value;
                     try {
-                        value = x.get(selectedColumn);
+                        value = x.get(getParent().getParent().getCalibration(), selectedColumn);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -141,7 +141,7 @@ public class TableEditorFooter extends Footer<TableEditor> {
                 if (y != null) {
                     float value;
                     try {
-                        value = y.get(selectedRow);
+                        value = y.get(getParent().getParent().getCalibration(), selectedRow);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }

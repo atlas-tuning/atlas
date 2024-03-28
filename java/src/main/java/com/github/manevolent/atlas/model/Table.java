@@ -27,11 +27,11 @@ public class Table {
         return axes;
     }
 
-    public float getCell(Map<Axis, Integer> coordinates) throws IOException {
-        return data.get(getDataIndex(coordinates));
+    public float getCell(MemorySource source, Map<Axis, Integer> coordinates) throws IOException {
+        return data.get(source, getDataIndex(coordinates));
     }
 
-    public float getCell(Integer... coordinates) throws IOException {
+    public float getCell(MemorySource source, Integer... coordinates) throws IOException {
         Map<Axis, Integer> coordinatesMap = new HashMap<>();
 
         for (int n = 0; n < coordinates.length; n ++) {
@@ -43,14 +43,14 @@ public class Table {
             coordinatesMap.put(axis, coordinates[n]);
         }
 
-        return getCell(coordinatesMap);
+        return getCell(source, coordinatesMap);
     }
 
-    public float setCell(float value, Map<Axis, Integer> coordinates) throws IOException {
-        return data.set(getDataIndex(coordinates), value);
+    public float setCell(MemorySource source, float value, Map<Axis, Integer> coordinates) throws IOException {
+        return data.set(source, getDataIndex(coordinates), value);
     }
 
-    public float setCell(float value, Integer... coordinates) throws IOException {
+    public float setCell(MemorySource source, float value, Integer... coordinates) throws IOException {
         Map<Axis, Integer> coordinatesMap = new HashMap<>();
 
         for (int n = 0; n < coordinates.length; n ++) {
@@ -62,7 +62,7 @@ public class Table {
             coordinatesMap.put(axis, coordinates[n]);
         }
 
-        return setCell(value, coordinatesMap);
+        return setCell(source, value, coordinatesMap);
     }
 
     public int getDataIndex(Map<Axis, Integer> coordinates) {
@@ -110,7 +110,7 @@ public class Table {
         return this.axes.get(axis);
     }
 
-    public void writeCsv(OutputStream outputStream, int rounding_precision) throws IOException {
+    public void writeCsv(MemorySource source, OutputStream outputStream, int rounding_precision) throws IOException {
         try (OutputStreamWriter osw = new OutputStreamWriter(outputStream);
                 BufferedWriter writer = new BufferedWriter(osw)) {
             Consumer<String> writeCell = (value) -> {
@@ -126,9 +126,9 @@ public class Table {
 
             writeCell.accept("");
 
-            if (axes.size() > 0) {
+            if (!axes.isEmpty()) {
                 for (int x_index = 0; x_index < x.getLength(); x_index++) {
-                    writeCell.accept(String.format("%." + rounding_precision + "f", x.get(x_index)));
+                    writeCell.accept(String.format("%." + rounding_precision + "f", x.get(source, x_index)));
                 }
             }
             writer.write("\r\n");
@@ -136,10 +136,10 @@ public class Table {
             if (axes.size() == 2) {
                 for (int y_index = 0; y_index < y.getLength(); y_index ++) {
                     // Write the row header
-                    writeCell.accept(String.format("%." + rounding_precision + "f", y.get(y_index)));
+                    writeCell.accept(String.format("%." + rounding_precision + "f", y.get(source, y_index)));
                     for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                         // Write the cell data
-                        writeCell.accept(String.format("%." + rounding_precision + "f", getCell(x_index, y_index)));
+                        writeCell.accept(String.format("%." + rounding_precision + "f", getCell(source, x_index, y_index)));
                     }
                     writer.write("\r\n");
                 }
@@ -148,16 +148,16 @@ public class Table {
                 writeCell.accept("");
                 for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                     // Write the cell data
-                    writeCell.accept(String.format("%." + rounding_precision + "f", getCell(x_index)));
+                    writeCell.accept(String.format("%." + rounding_precision + "f", getCell(source, x_index)));
                 }
                 writer.write("\r\n");
-            } else if (axes.size() == 0) {
+            } else if (axes.isEmpty()) {
                 // Write the row header
                 writeCell.accept("");
                 x = data;
                 for (int x_index = 0; x_index < x.getLength(); x_index ++) {
                     // Write the cell data
-                    writeCell.accept(String.format("%." + rounding_precision + "f", getCell(x_index)));
+                    writeCell.accept(String.format("%." + rounding_precision + "f", getCell(source, x_index)));
                 }
                 writer.write("\r\n");
             }

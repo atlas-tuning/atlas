@@ -4,6 +4,10 @@ import java.io.IOException;
 
 public interface MemorySource {
 
+    long getBaseAddress();
+
+    int getLength();
+
     int read(byte[] dst, long memoryBase, int offs, int len) throws IOException;
 
     int read(long position) throws IOException;

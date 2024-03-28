@@ -19,10 +19,10 @@ public class EditorToolbar extends Toolbar<Editor> {
     @Override
     protected void initComponent(JToolBar toolbar) {
         toolbar.add(makeSmallButton(FontAwesomeSolid.FOLDER_OPEN, "open", "Open project...", _ -> {
-            getParent().openRom();
+            getParent().openProject();
         }));
         toolbar.add(makeSmallButton(FontAwesomeSolid.SAVE, "save", "Save project", _ -> {
-            getParent().saveRom();
+            getParent().saveProject();
         }));
 
         toolbar.addSeparator();

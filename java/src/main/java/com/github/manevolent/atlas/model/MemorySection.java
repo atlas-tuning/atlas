@@ -1,8 +1,5 @@
 package com.github.manevolent.atlas.model;
 
-import com.github.manevolent.atlas.model.source.ArraySource;
-import com.github.manevolent.atlas.model.source.VehicleSource;
-
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.HexFormat;
@@ -10,7 +7,6 @@ import java.util.HexFormat;
 public class MemorySection {
     private String name;
     private MemoryType memoryType;
-    private MemorySource source;
     private MemoryEncryptionType encryptionType;
     private MemoryEncryption encryption;
     private MemoryByteOrder byteOrder;
@@ -31,10 +27,6 @@ public class MemorySection {
 
     public void setMemoryType(MemoryType memoryType) {
         this.memoryType = memoryType;
-    }
-
-    public void setSource(MemorySource source) {
-        this.source = source;
     }
 
     public MemoryEncryptionType getEncryptionType() {
@@ -65,36 +57,19 @@ public class MemorySection {
         this.dataLength = dataLength;
     }
 
-    public int copyTo(OutputStream outputStream) throws IOException {
-        int length = getDataLength();
-        for (int i = 0; i < length; i ++) {
-            outputStream.write(source.read(baseAddress + i) & 0xFF);
-        }
-        return length;
-    }
-
     /**
      * Sets up this memory section when a ROM/project is loaded
      * @param project ROM loaded
-     * @param data data for this section
      */
-    public void setup(Project project, byte[] data) {
+    public void setup(Project project) {
         if (encryptionType != null && encryptionType != MemoryEncryptionType.NONE) {
             encryption = encryptionType.getFactory().create(project);
         } else {
             encryption = null;
         }
-
-        if (this.source == null) {
-            if (data != null) {
-                source = new ArraySource(getBaseAddress(), data, 0, data.length);
-            } else {
-                source = new VehicleSource();
-            }
-        }
     }
 
-    public int read(byte[] dst, long memoryOffs, int offs, int len) throws IOException {
+    public int read(MemorySource source, byte[] dst, long memoryOffs, int offs, int len) throws IOException {
         if (memoryOffs < baseAddress || memoryOffs + len >= baseAddress + dataLength) {
             throw new ArrayIndexOutOfBoundsException(Long.toString(memoryOffs));
         }
@@ -106,7 +81,7 @@ public class MemorySection {
         }
     }
 
-    public void write(byte[] src, long memoryOffs, int offs, int len) throws IOException {
+    public void write(MemorySource source, byte[] src, long memoryOffs, int offs, int len) throws IOException {
         if (memoryOffs < baseAddress || memoryOffs + len >= baseAddress + dataLength) {
             throw new ArrayIndexOutOfBoundsException(Long.toString(memoryOffs));
         }
@@ -118,7 +93,7 @@ public class MemorySection {
         }
     }
 
-    public int read(long position) throws IOException {
+    public int read(MemorySource source, long position) throws IOException {
         int readAddress = (int) (position - baseAddress);
         if (readAddress < 0 || readAddress >= dataLength) {
             throw new ArrayIndexOutOfBoundsException(readAddress);
@@ -165,10 +140,6 @@ public class MemorySection {
         setEncryptionType(other.getEncryptionType());
     }
 
-    public static Builder builder() {
-        return new Builder();
-    }
-
     public boolean intersects(long baseAddress, int dataLength) {
         long otherStart = baseAddress;
         long otherEnd = baseAddress + dataLength;
@@ -189,6 +160,10 @@ public class MemorySection {
 
     public boolean contains(MemoryReference reference) {
         return contains(reference.getAddress());
+    }
+
+    public static Builder builder() {
+        return new Builder();
     }
 
     public static class Builder {
@@ -216,11 +191,6 @@ public class MemorySection {
 
         public Builder withEndAddress(long endAddress) {
             section.setDataLength((int) (endAddress - section.getBaseAddress()));
-            return this;
-        }
-
-        public Builder withSource(MemorySource source) {
-            section.setSource(source);
             return this;
         }
 

@@ -8,31 +8,31 @@ public class Series {
     private MemoryAddress address;
     private Scale scale;
 
-    public float get(int index) throws IOException {
+    public float get(MemorySource source, int index) throws IOException {
         if (length > 0 && (index >= length || index < 0)) {
             throw new ArrayIndexOutOfBoundsException(index);
         }
 
-        float data = address.read(index, scale.getFormat());
+        float data = address.read(source, index, scale.getFormat());
         return scale.forward(data);
     }
 
-    public int get(float[] floats, int offs, int len) throws IOException {
+    public int get(MemorySource source, float[] floats, int offs, int len) throws IOException {
         int i = 0;
         for (; i < len; i ++) {
-            floats[offs + i] = get(i);
+            floats[offs + i] = get(source, i);
         }
         return i;
     }
 
-    public float[] getNum(int numCells) throws IOException {
+    public float[] getNum(MemorySource source, int numCells) throws IOException {
         float[] cells = new float[numCells];
-        get(cells, 0, numCells);
+        get(source, cells, 0, numCells);
         return cells;
     }
 
-    public float[] getAll() throws IOException {
-        return getNum(length);
+    public float[] getAll(MemorySource source) throws IOException {
+        return getNum(source, length);
     }
 
     public String getName() {
@@ -79,10 +79,10 @@ public class Series {
         return new Builder();
     }
 
-    public float set(int index, float value) throws IOException {
+    public float set(MemorySource source, int index, float value) throws IOException {
         float data = scale.reverse(value);
-        address.write(index, data, scale.getFormat());
-        return get(index);
+        address.write(source, index, data, scale.getFormat());
+        return get(source, index);
     }
 
     public Series copy() {

@@ -62,7 +62,7 @@ public class ProjectSettingsDialog extends SettingsDialog<Project> {
                 ),
                 new ConnectionSettingPage(parent, getSettingObject()),
                 new MemoryRegionListSettingPage(parent, getSettingObject()),
-                new DefaultSettingPage(parent, CarbonIcons.CATALOG, "Calibrations")
+                new CalibrationListSettingPage(parent, getSettingObject())
         );
     }
 

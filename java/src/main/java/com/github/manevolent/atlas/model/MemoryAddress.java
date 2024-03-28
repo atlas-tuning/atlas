@@ -28,9 +28,9 @@ public class MemoryAddress {
         return "0x" + HexFormat.of().toHexDigits((int) offset).toUpperCase();
     }
 
-    public float read(int index, DataFormat format) throws IOException {
+    public float read(MemorySource source, int index, DataFormat format) throws IOException {
         byte[] data = new byte[format.getSize()];
-        getSection().read(data, offset + (index * format.getSize()), 0, format.getSize());
+        getSection().read(source, data, offset + (index * format.getSize()), 0, format.getSize());
         return format.convertFromBytes(data, getSection().getByteOrder().getByteOrder());
     }
 
@@ -38,9 +38,9 @@ public class MemoryAddress {
         return new Builder();
     }
 
-    public void write(int index, float data, DataFormat format) throws IOException {
+    public void write(MemorySource source, int index, float data, DataFormat format) throws IOException {
         byte[] bytes = format.convertToBytes(data, getSection().getByteOrder().getByteOrder());
-        getSection().write(bytes, offset + (index * format.getSize()), 0, bytes.length);
+        getSection().write(source, bytes, offset + (index * format.getSize()), 0, bytes.length);
     }
 
     public static class Builder {

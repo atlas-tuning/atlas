@@ -16,6 +16,16 @@ public class ArraySource implements com.github.manevolent.atlas.model.MemorySour
     }
 
     @Override
+    public long getBaseAddress() {
+        return memoryBase;
+    }
+
+    @Override
+    public int getLength() {
+        return len;
+    }
+
+    @Override
     public int read(byte[] dst, long memoryBase, int offs, int len) throws IOException {
         if (memoryBase + len > this.memoryBase + this.len) {
             throw new ArrayIndexOutOfBoundsException(Long.toString(memoryBase + len));

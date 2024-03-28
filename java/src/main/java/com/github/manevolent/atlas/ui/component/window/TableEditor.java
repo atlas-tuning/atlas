@@ -253,7 +253,7 @@ public class TableEditor extends Window implements
         for (int selectedRow : selectedRows) {
             for (int selectedColumn : selectedColumns) {
                 try {
-                    sum += table.getCell(selectedColumn, selectedRow);
+                    sum += table.getCell(getParent().getCalibration(), selectedColumn, selectedRow);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -340,7 +340,7 @@ public class TableEditor extends Window implements
             for (int selectedColumn : selectedColumns) {
                 float data;
                 try {
-                    data = table.getCell(selectedColumn, selectedRow);
+                    data = table.getCell(getParent().getCalibration(), selectedColumn, selectedRow);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -368,7 +368,7 @@ public class TableEditor extends Window implements
             columns = new Object[x.getLength()];
             for (int i = 0; i < x.getLength(); i ++) {
                 try {
-                    columns[i] = String.format(valueFormat, x.get(i));
+                    columns[i] = String.format(valueFormat, x.get(getParent().getCalibration(), i));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -404,7 +404,7 @@ public class TableEditor extends Window implements
             for (int i = 0; i < x.getLength(); i ++) {
                 float data;
                 try {
-                    data = x.get(i);
+                    data = x.get(getParent().getCalibration(), i);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -419,7 +419,7 @@ public class TableEditor extends Window implements
         for (int i = 0; i < table.getData().getLength(); i ++) {
             float data;
             try {
-                data = table.getData().get(i);
+                data = table.getData().get(getParent().getCalibration(), i);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -493,7 +493,7 @@ public class TableEditor extends Window implements
         while (read < size) {
             float value;
             try {
-                value = table.getCell(coordinates);
+                value = table.getCell(getParent().getCalibration(), coordinates);
                 setValue(coordinates, value);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -543,7 +543,7 @@ public class TableEditor extends Window implements
         return IntStream.range(0, table.getSeries(Y).getLength())
                 .mapToObj(index -> {
                     try {
-                        return table.getSeries(Y).get(index);
+                        return table.getSeries(Y).get(getParent().getCalibration(), index);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -563,7 +563,7 @@ public class TableEditor extends Window implements
             for (int j = 0; j < selectedColumns.length; j++) {
                 float data;
                 try {
-                    data = table.getCell(selectedColumns[j], selectedRow[i]);
+                    data = table.getCell(getParent().getCalibration(), selectedColumns[j], selectedRow[i]);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -587,7 +587,7 @@ public class TableEditor extends Window implements
 
         for (int i = 0; i < table.getData().getLength(); i ++) {
             try {
-                float data = table.getData().get(i);
+                float data = table.getData().get(getParent().getCalibration(), i);
                 max = Math.max(data, max);
                 min = Math.min(data, min);
             } catch (IOException e) {
@@ -772,7 +772,7 @@ public class TableEditor extends Window implements
             float value;
 
             try {
-                value = table.getCell(col, row);
+                value = table.getCell(getParent().getCalibration(), col, row);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -793,12 +793,12 @@ public class TableEditor extends Window implements
         String valueString;
 
         try {
-            oldValue = table.getCell(col, row);
+            oldValue = table.getCell(getParent().getCalibration(), col, row);
             String oldString = String.format(valueFormat, oldValue);
             valueString = String.format(valueFormat, value);
 
             if (!valueString.equals(oldString)) {
-                newValue = table.setCell(value, col, row);
+                newValue = table.setCell(getParent().getCalibration(), value, col, row);
                 getParent().setDirty(true);
             } else {
                 newValue = value;

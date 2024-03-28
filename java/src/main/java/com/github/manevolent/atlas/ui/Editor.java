@@ -2,10 +2,7 @@ package com.github.manevolent.atlas.ui;
 
 import com.github.manevolent.atlas.connection.Connection;
 import com.github.manevolent.atlas.connection.ConnectionType;
-import com.github.manevolent.atlas.model.Project;
-import com.github.manevolent.atlas.model.Scale;
-import com.github.manevolent.atlas.model.Series;
-import com.github.manevolent.atlas.model.Table;
+import com.github.manevolent.atlas.model.*;
 import com.github.manevolent.atlas.logging.Log;
 import com.github.manevolent.atlas.settings.Setting;
 import com.github.manevolent.atlas.settings.Settings;
@@ -33,6 +30,7 @@ import javax.swing.event.InternalFrameListener;
 import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.tree.TreeNode;
 import java.awt.*;
+import java.awt.Color;
 import java.awt.event.*;
 import java.io.File;
 import java.io.IOException;
@@ -78,6 +76,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     private EditHistory editHistory;
     private WindowHistory windowHistory;
     private Window lastDeactivatedWindow;
+    private Calibration activeCalibration;
     private boolean dirty;
 
     // Vehicle connection
@@ -87,7 +86,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         // Just to make sure it shows up in the taskbar/dock/etc.
         setType(Type.NORMAL);
 
-        openRom(null, project);
+        openProject(null, project);
         setDirty(false);
 
         initComponents();
@@ -144,7 +143,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 KeyStroke.getKeyStroke(KeyEvent.VK_H, InputEvent.META_DOWN_MASK)); // OSX
         Inputs.bind(this.getRootPane(),
                 "save",
-                this::saveRom,
+                this::saveProject,
                 KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.CTRL_DOWN_MASK),
                 KeyStroke.getKeyStroke(KeyEvent.VK_S, InputEvent.META_DOWN_MASK)); // OSX
         Inputs.bind(this.getRootPane(),
@@ -193,6 +192,18 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
 
     public Project getProject() {
         return project;
+    }
+
+    public Calibration getCalibration() {
+        return activeCalibration;
+    }
+
+    public void setCalibration(Calibration calibration) {
+        if (this.activeCalibration != calibration) {
+            this.activeCalibration = calibration;
+
+            //TODO reload stuff
+        }
     }
 
     public void postStatus(String status) {
@@ -273,7 +284,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
                 case JOptionPane.CANCEL_OPTION:
                     return false;
                 case JOptionPane.YES_OPTION:
-                    return saveRom();
+                    return saveProject();
                 case JOptionPane.NO_OPTION:
             }
         }
@@ -306,7 +317,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         }
     }
 
-    public boolean saveRom() {
+    public boolean saveProject() {
         postStatus("Saving project...");
 
         return withWaitCursor(() -> {
@@ -348,7 +359,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         });
     }
 
-    public void openRom() {
+    public void openProject() {
         if (!closing()) {
             return;
         }
@@ -363,7 +374,7 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
             File file = fileChooser.getSelectedFile();
                 withWaitCursor(() -> {
                     try {
-                        openRom(file, Project.loadFromArchive(file));
+                        openProject(file, Project.loadFromArchive(file));
                     } catch (Exception e) {
                         postStatus("Open project failed; see console output for details.");
                         JOptionPane.showMessageDialog(this, "Failed to open project!\r\nSee console output for more details.",
@@ -378,8 +389,10 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
         }
     }
 
-    public void openRom(File file, Project project) {
+    public void openProject(File file, Project project) {
         this.project = project;
+        this.activeCalibration = this.project.getCalibrations().stream().findFirst().orElse(null);
+
         this.romFile = file;
 
         updateTitle();
@@ -591,6 +604,15 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     }
 
     public void openTable(Table table) {
+        if (activeCalibration == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Failed to open table \"" + table.getName() + "\"!\r\nNo calibration has been selected. " +
+                            "Please add a calibration using Project Settings before editing table data.",
+                    "Open failed",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         TableEditor opened;
 
         opened = openedTables.get(table);
@@ -605,6 +627,15 @@ public class Editor extends JFrame implements InternalFrameListener, MouseMotion
     }
 
     public void openTableDefinition(Table table) {
+        if (activeCalibration == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Failed to open table \"" + table.getName() + "\"!\r\nNo calibration has been selected. " +
+                            "Please add a calibration using Project Settings before editing table data.",
+                    "Open failed",
+                    JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
         TableDefinitionEditor opened;
 
         opened = openedTableDefs.get(table);

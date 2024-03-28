@@ -20,6 +20,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static javax.swing.JOptionPane.QUESTION_MESSAGE;
+import static javax.swing.JOptionPane.WARNING_MESSAGE;
 
 public class MemoryRegionListSettingPage extends AbstractSettingPage implements ListSelectionListener {
     private final Editor editor;
@@ -195,7 +196,7 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
         MemorySection workingSection = settingPage.getWorkingSection();
 
         long references = project.getMemoryReferences().stream()
-                .filter(realSection::contains)
+                .filter(ref -> ref.getAddress().getSection().equals(realSection))
                 .count();
 
         if (references > 0) {
@@ -209,7 +210,8 @@ public class MemoryRegionListSettingPage extends AbstractSettingPage implements 
         if (JOptionPane.showConfirmDialog(editor,
                 "Are you sure you want to delete " + realSection.getName() + "?",
                 "Delete Memory Region",
-                JOptionPane.YES_NO_OPTION) != JOptionPane.YES_OPTION) {
+                JOptionPane.YES_NO_OPTION,
+                WARNING_MESSAGE) != JOptionPane.YES_OPTION) {
             return;
         }
 

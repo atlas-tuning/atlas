@@ -20,6 +20,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.*;
 
+import static javax.swing.JOptionPane.WARNING_MESSAGE;
+
 public abstract class SettingsDialog<T> extends JDialog implements TreeSelectionListener,
         PropertyChangeListener, KeyEventDispatcher {
     private final T settingObject;
@@ -248,7 +250,8 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
             int answer = JOptionPane.showConfirmDialog(getParent(),
                     message,
                     "Unsaved changes",
-                    JOptionPane.YES_NO_CANCEL_OPTION
+                    JOptionPane.YES_NO_CANCEL_OPTION,
+                    WARNING_MESSAGE
             );
 
             switch (answer) {
@@ -348,19 +351,23 @@ public abstract class SettingsDialog<T> extends JDialog implements TreeSelection
             return null;
         }
 
-        if (currentPage != null) {
-            ValidationState state = currentPage.validate();
-
-            ValidationProblem problem = state.getProblems().stream()
-                    .min(Comparator.comparing(v -> v.getSeverity().getOrdinal()))
-                    .orElse(null);
-
-            updateProblemLabel(problem);
-        }
-
         ValidationState state = new ValidationState();
         pages.forEach(page -> page.validate(state));
         problems.setProblems(state.getProblems());
+        boolean hasProblemsOnPage = state.getProblems().stream().anyMatch(x -> x.getPage() == currentPage);
+        ValidationProblem problem = state.getProblems().stream()
+                .filter(x -> {
+                    if (currentPage != null && hasProblemsOnPage) {
+                        return currentPage == x.getPage();
+                    } else {
+                        return true;
+                    }
+                })
+                .min(Comparator.comparing(v -> v.getSeverity().getOrdinal()))
+                .orElse(null);
+
+        updateProblemLabel(problem);
+
         return state;
     }
 

@@ -27,7 +27,7 @@ public class FileMenu extends EditorMenu {
         JMenuItem openRom = new JMenuItem("Open Project...");
         openRom.setIcon(Icons.get(CarbonIcons.FOLDER));
         openRom.addActionListener(e -> {
-            getParent().openRom();
+            getParent().openProject();
         });
         fileMenu.add(openRom);
 
@@ -45,7 +45,7 @@ public class FileMenu extends EditorMenu {
         JMenuItem saveRom = new JMenuItem("Save Project");
         saveRom.setIcon(Icons.get(CarbonIcons.SAVE));
         saveRom.addActionListener((e) -> {
-            getParent().saveRom();
+            getParent().saveProject();
         });
         fileMenu.add(saveRom);
 
