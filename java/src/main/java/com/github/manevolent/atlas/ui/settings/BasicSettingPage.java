@@ -76,6 +76,8 @@ public abstract class BasicSettingPage extends AbstractSettingPage {
             ));
         }
         input.setToolTipText(helpText);
+
+
         entryPanel.add(input,
                 Layout.gridBagConstraints(GridBagConstraints.NORTHWEST,
                         GridBagConstraints.HORIZONTAL,
@@ -94,6 +96,8 @@ public abstract class BasicSettingPage extends AbstractSettingPage {
                 Integer.MAX_VALUE,
                 (int) input.getSize().getHeight()
         ));
+        Layout.preferHeight(labelField, input);
+        labelField.setVerticalAlignment(SwingConstants.CENTER);
 
         int height = Math.max(input.getHeight(), input.getPreferredSize().height);
 

@@ -1,14 +1,32 @@
 package com.github.manevolent.atlas.ui.component.toolbar;
 
+import com.github.manevolent.atlas.model.Calibration;
 import com.github.manevolent.atlas.ui.component.window.TableEditor;
+import com.github.manevolent.atlas.ui.util.Layout;
 import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import org.kordamp.ikonli.fontawesome5.FontAwesomeSolid;
 
 import javax.swing.*;
+import java.awt.*;
+import java.util.Comparator;
 
 public class TableEditorToolbar extends Toolbar<TableEditor> {
     public TableEditorToolbar(TableEditor editor) {
         super(editor);
+    }
+
+    private JComboBox<Calibration> initCalibrationsList() {
+        DefaultComboBoxModel<Calibration> model = new DefaultComboBoxModel<>();
+        getParent().getParent().getProject().getCalibrations().stream()
+                .sorted(Comparator.comparing(Calibration::getName))
+                .forEach(model::addElement);
+        JComboBox<Calibration> calibrations = new JComboBox<>(model);
+        calibrations.setSelectedItem(getParent().getCalibration());
+        calibrations.addItemListener(e -> getParent().setCalibration((Calibration) e.getItem()));
+        Layout.preferWidth(calibrations, 150);
+        calibrations.setMaximumSize(new Dimension(200, Integer.MAX_VALUE));
+        calibrations.setFocusable(false);
+        return calibrations;
     }
 
     @Override
@@ -35,7 +53,11 @@ public class TableEditorToolbar extends Toolbar<TableEditor> {
                 (e) -> getParent().interpolateHorizontal()));
         toolbar.add(makeButton(FontAwesomeSolid.GRIP_VERTICAL, "interpolate-vertical", "Interpolate vertically",
                 (e) -> getParent().interpolateVertical()));
+        toolbar.addSeparator();
 
+        toolbar.add(Box.createHorizontalGlue());
+
+        toolbar.add(initCalibrationsList());
 
     }
 }

@@ -44,17 +44,17 @@ public class CalibrationSettingPage extends BasicSettingPage {
                 calibration::setName
         ));
 
-        elements.add(new CalibrationField(
-                "ROM",
-                calibration,
-                () -> {}
-        ));
-
         elements.add(new CheckboxSettingField(
                 "Read-only", "Check if this calibration should not be edited in any table editors, etc.",
                 calibration.isReadonly(),
                 v -> true,
                 calibration::setReadonly
+        ));
+
+        elements.add(new CalibrationField(
+                "",
+                calibration,
+                () -> {}
         ));
 
         return elements;

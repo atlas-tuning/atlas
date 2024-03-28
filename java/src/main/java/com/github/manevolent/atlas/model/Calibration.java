@@ -26,7 +26,15 @@ public class Calibration implements MemorySource {
     }
 
     public void updateSource(byte[] data) {
-        this.source = new ArraySource(section.getBaseAddress(), data, 0, data.length);
+        updateSource(data, data.length);
+    }
+
+    public void updateSource(byte[] data, int length) {
+        updateSource(data, 0, length);
+    }
+
+    public void updateSource(byte[] data, int offset, int length) {
+        this.source = new ArraySource(section.getBaseAddress(), data, offset, length);
     }
 
     public boolean hasData() {
@@ -105,7 +113,7 @@ public class Calibration implements MemorySource {
 
     @Override
     public long getBaseAddress() {
-        return source.getBaseAddress();
+        return section.getBaseAddress();
     }
 
     @Override

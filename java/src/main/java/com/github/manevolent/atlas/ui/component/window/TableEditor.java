@@ -16,10 +16,7 @@ import org.kordamp.ikonli.carbonicons.CarbonIcons;
 import javax.swing.*;
 import javax.swing.border.Border;
 import javax.swing.event.*;
-import javax.swing.table.DefaultTableCellRenderer;
-import javax.swing.table.DefaultTableModel;
-import javax.swing.table.TableCellEditor;
-import javax.swing.table.TableModel;
+import javax.swing.table.*;
 
 import java.awt.*;
 import java.awt.Color;
@@ -28,6 +25,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.stream.IntStream;
 
 import static com.github.manevolent.atlas.model.Axis.X;
@@ -70,12 +68,14 @@ public class TableEditor extends Window implements
     private HelpMenu helpMenu;
 
     private TableEditorToolbar toolbar;
+    private Calibration calibration;
 
     private final boolean readOnly;
 
     public TableEditor(Editor editor, Table table, boolean readOnly) {
         super(editor);
 
+        this.calibration = editor.getCalibration();
         this.readOnly = readOnly;
         this.selfUpdate.set(false);
         this.table = table;
@@ -84,6 +84,7 @@ public class TableEditor extends Window implements
     public TableEditor(Editor editor, Table table) {
         super(editor);
 
+        this.calibration = editor.getCalibration();
         this.readOnly = false;
         this.selfUpdate.set(false);
         this.table = table;
@@ -91,12 +92,26 @@ public class TableEditor extends Window implements
 
     @Override
     public String getTitle() {
-        return table.getName();
+        return table.getName() + " (" + calibration.getName() + ")";
     }
 
     @Override
     public Icon getIcon() {
         return Icons.get(CarbonIcons.DATA_TABLE, getTextColor());
+    }
+
+    public Calibration getCalibration() {
+        return calibration;
+    }
+
+    public void setCalibration(Calibration calibration) {
+        this.calibration = calibration;
+        updateTitle();
+        updateData();
+        updateMinMax();
+        updateSelection();
+        updateRowHeaders();
+        updateColumns();
     }
 
     @Override
@@ -253,7 +268,7 @@ public class TableEditor extends Window implements
         for (int selectedRow : selectedRows) {
             for (int selectedColumn : selectedColumns) {
                 try {
-                    sum += table.getCell(getParent().getCalibration(), selectedColumn, selectedRow);
+                    sum += table.getCell(getCalibration(), selectedColumn, selectedRow);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -340,7 +355,7 @@ public class TableEditor extends Window implements
             for (int selectedColumn : selectedColumns) {
                 float data;
                 try {
-                    data = table.getCell(getParent().getCalibration(), selectedColumn, selectedRow);
+                    data = table.getCell(getCalibration(), selectedColumn, selectedRow);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -356,19 +371,15 @@ public class TableEditor extends Window implements
         footer.reinitialize();
     }
 
-    private TableModel generateTableModel() {
-        int x_size = table.getSeries(X) == null ? 1 : table.getSeries(X).getLength();
-        int y_size = table.getSeries(Y) == null ? 1 : table.getSeries(Y).getLength();
-        Object[][] data = new Float[y_size][x_size];
+    private Object[] generateColumns() {
+        Object[] columns;
 
         Series x = table.getSeries(X);
-
-        Object[] columns;
         if (x != null) {
             columns = new Object[x.getLength()];
             for (int i = 0; i < x.getLength(); i ++) {
                 try {
-                    columns[i] = String.format(valueFormat, x.get(getParent().getCalibration(), i));
+                    columns[i] = String.format(valueFormat, x.get(getCalibration(), i));
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -376,7 +387,15 @@ public class TableEditor extends Window implements
         } else {
             columns = new Object[1];
         }
-        return new DefaultTableModel(data, columns);
+
+        return columns;
+    }
+
+    private TableModel generateTableModel() {
+        int x_size = table.getSeries(X) == null ? 1 : table.getSeries(X).getLength();
+        int y_size = table.getSeries(Y) == null ? 1 : table.getSeries(Y).getLength();
+        Object[][] data = new Float[y_size][x_size];
+        return new DefaultTableModel(data, generateColumns());
     }
 
     private JToolBar initToolbar() {
@@ -404,7 +423,7 @@ public class TableEditor extends Window implements
             for (int i = 0; i < x.getLength(); i ++) {
                 float data;
                 try {
-                    data = x.get(getParent().getCalibration(), i);
+                    data = x.get(getCalibration(), i);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -419,7 +438,7 @@ public class TableEditor extends Window implements
         for (int i = 0; i < table.getData().getLength(); i ++) {
             float data;
             try {
-                data = table.getData().get(getParent().getCalibration(), i);
+                data = table.getData().get(getCalibration(), i);
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
@@ -455,6 +474,18 @@ public class TableEditor extends Window implements
             column.setPreferredWidth(spacing);
             column.setWidth(spacing);
         }
+    }
+
+    private void updateColumns() {
+        JTableHeader th = tableComponent.getTableHeader();
+        TableColumnModel tcm = th.getColumnModel();
+
+        Object[] columns = generateColumns();
+        for (int i = 0; i < columns.length; i ++) {
+            TableColumn tc = tcm.getColumn(i);
+            tc.setHeaderValue(columns[i]);
+        }
+        th.repaint();
     }
 
     private void updateRowHeaders() {
@@ -493,7 +524,7 @@ public class TableEditor extends Window implements
         while (read < size) {
             float value;
             try {
-                value = table.getCell(getParent().getCalibration(), coordinates);
+                value = table.getCell(getCalibration(), coordinates);
                 setValue(coordinates, value);
             } catch (IOException e) {
                 throw new RuntimeException(e);
@@ -543,7 +574,7 @@ public class TableEditor extends Window implements
         return IntStream.range(0, table.getSeries(Y).getLength())
                 .mapToObj(index -> {
                     try {
-                        return table.getSeries(Y).get(getParent().getCalibration(), index);
+                        return table.getSeries(Y).get(getCalibration(), index);
                     } catch (IOException e) {
                         throw new RuntimeException(e);
                     }
@@ -563,7 +594,7 @@ public class TableEditor extends Window implements
             for (int j = 0; j < selectedColumns.length; j++) {
                 float data;
                 try {
-                    data = table.getCell(getParent().getCalibration(), selectedColumns[j], selectedRow[i]);
+                    data = table.getCell(getCalibration(), selectedColumns[j], selectedRow[i]);
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -587,7 +618,7 @@ public class TableEditor extends Window implements
 
         for (int i = 0; i < table.getData().getLength(); i ++) {
             try {
-                float data = table.getData().get(getParent().getCalibration(), i);
+                float data = table.getData().get(getCalibration(), i);
                 max = Math.max(data, max);
                 min = Math.min(data, min);
             } catch (IOException e) {
@@ -772,7 +803,7 @@ public class TableEditor extends Window implements
             float value;
 
             try {
-                value = table.getCell(getParent().getCalibration(), col, row);
+                value = table.getCell(getCalibration(), col, row);
             } catch (IOException ex) {
                 throw new RuntimeException(ex);
             }
@@ -788,23 +819,27 @@ public class TableEditor extends Window implements
         }
 
         float newValue;
-        float oldValue;
+        float oldValue = 0;
 
         String valueString;
 
         try {
-            oldValue = table.getCell(getParent().getCalibration(), col, row);
+            oldValue = table.getCell(getCalibration(), col, row);
             String oldString = String.format(valueFormat, oldValue);
             valueString = String.format(valueFormat, value);
 
             if (!valueString.equals(oldString)) {
-                newValue = table.setCell(getParent().getCalibration(), value, col, row);
+                newValue = table.setCell(getCalibration(), value, col, row);
                 getParent().setDirty(true);
             } else {
                 newValue = value;
             }
         } catch (IOException ex) {
-            throw new RuntimeException(ex);
+            Log.ui().log(Level.SEVERE, "Failed to set data in cell", ex);
+
+            setValue(row, col, oldValue);
+
+            return;
         }
 
         // If we're about to reposition the value due to the Table API precision,
@@ -979,7 +1014,8 @@ public class TableEditor extends Window implements
 
         @Override
         public boolean isCellEditable(EventObject anEvent) {
-            return super.isCellEditable(anEvent);
+            return super.isCellEditable(anEvent) && !getCalibration().isReadonly()
+                    && !isReadOnly();
         }
 
         @Override

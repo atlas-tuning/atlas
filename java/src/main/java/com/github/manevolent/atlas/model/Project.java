@@ -27,7 +27,7 @@ public class Project {
             MemoryByteOrder.class, MemoryAddress.class, DataFormat.class,
             Axis.class, ArithmeticOperation.class, MemoryEncryptionType.class, KeyProperty.class,
             Color.class, SecurityAccessProperty.class, ConnectionType.class,
-            Calibration.class
+            Calibration.class, UUID.class
     ).map(Class::getName).collect(Collectors.toSet()));
 
     private Vehicle vehicle;
@@ -428,6 +428,8 @@ public class Project {
             byte[] data = sections.get(calibration.getUuid());
             calibration.setSource(new ArraySource(section.getBaseAddress(), data, 0, section.getDataLength()));
         }
+
+        project.sections.forEach(x -> x.setup(project));
 
         return project;
     }
